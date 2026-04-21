@@ -1,0 +1,37 @@
+services:
+  backend:
+    # 后端服务镜像从 backend 目录构建。
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: offerCopilot-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ../backend/.env
+    environment:
+      # 容器内连接 postgres 服务，覆盖本地 .env 中的数据库地址。
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5433/offercopilot
+    depends_on:
+      # 当前先只依赖数据库，Redis 后续接入时再补。
+      - postgres
+    restart: unless-stopped
+
+  postgres:
+    # PostgreSQL 容器启动时会自动创建 offercopilot 数据库。
+    image: postgres:16-alpine
+    container_name: offercopilot-postgres
+    environment:
+      POSTGRES_DB: offercopilot
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      # 持久化数据库数据，避免容器重建后数据丢失。
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  # Compose 管理的命名卷，用于持久化 Postgres 数据。
+  postgres_data:
