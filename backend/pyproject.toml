@@ -1,0 +1,9 @@
+[project]
+name = "offer-pilot-backend"
+version = "0.1.0"
+description = "OfferPilot 后端服务，聚焦 JD 分析、简历优化与面试准备的 AI 求职副驾。"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "uvicorn>=0.44.0",
+]
