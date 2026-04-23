@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     APP_ENV: str = "development"
     DEBUG: bool = True
     API_V1_PREFIX: str = "/api/v1"
+    LOG_LEVEL: str = "INFO"
 
     # Web 服务运行配置。
     APP_HOST: str = "0.0.0.0"
@@ -34,7 +35,7 @@ class Settings(BaseSettings):
     # 鉴权相关配置，后续 JWT 生成和校验会使用。
     SECRET_KEY: str = "change-me-in-production"
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440 # 24 小时
 
     # 预留给 AI 和对象存储能力，避免后面继续改配置模型。
     OPENAI_API_KEY: str | None = None
@@ -60,4 +61,3 @@ def get_settings() -> Settings:
 
 # 作为全局单例配置入口直接复用。
 settings = get_settings()
-

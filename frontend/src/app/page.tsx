@@ -1,6 +1,10 @@
 
+import { AuthGuard } from "@/features/auth/components/auth-guard";
+
 export default function Home() {
   return (
-      <div>hello,offerpilot</div>
+    <AuthGuard>
+      <div>hello,OfferCopilot</div>
+    </AuthGuard>
   );
 }

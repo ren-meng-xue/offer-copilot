@@ -19,10 +19,18 @@ cd frontend
 再启动开发服务器：
 
 ```bash
+cp .env.example .env.local
 pnpm dev
 ```
 
 启动后，在浏览器打开 [http://localhost:3000](http://localhost:3000) 查看页面。
+
+当前前端请求后端时，默认从 `NEXT_PUBLIC_API_BASE_URL` 读取 API 地址。
+本地开发建议配置为：
+
+```bash
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1
+```
 
 ## 当前技术基线
 
