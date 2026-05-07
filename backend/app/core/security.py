@@ -5,7 +5,8 @@ Author         : xuebao
 File           : security.py
 """
 from datetime import datetime, timedelta, timezone
-
+import secrets
+import hashlib
 import bcrypt
 from fastapi import Depends, HTTPException, status
 from jose import JWTError, jwt
@@ -13,8 +14,7 @@ from fastapi.security import OAuth2PasswordBearer
 
 from backend.app.core.config import settings
 
-
-#这个作用不是登陆，而是从请求头里帮拿token
+# 这个作用不是登陆，而是从请求头里帮拿token
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 
@@ -71,8 +71,8 @@ def create_access_token(data: dict) -> str:
 
     # 🔐 生成 JWT
     return jwt.encode(
-        to_encode,                 # payload（数据）
-        settings.SECRET_KEY,       # 密钥（必须保密！）
+        to_encode,  # payload（数据）
+        settings.SECRET_KEY,  # 密钥（必须保密！）
         algorithm=settings.ALGORITHM,  # 加密算法（如 HS256）
     )
 
@@ -98,3 +98,14 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> str:
         raise credentials_exception
 
     return user_id
+
+
+# 生成 refresh token，登录成功后写入客户端，用于 access token 过期后的续签。
+def create_refresh_token() -> str:
+    """生成高随机性的 refresh token，返回给客户端保存。"""
+    return secrets.token_urlsafe(32)
+
+
+def hash_token(token: str) -> str:
+    """对 refresh token 做哈希，数据库中只保存哈希值。"""
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()

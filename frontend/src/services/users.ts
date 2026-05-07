@@ -10,6 +10,6 @@ export type CurrentUser = {
 
 // 当前用户信息接口：
 // GET /users
-export function getCurrentUser(token: string) {
-  return get<CurrentUser>("/users", { token });
+export function getCurrentUser() {
+  return get<CurrentUser>("/users", { auth: true });
 }

@@ -1,19 +1,13 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
-
-const geist = Geist({
-  subsets: ["latin"],
-  variable: "--font-sans",
-});
 
 export const metadata: Metadata = {
   title: {
-    default: "OfferCopilot",
-    template: "%s | OfferCopilot",
+    default: "文档助手",
+    template: "%s | 文档助手",
   },
-  description: "OfferCopilot AI 求职副驾前端",
+  description: "导入技术文档，让文档助手基于真实内容回答问题，并附上可追溯的引用来源。",
 };
 
 export default function RootLayout({
@@ -24,7 +18,9 @@ export default function RootLayout({
   return (
     <html
       lang="zh-CN"
-      className={cn("h-full antialiased", "font-sans", geist.variable)}
+      className={cn("h-full font-sans antialiased")}
+      data-scroll-behavior="smooth"
+      suppressHydrationWarning
     >
       <body className="min-h-screen bg-white text-slate-950">
         <div className="relative flex min-h-screen flex-col">

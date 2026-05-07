@@ -1,0 +1,146 @@
+## 本地开发配置：
+## - 默认读取 backend/.env
+## - 数据库和 Redis 端口暴露给宿主机，便于本地调试
+## - 数据库连接参数直接写死为开发环境默认值
+# Compose 服务定义入口。
+services:
+  # FastAPI 后端服务。
+  api:
+    # 本地构建镜像时使用 backend 目录作为上下文。
+    build:
+      # 构建上下文目录。
+      context: ./backend
+      # 使用 backend 下的 Dockerfile。
+      dockerfile: Dockerfile
+    # 固定容器名，便于本地排查日志。
+    container_name: offercopilot-api
+    # 对外暴露 API 端口。
+    ports:
+      # 宿主机 8000 -> 容器 8000。
+      - "8000:8000"
+    # 从 backend/.env 读取通用环境变量。
+    env_file:
+      # 本地后端环境变量文件。
+      - ./backend/.env
+    # 覆盖或补充容器运行时环境变量。
+    environment:
+      # 容器内走 Docker 网络，使用服务名 + 容器端口。
+      # 这里写死开发库地址，避免本地启动时还要额外注入 DATABASE_URL。
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/offercopilot
+      # Redis 主机名使用 compose 服务名。
+      REDIS_HOST: redis
+      # Redis 容器内部端口。
+      REDIS_PORT: 6379
+    # 等待依赖服务健康后再启动当前服务。
+    depends_on:
+      # 依赖 PostgreSQL。
+      postgres:
+        # 仅在 postgres healthcheck 通过后启动。
+        condition: service_healthy
+      # 依赖 Redis。
+      redis:
+        # 仅在 redis healthcheck 通过后启动。
+        condition: service_healthy
+    # 手动停止前自动重启，适合开发环境。
+    restart: unless-stopped
+
+  # Celery Worker，负责异步任务。
+  celery:
+    # 与 api 共用同一份后端镜像。
+    build:
+      # 构建上下文目录。
+      context: ./backend
+      # 使用 backend 下的 Dockerfile。
+      dockerfile: Dockerfile
+    # 固定容器名，便于本地排查日志。
+    container_name: offercopilot-celery
+    # 启动 Celery worker 进程。
+    command: uv run --project /app/backend celery -A backend.app.tasks:celery_app worker --loglevel=info
+    # 从 backend/.env 读取通用环境变量。
+    env_file:
+      # 本地后端环境变量文件。
+      - ./backend/.env
+    # 覆盖或补充容器运行时环境变量。
+    environment:
+      # 使用 Docker 网络内的 PostgreSQL 地址。
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/offercopilot
+      # Redis 主机名使用 compose 服务名。
+      REDIS_HOST: redis
+      # Redis 容器内部端口。
+      REDIS_PORT: 6379
+    # 等待依赖服务健康后再启动当前服务。
+    depends_on:
+      # 依赖 PostgreSQL。
+      postgres:
+        # 仅在 postgres healthcheck 通过后启动。
+        condition: service_healthy
+      # 依赖 Redis。
+      redis:
+        # 仅在 redis healthcheck 通过后启动。
+        condition: service_healthy
+    # 手动停止前自动重启，适合开发环境。
+    restart: unless-stopped
+
+  # PostgreSQL 数据库服务，内置 pgvector 扩展。
+  postgres:
+    # pgvector/pgvector 镜像在 postgres:16 基础上预装了 pgvector 扩展。
+    # 数据库镜像。
+    image: pgvector/pgvector:pg16
+    # 固定容器名，便于本地排查日志。
+    container_name: offercopilot-postgres
+    # 初始化数据库所需环境变量。
+    environment:
+      # 默认数据库名。
+      POSTGRES_DB: offercopilot
+      # 默认数据库用户名。
+      POSTGRES_USER: postgres
+      # 默认数据库密码。
+      POSTGRES_PASSWORD: postgres
+    # 将数据库端口暴露到宿主机。
+    ports:
+      # 映射到宿主机 5433，避免与本机已安装的 PostgreSQL 默认 5432 冲突。
+      - "5433:5432"
+    # 挂载持久化数据卷，避免容器删除后丢库。
+    volumes:
+      # 命名卷挂载到 PostgreSQL 数据目录。
+      - postgres_data:/var/lib/postgresql/data
+    # 数据库健康检查。
+    healthcheck:
+      # 使用 pg_isready 检查数据库可连接状态。
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      # 每 5 秒检查一次。
+      interval: 5s
+      # 单次检查超时时间。
+      timeout: 5s
+      # 连续失败 5 次后视为不健康。
+      retries: 5
+    # 手动停止前自动重启，适合开发环境。
+    restart: unless-stopped
+
+  # Redis 服务，供 Celery 和任务状态使用。
+  redis:
+    # Redis 镜像。
+    image: redis:7-alpine
+    # 固定容器名，便于本地排查日志。
+    container_name: offercopilot-redis
+    # 将 Redis 端口暴露到宿主机。
+    ports:
+      # 本地暴露 Redis 端口，便于调试任务状态和消息队列。
+      - "6379:6379"
+    # Redis 健康检查。
+    healthcheck:
+      # 使用 redis-cli ping 检查服务是否可用。
+      test: ["CMD", "redis-cli", "ping"]
+      # 每 5 秒检查一次。
+      interval: 5s
+      # 单次检查超时时间。
+      timeout: 5s
+      # 连续失败 5 次后视为不健康。
+      retries: 5
+    # 手动停止前自动重启，适合开发环境。
+    restart: unless-stopped
+
+# 命名卷定义。
+volumes:
+  # PostgreSQL 数据卷。
+  postgres_data:

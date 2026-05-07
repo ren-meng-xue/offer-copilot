@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c \"import matplotlib; print\\('matplotlib ok'\\)\")",
+      "Bash(python3 -c \"import PIL; print\\('PIL ok'\\)\")",
+      "Bash(npm --version)",
+      "Bash(awk '/^```mermaid$/,/^```$/' /Users/xuebao/learn/AI项目/offer-copilot/spec/backend/qa.md)",
+      "Bash(grep -v '^```')",
+      "Bash(uv run *)"
+    ]
+  }
+}

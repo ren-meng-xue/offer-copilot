@@ -23,14 +23,30 @@ cp .env.example .env.local
 pnpm dev
 ```
 
-启动后，在浏览器打开 [http://localhost:3000](http://localhost:3000) 查看页面。
+启动后，在浏览器打开 [http://127.0.0.1:3000](http://127.0.0.1:3000) 查看页面。
 
-当前前端请求后端时，默认从 `NEXT_PUBLIC_API_BASE_URL` 读取 API 地址。
+当前前端请求后端时，建议本地开发直接请求 `http://127.0.0.1:8000/api/v1`，
+并且浏览器也统一打开 `http://127.0.0.1:3000`。
+这样前端页面 `http://127.0.0.1:3000` 和后端接口 `http://127.0.0.1:8000` 仍然属于同一个 site，
+refresh cookie 在 `SameSite=Lax` 下也能正常工作。
+
+如果你后面确实需要走前端代理，也可以把 `NEXT_PUBLIC_API_BASE_URL` 改成 `/api/v1`，
+再让 Next.js 通过 rewrite 转发到后端。
+
 本地开发建议配置为：
 
 ```bash
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1
+NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000/api/v1
+BACKEND_PROXY_TARGET=http://127.0.0.1:8000
 ```
+
+当前登录链路里：
+
+- `access_token` 会保存在前端本地，用于请求 `/users` 这类受保护接口时放到 `Authorization` 头里
+- `refresh_token` 会被后端写成 `HttpOnly Cookie`
+- 这个 Cookie 默认只对 `/api/v1/auth/refresh-token` 生效，所以你在 `/users` 请求里看不到它是正常的
+- 本地开发如果把前端页面开在 `localhost:3000`，却直接请求 `127.0.0.1:8000`，浏览器会把它当成跨站请求，`SameSite=Lax` 的 refresh cookie 不会在 `fetch` 里带上
+- 你这台机器上 `localhost:8000` 还会优先命中一个返回 `404` 的 IPv6 监听，所以本地联调更稳的方式是前后端都统一使用 `127.0.0.1`
 
 ## 当前技术基线
 
@@ -48,7 +64,7 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1
 
 ## 目录说明
 
-当前项目由 `create-next-app` 初始化，主要代码在：
+当前项目由 `crea********te-next-app` 初始化，主要代码在：
 
 - `src/app/`：页面和路由
 - `public/`：静态资源

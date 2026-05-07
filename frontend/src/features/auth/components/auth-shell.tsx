@@ -11,8 +11,8 @@ export function AuthShell({ children }: AuthShellProps) {
   return (
     <div className="grid min-h-screen select-none lg:h-screen lg:grid-cols-[1fr_1fr] lg:overflow-hidden xl:grid-cols-[0.96fr_1.04fr]">
       <AuthAside />
-      <section className="flex items-center justify-center bg-white px-6 py-8 sm:px-8 lg:px-10 lg:py-6 xl:px-14">
-        <div className="w-full max-w-[520px]">
+      <section className="flex items-center justify-center bg-white px-5 py-8 sm:px-8 lg:px-8 lg:py-6 xl:px-12">
+        <div className="w-full max-w-[760px]">
           <div className="mb-8 flex items-center justify-center lg:hidden">
             <AuthBrand />
           </div>
@@ -32,14 +32,14 @@ function AuthAside() {
 
       <div className="relative z-10 max-w-lg space-y-4">
         <span className="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs uppercase tracking-[0.24em] text-white/80">
-          AI Job Copilot
+          文档助手
         </span>
         <div className="space-y-2.5">
           <h2 className="text-[1.85rem] font-semibold leading-tight tracking-tight xl:text-[2.1rem]">
-            围绕目标岗位，做更有效的准备。
+            你的文档助手
           </h2>
           <p className="max-w-md text-sm leading-7 text-slate-200">
-            OfferCopilot 围绕具体 JD 帮你完成岗位分析、简历匹配、内容优化和面试准备。
+            导入技术文档 URL 或 PDF，文档助手会自动整理、索引并回答问题。每个答案都带来源引用，方便你快速确认、继续深入。
           </p>
         </div>
       </div>
@@ -49,9 +49,9 @@ function AuthAside() {
       </div>
 
       <div className="relative z-10 flex flex-wrap gap-6 text-sm text-slate-200/90">
-        <span>JD 输入</span>
-        <span>匹配评分</span>
-        <span>面试准备</span>
+        <span>一键导入</span>
+        <span>精准问答</span>
+        <span>来源可查</span>
       </div>
 
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.06)_1px,transparent_1px)] bg-[size:22px_22px] opacity-30" />
@@ -69,10 +69,10 @@ function AuthBrand() {
       </div>
       <div className="space-y-0.5">
         <p className="text-sm font-medium text-slate-950 lg:text-white">
-          OfferCopilot
+          文档助手
         </p>
         <p className="text-xs text-slate-500 lg:text-slate-200">
-          AI 求职副驾
+          让技术文档开口回答
         </p>
       </div>
     </Link>

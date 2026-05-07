@@ -25,3 +25,4 @@ async def get_current_user_info(
         data=UserInfoResponse.model_validate(user),
         msg="获取当前用户成功",
     )
+

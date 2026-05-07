@@ -1,10 +1,5 @@
-
-import { AuthGuard } from "@/features/auth/components/auth-guard";
+import { redirect } from "next/navigation";
 
 export default function Home() {
-  return (
-    <AuthGuard>
-      <div>hello,OfferCopilot</div>
-    </AuthGuard>
-  );
+  redirect("/chat");
 }

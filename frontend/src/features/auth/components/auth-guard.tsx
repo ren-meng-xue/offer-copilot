@@ -3,48 +3,48 @@
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { hasStoredSession, restoreSession } from "@/lib/session";
 
 type AuthGuardProps = {
   children: ReactNode;
 };
 
 function hasAuthState() {
-  if (typeof window === "undefined") {
-    return false;
-  }
-
-  const token = localStorage.getItem("access_token");
-  const currentUser = localStorage.getItem("current_user");
-
-  return Boolean(token && currentUser);
+  return hasStoredSession();
 }
 
 export function AuthGuard({ children }: AuthGuardProps) {
   const router = useRouter();
-  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [isChecked, setIsChecked] = useState(false);
 
   useEffect(() => {
-    const checkAuth = () => {
-      const authorized = hasAuthState();
+    let isMounted = true;
+
+    const checkAuth = async () => {
+      const authorized = hasAuthState() || (await restoreSession());
+      if (!isMounted) {
+        return;
+      }
+
       setIsAuthorized(authorized);
+      setIsChecked(true);
 
       if (!authorized) {
         router.replace("/auth/login");
       }
     };
 
-    checkAuth();
-
-    const intervalId = window.setInterval(checkAuth, 1000);
-    const handleStorage = () => checkAuth();
-
-    window.addEventListener("storage", handleStorage);
+    void checkAuth();
 
     return () => {
-      window.clearInterval(intervalId);
-      window.removeEventListener("storage", handleStorage);
+      isMounted = false;
     };
   }, [router]);
+
+  if (!isChecked) {
+    return <>{children}</>;
+  }
 
   if (!isAuthorized) {
     return null;

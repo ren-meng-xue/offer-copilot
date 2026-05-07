@@ -8,11 +8,13 @@ WORKDIR /app
 
 RUN pip install --no-cache-dir uv
 
-COPY pyproject.toml uv.lock README.md ./
-RUN uv sync --frozen --no-dev
+# 将后端项目放到 /app/backend，保留仓库里的 backend 包层级，
+# 这样容器内仍然可以使用 `backend.app...` 这类绝对导入。
+COPY pyproject.toml uv.lock README.md /app/backend/
+RUN uv sync --frozen --no-dev --project /app/backend
 
-COPY . .
+COPY . /app/backend
 
 EXPOSE 8000
 
-CMD ["uv", "run", "python", "main.py"]
+CMD ["uv", "run", "--project", "/app/backend", "uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000"]

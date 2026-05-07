@@ -3,6 +3,8 @@ from .auth import (
     LoginResponse,
     RegisterRequest,
     UserInfoResponse,
+   ForgotPasswordRequest,
+   ResetPasswordRequest
 
 )
 
@@ -11,4 +13,6 @@ __all__ = [
     "LoginResponse",
     "RegisterRequest",
     "UserInfoResponse",
+    "ForgotPasswordRequest",
+    "ResetPasswordRequest"
 ]

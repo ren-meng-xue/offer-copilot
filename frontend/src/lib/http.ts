@@ -1,6 +1,11 @@
 import { env } from "@/lib/env";
+import {
+  getValidAccessToken,
+  handleUnauthorizedSession,
+  refreshAccessToken,
+} from "@/lib/session";
 
-type RequestMethod = "GET" | "POST";
+type RequestMethod = "GET" | "POST" | "DELETE";
 type RequestBody = Record<string, unknown>;
 
 type RequestOptions = {
@@ -10,6 +15,7 @@ type RequestOptions = {
   headers?: HeadersInit;
   // 受保护接口会在这里传 Bearer Token。
   token?: string;
+  auth?: boolean;
   signal?: AbortSignal;
 };
 
@@ -53,25 +59,49 @@ export async function request<TResponse>(
   path: string,
   options: RequestOptions = {},
 ): Promise<TResponse> {
-  const { method = "GET", body, headers, token, signal } = options;
+  const { method = "GET", body, headers, token, auth = false, signal } = options;
   const requestHeaders = new Headers(headers);
 
   if (!requestHeaders.has("Content-Type") && body !== undefined) {
     requestHeaders.set("Content-Type", "application/json");
   }
 
-  if (token) {
-    requestHeaders.set("Authorization", `Bearer ${token}`);
+  const accessToken = token ?? (auth ? await getValidAccessToken() : null);
+
+  if (accessToken) {
+    requestHeaders.set("Authorization", `Bearer ${accessToken}`);
   }
 
-  const response = await fetch(buildUrl(path), {
+  let response = await fetch(buildUrl(path), {
     method,
     headers: requestHeaders,
     body: body === undefined ? undefined : JSON.stringify(body),
     signal,
+    credentials: "include",
   });
 
+  if (auth && response.status === 401) {
+    const refreshedAccessToken = await refreshAccessToken();
+
+    if (!refreshedAccessToken) {
+      handleUnauthorizedSession();
+    } else {
+      requestHeaders.set("Authorization", `Bearer ${refreshedAccessToken}`);
+      response = await fetch(buildUrl(path), {
+        method,
+        headers: requestHeaders,
+        body: body === undefined ? undefined : JSON.stringify(body),
+        signal,
+        credentials: "include",
+      });
+    }
+  }
+
   const payload = (await parseJson<ApiEnvelope<TResponse>>(response)) ?? null;
+
+  if (auth && response.status === 401) {
+    handleUnauthorizedSession();
+  }
 
   if (!response.ok) {
     throw new ApiError({
@@ -114,6 +144,17 @@ export function post<TResponse>(
     ...options,
     method: "POST",
     body,
+  });
+}
+
+// 删除类接口统一走 del，避免和关键字 delete 冲突。
+export function del<TResponse>(
+  path: string,
+  options: Omit<RequestOptions, "method" | "body"> = {},
+) {
+  return request<TResponse>(path, {
+    ...options,
+    method: "DELETE",
   });
 }
 

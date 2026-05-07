@@ -1,0 +1,119 @@
+## 部署配置：
+## - 不依赖 backend/.env，统一由外部环境变量注入
+## - 默认不暴露 Postgres / Redis 到宿主机，减少外部访问面
+## - 重启策略使用 always，更接近持续运行场景
+# Compose 服务定义入口。
+services:
+  # FastAPI 后端服务。
+  api:
+    # 生产环境同样从 backend 构建镜像。
+    build:
+      # 构建上下文目录。
+      context: ./backend
+      # 使用 backend 下的 Dockerfile。
+      dockerfile: Dockerfile
+    # 固定容器名，便于部署排查。
+    container_name: offercopilot-api
+    # 对外暴露 API 端口。
+    ports:
+      # 宿主机 8000 -> 容器 8000。
+      - "8000:8000"
+    # 运行时环境变量由外部注入。
+    environment:
+      # 生产环境不在文件中写死数据库连接，交给部署环境注入。
+      DATABASE_URL: ${DATABASE_URL}
+      # Redis 主机名使用 compose 服务名。
+      REDIS_HOST: redis
+      # Redis 容器内部端口。
+      REDIS_PORT: 6379
+    # 等待依赖服务健康后再启动当前服务。
+    depends_on:
+      # 依赖 PostgreSQL。
+      postgres:
+        # 仅在 postgres healthcheck 通过后启动。
+        condition: service_healthy
+      # 依赖 Redis。
+      redis:
+        # 仅在 redis healthcheck 通过后启动。
+        condition: service_healthy
+    # 始终自动重启，更适合持续运行场景。
+    restart: always
+
+  # Celery Worker，负责异步任务。
+  celery:
+    # 与 api 共用同一份后端镜像。
+    build:
+      # 构建上下文目录。
+      context: ./backend
+      # 使用 backend 下的 Dockerfile。
+      dockerfile: Dockerfile
+    # 固定容器名，便于部署排查。
+    container_name: offercopilot-celery
+    # 启动 Celery worker 进程。
+    command: uv run --project /app/backend celery -A backend.app.tasks:celery_app worker --loglevel=info
+    # 运行时环境变量由外部注入。
+    environment:
+      # 数据库连接串由部署环境提供。
+      DATABASE_URL: ${DATABASE_URL}
+      # Redis 主机名使用 compose 服务名。
+      REDIS_HOST: redis
+      # Redis 容器内部端口。
+      REDIS_PORT: 6379
+    # 等待依赖服务健康后再启动当前服务。
+    depends_on:
+      # 依赖 PostgreSQL。
+      postgres:
+        # 仅在 postgres healthcheck 通过后启动。
+        condition: service_healthy
+      # 依赖 Redis。
+      redis:
+        # 仅在 redis healthcheck 通过后启动。
+        condition: service_healthy
+    # 始终自动重启，更适合持续运行场景。
+    restart: always
+
+  # PostgreSQL 数据库服务，内置 pgvector 扩展。
+  postgres:
+    # 数据库镜像。
+    image: pgvector/pgvector:pg16
+    # 固定容器名，便于部署排查。
+    container_name: offercopilot-postgres
+    # 初始化数据库所需环境变量。
+    environment:
+      # 生产数据库账号密码通过环境变量传入，避免提交到仓库。
+      POSTGRES_DB: ${POSTGRES_DB}
+      # 数据库用户名由部署环境提供。
+      POSTGRES_USER: ${POSTGRES_USER}
+      # 数据库密码由部署环境提供。
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    # 挂载持久化数据卷。
+    volumes:
+      # 命名卷挂载到 PostgreSQL 数据目录。
+      - postgres_data:/var/lib/postgresql/data
+    # 数据库健康检查。
+    healthcheck:
+      # 使用部署时传入的用户名执行 pg_isready 检查。
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      # 每 5 秒检查一次。
+      interval: 5s
+      # 单次检查超时时间。
+      timeout: 5s
+      # 连续失败 5 次后视为不健康。
+      retries: 5
+    # 始终自动重启，更适合持续运行场景。
+    restart: always
+
+  # Redis 服务，供 Celery 和任务状态使用。
+  redis:
+    # Redis 镜像。
+    image: redis:7-alpine
+    # 固定容器名，便于部署排查。
+    container_name: offercopilot-redis
+    # 未映射宿主机端口，仅供 compose 网络内的 api / celery 访问。
+    # 始终自动重启，更适合持续运行场景。
+    restart: always
+
+# 命名卷定义。
+volumes:
+  # PostgreSQL 数据卷。
+  postgres_data:

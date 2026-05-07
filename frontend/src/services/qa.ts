@@ -1,0 +1,93 @@
+import { env } from "@/lib/env";
+import { del, get, post } from "@/lib/http";
+import { getValidAccessToken } from "@/lib/session";
+import type {
+  ChatMessage,
+  ConversationListItem as ChatConversationListItem,
+} from "@/features/chat/types";
+
+export type ConversationListItem = ChatConversationListItem;
+export type MessageItem = ChatMessage;
+
+type CreateConversationResponse = {
+  conv_id: string;
+  created_at: string;
+};
+
+export function createConversation(signal?: AbortSignal) {
+  return post<CreateConversationResponse>(
+    "/qa/conversations",
+    {},
+    { auth: true, signal },
+  );
+}
+
+export function listConversations(signal?: AbortSignal) {
+  return get<ConversationListItem[]>("/qa/conversations", {
+    auth: true,
+    signal,
+  });
+}
+
+export function listMessages(conversationId: string, signal?: AbortSignal) {
+  return get<ChatMessage[]>(
+    `/qa/conversations/${conversationId}/messages`,
+    { auth: true, signal },
+  );
+}
+
+export function deleteConversation(conversationId: string, signal?: AbortSignal) {
+  return del<null>(`/qa/conversations/${conversationId}`, {
+    auth: true,
+    signal,
+  });
+}
+
+export function getConversationMessages(
+  conversationId: string,
+  signal?: AbortSignal,
+) {
+  return listMessages(conversationId, signal);
+}
+
+export function askConversation(
+  conversationId: string,
+  question: string,
+  signal?: AbortSignal,
+): Promise<Response>;
+export async function askConversation(
+  conversationId: string,
+  question: string,
+  signal?: AbortSignal,
+): Promise<Response> {
+  return fetchAskConversation({
+    conversationId,
+    question,
+    signal,
+  });
+}
+
+async function fetchAskConversation({
+  conversationId,
+  question,
+  signal,
+}: {
+  conversationId: string;
+  question: string;
+  signal?: AbortSignal;
+}) {
+  const accessToken = await getValidAccessToken();
+  const headers = new Headers({ "Content-Type": "application/json" });
+
+  if (accessToken) {
+    headers.set("Authorization", `Bearer ${accessToken}`);
+  }
+
+  return fetch(`${env.apiBaseUrl}/qa/conversations/${conversationId}/ask`, {
+    method: "POST",
+    headers,
+    credentials: "include",
+    body: JSON.stringify({ question }),
+    signal,
+  });
+}

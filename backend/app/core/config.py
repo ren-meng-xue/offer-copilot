@@ -21,9 +21,10 @@ class Settings(BaseSettings):
     # Web 服务运行配置。
     APP_HOST: str = "0.0.0.0"
     APP_PORT: int = 8000
+    BACKEND_CORS_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000"
 
     # 基础设施配置，后续 auth、数据库和任务系统都会依赖这些变量。
-    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/offercopilot"
+    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5433/offercopilot"
 
 
 
@@ -35,14 +36,50 @@ class Settings(BaseSettings):
     # 鉴权相关配置，后续 JWT 生成和校验会使用。
     SECRET_KEY: str = "change-me-in-production"
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440 # 24 小时
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
+    REFRESH_TOKEN_EXPIRE_MINUTES: int = 7 * 24 * 60
+    # 密码重置链接有效期，单位分钟。
+    PASSWORD_RESET_TOKEN_EXPIRE_MINUTES: int = 30
+    # 发邮件时拼接的前端重置密码页面地址。
+    PASSWORD_RESET_URL_BASE: str = "http://localhost:3000/auth/reset-password"
+    # SMTP 邮件配置。默认值按 QQ 邮箱本地联调场景给出。
+    SMTP_HOST: str = "smtp.qq.com"
+    SMTP_PORT: int = 465
+    SMTP_USERNAME: str | None = None
+    SMTP_PASSWORD: str | None = None
+    SMTP_USE_SSL: bool = True
+    SMTP_USE_STARTTLS: bool = False
+    SMTP_TIMEOUT_SECONDS: int = 15
+    MAIL_FROM: str | None = None
+    MAIL_FROM_NAME: str = "OfferPilot"
+    REFRESH_TOKEN_COOKIE_NAME: str = "refresh_token"
+    # 只让 refresh 接口自动携带该 cookie，减少不必要的请求暴露面。
+    REFRESH_TOKEN_COOKIE_PATH: str = "/api/v1/auth/"
+    # 本地开发通常没有 HTTPS，默认关闭；生产环境应改为 true。
+    REFRESH_TOKEN_COOKIE_SECURE: bool = False
+    # 前后端同站开发时先用 lax，后续跨站部署再按实际情况调整。
+    REFRESH_TOKEN_COOKIE_SAMESITE: str = "lax"
 
-    # 预留给 AI 和对象存储能力，避免后面继续改配置模型。
+    # Celery broker/backend 都指向 Redis，DB 编号与主 Redis 隔离。
+    CELERY_BROKER_URL: str = "redis://localhost:6379/1"
+    CELERY_RESULT_BACKEND: str = "redis://localhost:6379/1"
+
+    FIRECRAWL_API_KEY: str | None = None
     OPENAI_API_KEY: str | None = None
+    COHERE_API_KEY: str | None = None
     S3_ENDPOINT_URL: str | None = None
     S3_ACCESS_KEY_ID: str | None = None
     S3_SECRET_ACCESS_KEY: str | None = None
     S3_BUCKET_NAME: str | None = None
+
+    @property
+    def cors_allow_origins(self) -> list[str]:
+        """把逗号分隔的前端来源转成 CORS 白名单。"""
+        return [
+            origin.strip()
+            for origin in self.BACKEND_CORS_ORIGINS.split(",")
+            if origin.strip()
+        ]
 
     model_config = SettingsConfigDict(
         # 本地开发默认读取 backend/.env，容器环境下可直接由环境变量覆盖。

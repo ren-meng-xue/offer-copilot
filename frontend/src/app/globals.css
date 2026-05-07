@@ -6,6 +6,7 @@
 }
 
 :root {
+  --font-sans: Arial, Helvetica, sans-serif;
   --bg: #f4f7fb;
   --ink: #0f172a;
   --line: rgba(148, 163, 184, 0.24);
