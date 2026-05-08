@@ -67,6 +67,7 @@ class Settings(BaseSettings):
     FIRECRAWL_API_KEY: str | None = None
     OPENAI_API_KEY: str | None = None
     COHERE_API_KEY: str | None = None
+    RAG_DEBUG_ENABLED: bool = False  # 是否开启 RAG debug 输出
     S3_ENDPOINT_URL: str | None = None
     S3_ACCESS_KEY_ID: str | None = None
     S3_SECRET_ACCESS_KEY: str | None = None
