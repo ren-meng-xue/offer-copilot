@@ -89,6 +89,35 @@ def _debug_chunk_preview(chunks: Sequence[DocumentChunk], limit: int = DEBUG_PRE
     ]
 
 
+def _debug_chunk_preview_with_score(
+    chunks: Sequence[DocumentChunk],
+    scores: Sequence[float] | None = None,
+    limit: int = DEBUG_PREVIEW_LIMIT,
+) -> list[dict[str, Any]]:
+    """生成带 relevance_score 的 chunk 预览。
+
+    Args:
+        chunks: chunk 列表
+        scores: relevance_score 列表（长度应与 chunks 相同）
+        limit: 返回的最大数量
+
+    Returns:
+        chunk 预览列表，每个包含 chunk_id、source_url、heading_path、chunk_index、relevance_score
+    """
+    result = []
+    for i, chunk in enumerate(chunks[:limit]):
+        item = {
+            "chunk_id": str(chunk.id),
+            "source_url": chunk.source_url,
+            "heading_path": chunk.heading_path or "",
+            "chunk_index": chunk.chunk_index,
+        }
+        if scores and i < len(scores):
+            item["relevance_score"] = scores[i]
+        result.append(item)
+    return result
+
+
 def _get_stage_description(stage: str) -> str:
     """获取各阶段的描述文字"""
     descriptions = {
@@ -285,9 +314,22 @@ def _merge_chunks_by_id(*chunk_lists: Sequence[DocumentChunk]) -> list[DocumentC
     return merged
 
 
-async def _rerank(query: str, chunks: list[DocumentChunk]) -> list[DocumentChunk]:
+async def _rerank(
+    query: str,
+    chunks: list[DocumentChunk],
+) -> tuple[list[DocumentChunk], list[float]]:
+    """重排序 chunks。
+
+    Args:
+        query: 查询文本
+        chunks: 待重排序的 chunks
+
+    Returns:
+        (重排序后的 chunks, relevance_score 列表)
+    """
     if not chunks:
-        return chunks
+        return chunks, []
+
     try:
         client = _cohere_client()
         resp = await client.rerank(
@@ -296,10 +338,15 @@ async def _rerank(query: str, chunks: list[DocumentChunk]) -> list[DocumentChunk
             documents=[c.content for c in chunks],
             top_n=RERANK_TOP_N,
         )
-        return _filter_rerank_results(chunks, resp.results, settings.RAG_MIN_RERANK_SCORE)
+
+        # 提取分数并排序
+        scores = [result.relevance_score for result in resp.results]
+        ranked_chunks = _filter_rerank_results(chunks, resp.results, settings.RAG_MIN_RERANK_SCORE)
+
+        return ranked_chunks, scores[:len(ranked_chunks)]
     except Exception as e:
         logger.warning("Rerank failed, using original order: %s", e, exc_info=True)
-        return chunks[:RERANK_TOP_N]
+        return chunks[:RERANK_TOP_N], []
 
 
 def _filter_rerank_results(
@@ -459,6 +506,7 @@ async def stream_answer(
                     rerank_duration_ms=rerank_duration_ms,
                     generation_duration_ms=generation_duration_ms,
                 ),
+                conv_id=conv_id,
             )
         yield {"type": "error", "message": "对话不存在或无权访问"}
         return
@@ -481,6 +529,7 @@ async def stream_answer(
                     rerank_duration_ms=rerank_duration_ms,
                     generation_duration_ms=generation_duration_ms,
                 ),
+                conv_id=conv_id,
             )
         yield {
             "type": "error",
@@ -501,11 +550,34 @@ async def stream_answer(
                 "retrieval_query": retrieval_query,
                 "rewritten": retrieval_query != question,
                 "rewrite_duration_ms": rewrite_duration_ms,
+                "unit": {
+                    "rewrite_duration_ms": "毫秒",
+                },
             },
+            conv_id=conv_id,
         )
 
     # 向量化问题
+    embedding_start = perf_counter()
     [query_vec] = await generate_embeddings([retrieval_query])
+    embedding_duration_ms = _duration_ms(embedding_start, perf_counter())
+
+    if debug:
+        yield _build_debug_event(
+            "embedding",
+            {
+                "model": "text-embedding-3-small",
+                "dimension": len(query_vec[0]) if query_vec else 0,
+                "query_length": len(retrieval_query),
+                "duration_ms": embedding_duration_ms,
+                "unit": {
+                    "duration_ms": "毫秒",
+                    "dimension": "向量维度",
+                    "query_length": "字符数",
+                },
+            },
+            conv_id=conv_id,
+        )
 
     # 向量检索
     vector_start = perf_counter()
@@ -530,10 +602,17 @@ async def stream_answer(
                 "vector_candidates_count": vector_candidates_count,
                 "fts_candidates_count": fts_candidates_count,
                 "merged_candidates_count": merged_candidates_count,
-                "vector_candidates_preview": _debug_chunk_preview(vector_candidates),
-                "fts_candidates_preview": _debug_chunk_preview(fts_candidates),
-                "merged_candidates_preview": _debug_chunk_preview(candidates),
+                "vector_duration_ms": vector_duration_ms,
+                "fts_duration_ms": fts_duration_ms,
+                "unit": {
+                    "vector_candidates_count": "候选数",
+                    "fts_candidates_count": "候选数",
+                    "merged_candidates_count": "候选数",
+                    "vector_duration_ms": "毫秒",
+                    "fts_duration_ms": "毫秒",
+                },
             },
+            conv_id=conv_id,
         )
     if not candidates:
         _emit_rag_telemetry(
@@ -581,7 +660,7 @@ async def stream_answer(
 
     # Rerank
     rerank_start = perf_counter()
-    top_chunks = await _rerank(retrieval_query, candidates)
+    top_chunks, rerank_scores = await _rerank(retrieval_query, candidates)
     rerank_duration_ms = _duration_ms(rerank_start, perf_counter())
     rerank_candidates_count = len(top_chunks)
     if debug:
@@ -589,8 +668,13 @@ async def stream_answer(
             "rerank",
             {
                 "rerank_candidates_count": rerank_candidates_count,
-                "top_chunks_preview": _debug_chunk_preview(top_chunks),
+                "top_chunks": _debug_chunk_preview_with_score(top_chunks, rerank_scores),
+                "unit": {
+                    "relevance_score": "相关性分数 (0-1)",
+                    "rerank_candidates_count": "候选数",
+                },
             },
+            conv_id=conv_id,
         )
     if not top_chunks:
         _emit_rag_telemetry(
@@ -762,8 +846,11 @@ async def stream_answer(
             {
                 "citations_count": citations_count,
                 "citation_indices": [citation["index"] for citation in citations],
-                "citation_chunk_ids": [citation["chunk_id"] for citation in citations],
+                "unit": {
+                    "citations_count": "引用数",
+                },
             },
+            conv_id=conv_id,
         )
     yield {"type": "citations", "data": citations}
 
