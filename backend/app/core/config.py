@@ -108,6 +108,8 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def validate_infrastructure_urls(self) -> "Settings":
         """在所有字段加载后，处理跨字段的 fallback 逻辑。"""
+        import logging
+        logger = logging.getLogger(__name__)
 
         # 1. 自动推导 ALEMBIC_DATABASE_URL (同步驱动)
         if not self.ALEMBIC_DATABASE_URL:
@@ -124,6 +126,14 @@ class Settings(BaseSettings):
                 self.CELERY_BROKER_URL = f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/1"
                 if self.REDIS_PASSWORD:
                     self.CELERY_BROKER_URL = f"redis://:{self.REDIS_PASSWORD}@{self.REDIS_HOST}:{self.REDIS_PORT}/1"
+
+        # 启动时打印脱敏后的 Broker 地址，用于诊断 Railway 变量注入问题
+        broker_url = self.CELERY_BROKER_URL or "None"
+        if "@" in broker_url:
+            masked_url = broker_url.split("@")[-1]
+            logger.info(f"Celery Broker Host: {masked_url}")
+        else:
+            logger.info(f"Celery Broker URL: {broker_url}")
 
         return self
 
@@ -146,8 +156,8 @@ class Settings(BaseSettings):
         return regex or None
 
     model_config = SettingsConfigDict(
-        # 本地开发默认读取 backend/.env，容器环境下可直接由环境变量覆盖。
-        env_file=BASE_DIR / ".env",
+        # 确保环境变量优先级最高，忽略本地可能存在的 .env 干扰
+        env_file=BASE_DIR / ".env" if (BASE_DIR / ".env").exists() else None,
         env_file_encoding="utf-8",
         extra="ignore",
     )
