@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 import logging
 
 from starlette.middleware.cors import CORSMiddleware
@@ -17,28 +17,14 @@ from backend.app.db import engine
 setup_logging()
 logger = logging.getLogger(__name__)
 
-openapi_tags = [
-    # {
-    #     "name": "认证",
-    #     "description": "用于处理用户注册、登录、身份校验与账户访问。",
-    # },
-    #
-    # {
-    #     "name": "xx",
-    #     "description": "用于处理用户注册、登录、身份校验与账户访问。",
-    # },
-]
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-
-    logger.info("应用启动完成")
+    logger.info(f"应用启动中，监听端口: {settings.APP_PORT}")
+    logger.info(f"CORS 允许域: {settings.cors_allow_origins}")
     yield
     logger.info("应用关闭中")
     await engine.dispose()
     logger.info("数据库连接池已关闭")
-
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -46,12 +32,18 @@ app = FastAPI(
         "OfferPilot backend 当前先聚焦登录与注册能力，"
         "后续再逐步补充 JD、简历、分析和生成等业务模块。"
     ),
-    openapi_tags=openapi_tags,
+    openapi_tags=[],
     lifespan=lifespan,
     version=settings.APP_VERSION,
     debug=settings.DEBUG,
 )
 
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    logger.info(f"收到请求: {request.method} {request.url.path}")
+    response = await call_next(request)
+    logger.info(f"请求完成: {request.method} {request.url.path} - {response.status_code}")
+    return response
 
 @app.get("/")
 async def root():
