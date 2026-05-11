@@ -74,7 +74,9 @@ class Settings(BaseSettings):
 
     FIRECRAWL_API_KEY: str | None = None
     OPENAI_API_KEY: str | None = None
+    OPENAI_BASE_URL: str | None = None
     COHERE_API_KEY: str | None = None
+    COHERE_BASE_URL: str | None = None
     RAG_VECTOR_TOP_K: int = 20
     RAG_FTS_TOP_K: int = 20
     RAG_MIN_RERANK_SCORE: float = 0.15

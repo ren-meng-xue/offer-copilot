@@ -251,11 +251,17 @@ def _emit_rag_telemetry(payload: dict[str, Any]) -> None:
 
 
 def _openai_client() -> AsyncOpenAI:
-    return AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+    return AsyncOpenAI(
+        api_key=settings.OPENAI_API_KEY,
+        base_url=settings.OPENAI_BASE_URL,
+    )
 
 
 def _cohere_client() -> cohere.AsyncClientV2:
-    return cohere.AsyncClientV2(api_key=settings.COHERE_API_KEY)
+    return cohere.AsyncClientV2(
+        api_key=settings.COHERE_API_KEY,
+        base_url=settings.COHERE_BASE_URL,
+    )
 
 
 async def create_conversation(db: AsyncSession, user_id: int, knowledge_base_id: int):
