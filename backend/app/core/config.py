@@ -1,6 +1,7 @@
 from functools import lru_cache
 from pathlib import Path
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # 指向 backend 根目录，便于统一定位 .env。
@@ -76,6 +77,31 @@ class Settings(BaseSettings):
     S3_ACCESS_KEY_ID: str | None = None
     S3_SECRET_ACCESS_KEY: str | None = None
     S3_BUCKET_NAME: str | None = None
+
+    @staticmethod
+    def _normalize_postgres_url(value: str, driver_scheme: str) -> str:
+        """兼容 Railway 这类未显式声明驱动的 Postgres URL。"""
+        if "://" not in value:
+            return value
+
+        scheme, rest = value.split("://", 1)
+        if "+" in scheme:
+            return value
+
+        if scheme in {"postgres", "postgresql"}:
+            return f"{driver_scheme}://{rest}"
+
+        return value
+
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def normalize_database_url(cls, value: str) -> str:
+        return cls._normalize_postgres_url(str(value), "postgresql+asyncpg")
+
+    @field_validator("ALEMBIC_DATABASE_URL", mode="before")
+    @classmethod
+    def normalize_alembic_database_url(cls, value: str) -> str:
+        return cls._normalize_postgres_url(str(value), "postgresql+psycopg2")
 
     @property
     def cors_allow_origins(self) -> list[str]:
