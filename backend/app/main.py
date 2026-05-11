@@ -6,8 +6,11 @@ import logging
 
 from starlette.middleware.cors import CORSMiddleware
 
+from alembic import command
+from alembic.config import Config as AlembicConfig
+
 from backend.app.api.router import router as api_router
-from backend.app.core.config import settings
+from backend.app.core.config import settings, BASE_DIR
 from backend.app.core.cors import build_cors_middleware_options
 from backend.app.core.exception_handlers import register_exception_handlers
 from backend.app.core.logging import setup_logging
@@ -21,6 +24,18 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     logger.info(f"应用启动中，监听端口: {settings.APP_PORT}")
     logger.info(f"CORS 允许域: {settings.cors_allow_origins}")
+
+    # 启动时自动运行数据库迁移，确保表结构始终与代码一致。
+    try:
+        alembic_ini = BASE_DIR / "alembic.ini"
+        alembic_cfg = AlembicConfig(str(alembic_ini))
+        # 防止 alembic 读取 ini 中硬编码的本地数据库地址。
+        alembic_cfg.set_main_option("sqlalchemy.url", settings.ALEMBIC_DATABASE_URL)
+        command.upgrade(alembic_cfg, "head")
+        logger.info("数据库迁移完成")
+    except Exception:
+        logger.exception("数据库迁移失败，继续启动服务")
+
     yield
     logger.info("应用关闭中")
     await engine.dispose()
