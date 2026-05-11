@@ -53,6 +53,16 @@ app = FastAPI(
 )
 
 
+@app.get("/")
+async def root():
+    return {"message": "OfferPilot API is running"}
+
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
+
+
 # 配置 CORS 中间件，允许显式声明的前端来源访问。
 app.add_middleware(CORSMiddleware, **build_cors_middleware_options(settings))
 # 应用级基础能力先挂载，再注册具体业务路由。

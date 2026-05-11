@@ -90,7 +90,6 @@ class Settings(BaseSettings):
         scheme, rest = value.split("://", 1)
         if "+" in scheme:
             # 如果已经带了驱动（如 postgresql+asyncpg），则按原样返回，但确保是 postgresql 前缀。
-            # asyncpg 有时只认 postgresql+asyncpg，不认 postgres+asyncpg。
             if scheme.startswith("postgres+") or scheme.startswith("postgresql+"):
                 driver = scheme.split("+")[1]
                 return f"postgresql+{driver}://{rest}"
@@ -117,18 +116,13 @@ class Settings(BaseSettings):
             )
 
         # 2. 自动处理 Redis 相关的 fallback
-        # 如果提供了 REDIS_URL (Railway 默认提供)，则优先使用它。
         if self.REDIS_URL:
-            # 简单校验，如果是 redis:// 或 rediss:// 开头
             if not self.CELERY_BROKER_URL:
-                # Celery 默认使用 REDIS_URL 的 DB 0 或由 URL 指定。
                 self.CELERY_BROKER_URL = self.REDIS_URL
             if not self.CELERY_RESULT_BACKEND:
                 self.CELERY_RESULT_BACKEND = self.REDIS_URL
         else:
-            # 回退到传统的 HOST/PORT 组合
             if not self.CELERY_BROKER_URL:
-                # 默认给 Celery 分配 DB 1 避免与主缓存冲突。
                 self.CELERY_BROKER_URL = f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/1"
                 if self.REDIS_PASSWORD:
                     self.CELERY_BROKER_URL = f"redis://:{self.REDIS_PASSWORD}@{self.REDIS_HOST}:{self.REDIS_PORT}/1"
