@@ -26,6 +26,9 @@ services:
       REDIS_HOST: redis
       # Redis 容器内部端口。
       REDIS_PORT: 6379
+    # 服务器上的 backend/.env 负责注入 OpenAI、Firecrawl、SMTP、S3 等运行时密钥。
+    env_file:
+      - ./backend/.env
     # 等待依赖服务健康后再启动当前服务。
     depends_on:
       # 依赖 PostgreSQL。
@@ -59,6 +62,9 @@ services:
       REDIS_HOST: redis
       # Redis 容器内部端口。
       REDIS_PORT: 6379
+    # 服务器上的 backend/.env 负责注入 Celery 任务所需的运行时密钥。
+    env_file:
+      - ./backend/.env
     # 等待依赖服务健康后再启动当前服务。
     depends_on:
       # 依赖 PostgreSQL。
