@@ -7,7 +7,7 @@ celery_app = Celery(
     # 应用名，用于 worker 日志和任务命名空间。
     "offer_copilot",
     broker=settings.CELERY_BROKER_URL, #表示任务消息发到哪里，通常是redis
-    backend=settings.CELERY_RESULT_BACKEND,# 表示任务结果和状态存到哪里
+    backend=None, # 强制禁用结果后端，防止重连限制超限导致崩溃
     # 显式加载知识库异步任务，避免 worker 启动后找不到任务。
     include=["backend.app.tasks.knowledge_tasks", "backend.app.tasks.qa_tasks"],
 )
