@@ -21,7 +21,12 @@ class Settings(BaseSettings):
     # Web 服务运行配置。
     APP_HOST: str = "0.0.0.0"
     APP_PORT: int = 8000
-    BACKEND_CORS_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000"
+    BACKEND_CORS_ORIGINS: str = (
+        "http://localhost:3000,"
+        "http://127.0.0.1:3000,"
+        "https://offer-copilot-frontend.vercel.app"
+    )
+    BACKEND_CORS_ORIGIN_REGEX: str | None = None
 
     # 基础设施配置，后续 auth、数据库和任务系统都会依赖这些变量。
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5433/offercopilot"
@@ -80,6 +85,15 @@ class Settings(BaseSettings):
             for origin in self.BACKEND_CORS_ORIGINS.split(",")
             if origin.strip()
         ]
+
+    @property
+    def cors_allow_origin_regex(self) -> str | None:
+        """返回可选的 CORS 来源正则，空值统一折叠为 None。"""
+        if self.BACKEND_CORS_ORIGIN_REGEX is None:
+            return None
+
+        regex = self.BACKEND_CORS_ORIGIN_REGEX.strip()
+        return regex or None
 
     model_config = SettingsConfigDict(
         # 本地开发默认读取 backend/.env，容器环境下可直接由环境变量覆盖。

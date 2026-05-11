@@ -8,6 +8,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from backend.app.api.router import router as api_router
 from backend.app.core.config import settings
+from backend.app.core.cors import build_cors_middleware_options
 from backend.app.core.exception_handlers import register_exception_handlers
 from backend.app.core.logging import setup_logging
 from backend.app.db import engine
@@ -27,7 +28,6 @@ openapi_tags = [
     #     "description": "用于处理用户注册、登录、身份校验与账户访问。",
     # },
 ]
-
 
 
 @asynccontextmanager
@@ -53,15 +53,8 @@ app = FastAPI(
 )
 
 
-#配置CORS中间件，允许所有来源的跨域请求
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.cors_allow_origins,
-    allow_methods=["*"],  # 允许所有HTTP方法
-    allow_headers=["*"],  # 允许所有HTTP头
-    allow_credentials=True,  # 允许携带凭证（如Cookies）
-)
+# 配置 CORS 中间件，允许显式声明的前端来源访问。
+app.add_middleware(CORSMiddleware, **build_cors_middleware_options(settings))
 # 应用级基础能力先挂载，再注册具体业务路由。
 register_exception_handlers(app)
 app.include_router(api_router)
