@@ -75,6 +75,12 @@ class Settings(BaseSettings):
     FIRECRAWL_API_KEY: str | None = None
     OPENAI_API_KEY: str | None = None
     COHERE_API_KEY: str | None = None
+    RAG_VECTOR_TOP_K: int = 20
+    RAG_FTS_TOP_K: int = 20
+    RAG_MIN_RERANK_SCORE: float = 0.15
+    RAG_QUERY_REWRITE_ENABLED: bool = True
+    RAG_QUERY_REWRITE_MODEL: str = "gpt-4o-mini"
+    RAG_TELEMETRY_ENABLED: bool = True
     RAG_DEBUG_ENABLED: bool = False  # 是否开启 RAG debug 输出
     S3_ENDPOINT_URL: str | None = None
     S3_ACCESS_KEY_ID: str | None = None
