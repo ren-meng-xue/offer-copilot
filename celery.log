@@ -1,0 +1,31 @@
+ 
+ -------------- celery@localhost v5.6.3 (recovery)
+--- ***** ----- 
+-- ******* ---- macOS-26.4.1-x86_64-i386-64bit 2026-05-11 18:50:59
+- *** --- * --- 
+- ** ---------- [config]
+- ** ---------- .> app:         offer_copilot:0x10e6c60f0
+- ** ---------- .> transport:   redis://localhost:6379/1
+- ** ---------- .> results:     disabled://
+- *** --- * --- .> concurrency: 1 (prefork)
+-- ******* ---- .> task events: OFF (enable -E to monitor tasks in this worker)
+--- ***** ----- 
+ -------------- [queues]
+                .> celery           exchange=celery(direct) key=celery
+                
+
+[tasks]
+  . knowledge.ingest
+  . qa.summarize
+
+[2026-05-11 18:50:59,910: INFO/MainProcess] Connected to redis://localhost:6379/1
+[2026-05-11 18:50:59,930: INFO/MainProcess] mingle: searching for neighbors
+[2026-05-11 18:51:00,955: INFO/MainProcess] mingle: sync with 1 nodes
+[2026-05-11 18:51:00,957: INFO/MainProcess] mingle: sync complete
+[2026-05-11 18:51:01,009: INFO/MainProcess] celery@localhost ready.
+[2026-05-11 18:51:01,254: WARNING/MainProcess] Substantial drift from celery@1f8d3a14db2c may mean clocks are out of sync.  Current drift is 28800 seconds.  [orig: 2026-05-11 18:51:01.253601 recv: 2026-05-11 10:51:01.239436]
+
+SIGHUP not supported: Restarting with SIGHUP is unstable on this platform!
+
+SIGHUP not supported: Restarting with SIGHUP is unstable on this platform!
+[2026-05-11 18:52:29,351: ERROR/MainProcess] Process 'ForkPoolWorker-1' pid:49633 exited with 'exitcode 70'

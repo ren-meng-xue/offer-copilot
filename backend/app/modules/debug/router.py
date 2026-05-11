@@ -15,7 +15,7 @@ router = APIRouter(prefix="/debug", tags=["诊断"])
 
 @router.get("/health-check")
 async def debug_health_check(db: AsyncSession = Depends(get_db)):
-    """诊断端点：检查 DB、Redis、KB #9 状态。不需要认证。"""
+    """诊断端点：检查 DB、Redis、Celery Worker 和任务状态。"""
 
     results: dict = {}
 
@@ -40,10 +40,23 @@ async def debug_health_check(db: AsyncSession = Depends(get_db)):
                 try:
                     queue_len = r.llen("celery")
                     results["celery_queue_pending_tasks"] = queue_len
+                    # 额外检查是否有其他 queue
+                    results["all_keys_sample"] = r.keys("*")[:20]
                 except Exception:
                     results["celery_queue_pending_tasks"] = "无法读取"
             else:
                 results["redis"] = "ping 返回 False"
+            
+            # 3. 检查 Celery Worker 状态 (仅在有 broker 时)
+            try:
+                from backend.app.tasks import celery_app
+                i = celery_app.control.inspect()
+                active = i.active()
+                results["celery_active_workers"] = list(active.keys()) if active else []
+                results["celery_registered_tasks"] = i.registered()
+            except Exception as exc:
+                results["celery_worker_check_error"] = str(exc)
+            
             r.close()
         else:
             results["redis"] = "CELERY_BROKER_URL 未设置"

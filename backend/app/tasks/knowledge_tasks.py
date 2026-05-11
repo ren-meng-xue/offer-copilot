@@ -18,11 +18,11 @@ def _get_sync_redis() -> sync_redis.Redis:
     """返回 Celery worker 侧使用的同步 Redis 客户端。
 
     这里只需要简单读写任务状态，不引入异步 Redis 依赖。
+    优先使用 CELERY_BROKER_URL 以确保跨容器部署时能连接到正确的 Redis 实例。
     """
 
     return sync_redis.from_url(
-        f"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}/{settings.REDIS_DB}",
-        password=settings.REDIS_PASSWORD,
+        settings.CELERY_BROKER_URL,
         decode_responses=True,
     )
 

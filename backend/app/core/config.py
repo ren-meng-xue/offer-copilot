@@ -83,19 +83,15 @@ class Settings(BaseSettings):
 
     @staticmethod
     def _normalize_postgres_url(value: str, driver_scheme: str) -> str:
-        """兼容 Railway 这类未显式声明驱动的 Postgres URL。"""
+        """统一处理 Postgres URL，确保带上指定的驱动前缀（如 postgresql+asyncpg）。
+        主要兼容 Railway 等平台提供的原始 postgres:// 格式。
+        """
         if "://" not in value:
             return value
 
+        # 统一把所有以 postgres 或 postgresql 开头的 scheme 都替换为目标 driver_scheme
         scheme, rest = value.split("://", 1)
-        if "+" in scheme:
-            # 如果已经带了驱动（如 postgresql+asyncpg），则按原样返回，但确保是 postgresql 前缀。
-            if scheme.startswith("postgres+") or scheme.startswith("postgresql+"):
-                driver = scheme.split("+")[1]
-                return f"postgresql+{driver}://{rest}"
-            return value
-
-        if scheme in {"postgres", "postgresql"}:
+        if scheme.startswith("postgres"):
             return f"{driver_scheme}://{rest}"
 
         return value

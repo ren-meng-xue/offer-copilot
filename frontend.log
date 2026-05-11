@@ -1,0 +1,20 @@
+
+> frontend@0.1.0 dev /Users/xuebao/learn/AI项目/offer-copilot/frontend
+> next dev --webpack
+
+▲ Next.js 16.2.4 (webpack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.2.217:3000
+- Environments: .env.local
+✓ Ready in 627ms
+
+ GET /auth/login 200 in 2.7s (next.js: 1964ms, application-code: 703ms)
+ GET / 307 in 1330ms (next.js: 1224ms, application-code: 106ms)
+ GET /chat 200 in 988ms (next.js: 884ms, application-code: 104ms)
+ GET /auth/login 200 in 131ms (next.js: 4ms, application-code: 127ms)
+ GET /auth/login 200 in 283ms (next.js: 13ms, application-code: 271ms)
+ GET /auth/login 200 in 113ms (next.js: 1543µs, application-code: 111ms)
+ GET / 200 in 46ms (next.js: 21ms, application-code: 25ms)
+ GET /chat 200 in 33ms (next.js: 4ms, application-code: 29ms)
+ GET /chat 200 in 20ms (next.js: 1785µs, application-code: 18ms)
+ GET /knowledge 200 in 747ms (next.js: 709ms, application-code: 37ms)

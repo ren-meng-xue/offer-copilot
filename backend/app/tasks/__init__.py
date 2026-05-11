@@ -7,8 +7,7 @@ celery_app = Celery(
     # 应用名，用于 worker 日志和任务命名空间。
     "offer_copilot",
     broker=settings.CELERY_BROKER_URL, #表示任务消息发到哪里，通常是redis
-    backend=None, # 强制禁用结果后端，防止重连限制超限导致崩溃
-    # 显式加载知识库异步任务，避免 worker 启动后找不到任务。
+    backend=settings.CELERY_RESULT_BACKEND,    # 显式加载知识库异步任务，避免 worker 启动后找不到任务。
     include=["backend.app.tasks.knowledge_tasks", "backend.app.tasks.qa_tasks"],
 )
 
@@ -28,7 +27,7 @@ celery_app.conf.update(
     # 兼容 Celery 5.x 及后续版本。
     broker_connection_retry_on_startup=True,
     # 稳定性增强：由于我们手动在业务库/Redis 中维护状态，默认关闭 Celery 自带的 result backend 以节省开销和防止重连问题。
-    task_ignore_result=True,
+    task_ignore_result=False,
     # Redis 稳定性配置：定期健康检查，防止连接池中的长连接因超时被服务端关闭。
     redis_backend_health_check_interval=30,
     # 传输层配置。
