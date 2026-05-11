@@ -127,17 +127,6 @@ class Settings(BaseSettings):
                 if self.REDIS_PASSWORD:
                     self.CELERY_BROKER_URL = f"redis://:{self.REDIS_PASSWORD}@{self.REDIS_HOST}:{self.REDIS_PORT}/1"
 
-        # 暴力诊断：如果是生产环境但还在用 localhost，发出尖锐警告
-        is_localhost = "localhost" in (self.CELERY_BROKER_URL or "") or "127.0.0.1" in (self.CELERY_BROKER_URL or "")
-        if self.APP_ENV == "production" and is_localhost:
-            print(f"!!! FATAL CONFIG ERROR: In production but CELERY_BROKER_URL is using localhost: {self.CELERY_BROKER_URL}")
-            print(f"!!! Detected env vars: REDIS_URL={self.REDIS_URL}, REDIS_HOST={self.REDIS_HOST}")
-
-        # 确保诊断信息能打到 stdout
-        broker_url = self.CELERY_BROKER_URL or "None"
-        masked_url = broker_url.split("@")[-1] if "@" in broker_url else broker_url
-        print(f"--- [DIAGNOSTIC] Current Celery Broker Host: {masked_url} ---")
-
         return self
 
     @property

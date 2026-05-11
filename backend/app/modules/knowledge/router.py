@@ -1,3 +1,4 @@
+import logging
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -15,6 +16,8 @@ from backend.app.schemas.knowledge import (
 )
 from backend.app.services import knowledge_service
 from backend.app.tasks.knowledge_tasks import ingest_knowledge
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/knowledge", tags=["知识库"])
 
@@ -36,8 +39,6 @@ async def create_knowledge(
     try:
         ingest_knowledge.delay(result.knowledge_base_id, task_id, str(body.source_url))
     except Exception as exc:
-        import logging
-        logger = logging.getLogger(__name__)
         logger.exception("Celery task enqueue failed: %s", exc)
         await knowledge_service.update_knowledge_status(
             db,
@@ -73,7 +74,7 @@ async def get_knowledge_status(
     return Response.success(data=result)
 
 
-@router.delete("/{kb_id}", response_model=Response[None])
+@router.get("/{kb_id}/raw", response_model=Response[None])
 async def delete_knowledge(
     kb_id: int,
     db: AsyncSession = Depends(get_db),
