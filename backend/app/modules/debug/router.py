@@ -119,14 +119,19 @@ async def debug_health_check(db: AsyncSession = Depends(get_db)):
 
 @router.post("/run-migrations")
 async def debug_run_migrations():
-    """手动触发数据库迁移（建表）。使用 SQLAlchemy create_all 确保和 API 连同一个库。"""
+    """手动触发数据库迁移（建表）。"""
 
     from backend.app.db import engine as db_engine
     from backend.app.db import Base
+    import backend.app.models  # noqa: F401 确保所有模型注册到 Base.metadata
 
     try:
+        tables_before = Base.metadata.tables.keys()
         async with db_engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
-        return {"status": "成功", "message": "表创建完成"}
+        return {
+            "status": "成功",
+            "tables_created": list(Base.metadata.tables.keys()),
+        }
     except Exception as exc:
         return {"status": "失败", "error": str(exc)[:500]}
