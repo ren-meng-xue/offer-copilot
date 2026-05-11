@@ -119,16 +119,11 @@ class Settings(BaseSettings):
         if self.REDIS_URL:
             if not self.CELERY_BROKER_URL:
                 self.CELERY_BROKER_URL = self.REDIS_URL
-            if not self.CELERY_RESULT_BACKEND:
-                self.CELERY_RESULT_BACKEND = self.REDIS_URL
         else:
             if not self.CELERY_BROKER_URL:
                 self.CELERY_BROKER_URL = f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/1"
                 if self.REDIS_PASSWORD:
                     self.CELERY_BROKER_URL = f"redis://:{self.REDIS_PASSWORD}@{self.REDIS_HOST}:{self.REDIS_PORT}/1"
-
-            if not self.CELERY_RESULT_BACKEND:
-                self.CELERY_RESULT_BACKEND = self.CELERY_BROKER_URL
 
         return self
 

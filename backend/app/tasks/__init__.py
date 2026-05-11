@@ -22,4 +22,16 @@ celery_app.conf.update(
     # 后台任务统一使用 UTC，避免跨环境时区偏差。
     timezone="UTC",
     enable_utc=True,
+    # 稳定性增强：启动时如果 broker 不可用，自动重试而不是直接报错退出。
+    # 兼容 Celery 5.x 及后续版本。
+    broker_connection_retry_on_startup=True,
+    # 稳定性增强：由于我们手动在业务库/Redis 中维护状态，默认关闭 Celery 自带的 result backend 以节省开销和防止重连问题。
+    task_ignore_result=True,
+    # Redis 稳定性配置：定期健康检查，防止连接池中的长连接因超时被服务端关闭。
+    redis_backend_health_check_interval=30,
+    # 传输层配置。
+    broker_transport_options={
+        "visibility_timeout": 3600,  # 1小时未确认的任务会重回队列（避免长任务被误判为失败）
+        "max_retries": 10,
+    },
 )

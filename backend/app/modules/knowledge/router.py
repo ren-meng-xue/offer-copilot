@@ -36,6 +36,9 @@ async def create_knowledge(
     try:
         ingest_knowledge.delay(result.knowledge_base_id, task_id, str(body.source_url))
     except Exception as exc:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.exception("Celery task enqueue failed: %s", exc)
         await knowledge_service.update_knowledge_status(
             db,
             result.knowledge_base_id,

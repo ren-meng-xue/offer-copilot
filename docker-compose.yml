@@ -33,7 +33,6 @@ services:
       REDIS_PORT: 6379
       # Celery 在容器网络内必须连接 redis 服务名，不能使用 localhost。
       CELERY_BROKER_URL: redis://redis:6379/1
-      CELERY_RESULT_BACKEND: redis://redis:6379/1
     # 等待依赖服务健康后再启动当前服务。
     depends_on:
       # 依赖 PostgreSQL。
@@ -73,7 +72,6 @@ services:
       REDIS_PORT: 6379
       # Celery worker 也通过 compose 服务名访问 Redis。
       CELERY_BROKER_URL: redis://redis:6379/1
-      CELERY_RESULT_BACKEND: redis://redis:6379/1
     # 等待依赖服务健康后再启动当前服务。
     depends_on:
       # 依赖 PostgreSQL。
