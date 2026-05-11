@@ -102,6 +102,17 @@ describe("readSseStream", () => {
     ]);
   });
 
+  it("parses ping events", async () => {
+    const events: SseEvent[] = [];
+
+    await readSseStream(
+      createSseResponse('data: {"type":"ping"}\n\n'),
+      (event) => events.push(event),
+    );
+
+    expect(events).toEqual([{ type: "ping" }]);
+  });
+
   it("stops after error and ignores later frames", async () => {
     const events: SseEvent[] = [];
 

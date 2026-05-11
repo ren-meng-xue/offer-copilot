@@ -9,6 +9,7 @@ export type Citation = {
 export type SseEvent =
   | { type: "token"; content: string }
   | { type: "citations"; data: Citation[] }
+  | { type: "ping" }
   | { type: "done" }
   | { type: "error"; code?: string; message: string };
 
@@ -166,6 +167,10 @@ function parseEvent(payload: unknown): SseEvent {
       type: "citations",
       data: citations,
     };
+  }
+
+  if (payload.type === "ping") {
+    return { type: "ping" };
   }
 
   if (payload.type === "done") {

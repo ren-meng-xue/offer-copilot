@@ -472,176 +472,156 @@ async def stream_answer(
     *,
     debug: bool = False,
 ) -> AsyncGenerator[dict[str, Any], None]:
+    yield {"type": "ping"}
     debug = debug and settings.DEBUG
     total_start = perf_counter()
-    rewrite_duration_ms = 0
-    vector_duration_ms = 0
-    fts_duration_ms = 0
-    rerank_duration_ms = 0
-    generation_duration_ms = 0
-    vector_candidates_count = 0
-    fts_candidates_count = 0
-    merged_candidates_count = 0
-    rerank_candidates_count = 0
-    citations_count = 0
-    retrieval_query = question
-
-    conv = await qa_repository.get_conversation_by_id(db, conv_id)
-    if conv is None or conv.user_id != user_id:
-        if debug:
-            yield _build_debug_event(
-                "terminal_error",
-                _build_debug_error_data(
-                    code="conversation_not_found",
-                    message="对话不存在或无权访问",
-                    retrieval_query=retrieval_query,
-                    vector_candidates_count=vector_candidates_count,
-                    fts_candidates_count=fts_candidates_count,
-                    merged_candidates_count=merged_candidates_count,
-                    rerank_candidates_count=rerank_candidates_count,
-                    citations_count=citations_count,
-                    rewrite_duration_ms=rewrite_duration_ms,
-                    vector_duration_ms=vector_duration_ms,
-                    fts_duration_ms=fts_duration_ms,
-                    rerank_duration_ms=rerank_duration_ms,
-                    generation_duration_ms=generation_duration_ms,
-                ),
-                conv_id=conv_id,
-            )
-        yield {"type": "error", "message": "对话不存在或无权访问"}
-        return
-    if conv.knowledge_base_id is None:
-        if debug:
-            yield _build_debug_event(
-                "terminal_error",
-                _build_debug_error_data(
-                    code="conversation_scope_missing",
-                    message="当前会话未绑定知识库，请新建会话",
-                    retrieval_query=retrieval_query,
-                    vector_candidates_count=vector_candidates_count,
-                    fts_candidates_count=fts_candidates_count,
-                    merged_candidates_count=merged_candidates_count,
-                    rerank_candidates_count=rerank_candidates_count,
-                    citations_count=citations_count,
-                    rewrite_duration_ms=rewrite_duration_ms,
-                    vector_duration_ms=vector_duration_ms,
-                    fts_duration_ms=fts_duration_ms,
-                    rerank_duration_ms=rerank_duration_ms,
-                    generation_duration_ms=generation_duration_ms,
-                ),
-                conv_id=conv_id,
-            )
-        yield {
-            "type": "error",
-            "code": "conversation_scope_missing",
-            "message": "当前会话未绑定知识库，请新建会话",
-        }
-        return
-
-    recent = await qa_repository.get_recent_messages(db, conv_id, limit=KEEP_RECENT)
-    rewrite_start = perf_counter()
-    retrieval_query = await _rewrite_query(question, recent, conv.summary)
-    rewrite_duration_ms = _duration_ms(rewrite_start, perf_counter())
-    if debug:
-        yield _build_debug_event(
-            "query_rewrite",
-            {
-                "question": question,
-                "retrieval_query": retrieval_query,
-                "rewritten": retrieval_query != question,
-                "rewrite_duration_ms": rewrite_duration_ms,
-                "unit": {
-                    "rewrite_duration_ms": "毫秒",
-                },
-            },
-            conv_id=conv_id,
-        )
-
-    # 向量化问题
-    embedding_start = perf_counter()
-    [query_vec] = await generate_embeddings([retrieval_query])
-    embedding_duration_ms = _duration_ms(embedding_start, perf_counter())
-
-    if debug:
-        yield _build_debug_event(
-            "embedding",
-            {
-                "model": "text-embedding-3-small",
-                "dimension": len(query_vec[0]) if query_vec else 0,
-                "query_length": len(retrieval_query),
-                "duration_ms": embedding_duration_ms,
-                "unit": {
-                    "duration_ms": "毫秒",
-                    "dimension": "向量维度",
-                    "query_length": "字符数",
-                },
-            },
-            conv_id=conv_id,
-        )
-
-    # 向量检索
-    vector_start = perf_counter()
-    vector_candidates = await _vector_search(db, user_id, conv.knowledge_base_id, query_vec)
-    vector_duration_ms = _duration_ms(vector_start, perf_counter())
-    vector_candidates_count = len(vector_candidates)
     try:
-        fts_start = perf_counter()
-        fts_candidates = await _fts_search(db, user_id, conv.knowledge_base_id, retrieval_query)
-        fts_duration_ms = _duration_ms(fts_start, perf_counter())
-    except Exception as e:
-        logger.warning("FTS search failed: %s", e, exc_info=True)
-        fts_candidates = []
+        rewrite_duration_ms = 0
+        vector_duration_ms = 0
         fts_duration_ms = 0
-    fts_candidates_count = len(fts_candidates)
-    candidates = _merge_chunks_by_id(vector_candidates, fts_candidates)
-    merged_candidates_count = len(candidates)
-    if debug:
-        yield _build_debug_event(
-            "retrieval",
-            {
-                "vector_candidates_count": vector_candidates_count,
-                "fts_candidates_count": fts_candidates_count,
-                "merged_candidates_count": merged_candidates_count,
-                "vector_duration_ms": vector_duration_ms,
-                "fts_duration_ms": fts_duration_ms,
-                "unit": {
-                    "vector_candidates_count": "候选数",
-                    "fts_candidates_count": "候选数",
-                    "merged_candidates_count": "候选数",
-                    "vector_duration_ms": "毫秒",
-                    "fts_duration_ms": "毫秒",
-                },
-            },
-            conv_id=conv_id,
-        )
-    if not candidates:
-        _emit_rag_telemetry(
-            _build_rag_telemetry_payload(
-                conversation_id=conv_id,
-                knowledge_base_id=conv.knowledge_base_id,
-                question=question,
-                retrieval_query=retrieval_query,
-                vector_candidates_count=vector_candidates_count,
-                fts_candidates_count=fts_candidates_count,
-                merged_candidates_count=merged_candidates_count,
-                rerank_candidates_count=0,
-                citations_count=0,
-                rewrite_duration_ms=rewrite_duration_ms,
-                vector_duration_ms=vector_duration_ms,
-                fts_duration_ms=fts_duration_ms,
-                rerank_duration_ms=0,
-                generation_duration_ms=0,
-                total_duration_ms=_duration_ms(total_start, perf_counter()),
-                outcome="error",
-                error_code="no_knowledge_base",
-            )
-        )
+        rerank_duration_ms = 0
+        generation_duration_ms = 0
+        vector_candidates_count = 0
+        fts_candidates_count = 0
+        merged_candidates_count = 0
+        rerank_candidates_count = 0
+        citations_count = 0
+        retrieval_query = question
+
+        conv = await qa_repository.get_conversation_by_id(db, conv_id)
+        if conv is None or conv.user_id != user_id:
+            if debug:
+                yield _build_debug_event(
+                    "terminal_error",
+                    _build_debug_error_data(
+                        code="conversation_not_found",
+                        message="对话不存在或无权访问",
+                        retrieval_query=retrieval_query,
+                        vector_candidates_count=vector_candidates_count,
+                        fts_candidates_count=fts_candidates_count,
+                        merged_candidates_count=merged_candidates_count,
+                        rerank_candidates_count=rerank_candidates_count,
+                        citations_count=citations_count,
+                        rewrite_duration_ms=rewrite_duration_ms,
+                        vector_duration_ms=vector_duration_ms,
+                        fts_duration_ms=fts_duration_ms,
+                        rerank_duration_ms=rerank_duration_ms,
+                        generation_duration_ms=generation_duration_ms,
+                    ),
+                    conv_id=conv_id,
+                )
+            yield {"type": "error", "message": "对话不存在或无权访问"}
+            return
+        if conv.knowledge_base_id is None:
+            if debug:
+                yield _build_debug_event(
+                    "terminal_error",
+                    _build_debug_error_data(
+                        code="conversation_scope_missing",
+                        message="当前会话未绑定知识库，请新建会话",
+                        retrieval_query=retrieval_query,
+                        vector_candidates_count=vector_candidates_count,
+                        fts_candidates_count=fts_candidates_count,
+                        merged_candidates_count=merged_candidates_count,
+                        rerank_candidates_count=rerank_candidates_count,
+                        citations_count=citations_count,
+                        rewrite_duration_ms=rewrite_duration_ms,
+                        vector_duration_ms=vector_duration_ms,
+                        fts_duration_ms=fts_duration_ms,
+                        rerank_duration_ms=rerank_duration_ms,
+                        generation_duration_ms=generation_duration_ms,
+                    ),
+                    conv_id=conv_id,
+                )
+            yield {
+                "type": "error",
+                "code": "conversation_scope_missing",
+                "message": "当前会话未绑定知识库，请新建会话",
+            }
+            return
+
+        recent = await qa_repository.get_recent_messages(db, conv_id, limit=KEEP_RECENT)
+        rewrite_start = perf_counter()
+        retrieval_query = await _rewrite_query(question, recent, conv.summary)
+        rewrite_duration_ms = _duration_ms(rewrite_start, perf_counter())
         if debug:
             yield _build_debug_event(
-                "terminal_error",
-                _build_debug_error_data(
-                    code="no_knowledge_base",
-                    message="请先导入知识库",
+                "query_rewrite",
+                {
+                    "question": question,
+                    "retrieval_query": retrieval_query,
+                    "rewritten": retrieval_query != question,
+                    "rewrite_duration_ms": rewrite_duration_ms,
+                    "unit": {
+                        "rewrite_duration_ms": "毫秒",
+                    },
+                },
+                conv_id=conv_id,
+            )
+
+        # 向量化问题
+        embedding_start = perf_counter()
+        [query_vec] = await generate_embeddings([retrieval_query])
+        embedding_duration_ms = _duration_ms(embedding_start, perf_counter())
+
+        if debug:
+            yield _build_debug_event(
+                "embedding",
+                {
+                    "model": "text-embedding-3-small",
+                    "dimension": len(query_vec[0]) if query_vec else 0,
+                    "query_length": len(retrieval_query),
+                    "duration_ms": embedding_duration_ms,
+                    "unit": {
+                        "duration_ms": "毫秒",
+                        "dimension": "向量维度",
+                        "query_length": "字符数",
+                    },
+                },
+                conv_id=conv_id,
+            )
+
+        # 向量检索
+        vector_start = perf_counter()
+        vector_candidates = await _vector_search(db, user_id, conv.knowledge_base_id, query_vec)
+        vector_duration_ms = _duration_ms(vector_start, perf_counter())
+        vector_candidates_count = len(vector_candidates)
+        try:
+            fts_start = perf_counter()
+            fts_candidates = await _fts_search(db, user_id, conv.knowledge_base_id, retrieval_query)
+            fts_duration_ms = _duration_ms(fts_start, perf_counter())
+        except Exception as e:
+            logger.warning("FTS search failed: %s", e, exc_info=True)
+            fts_candidates = []
+            fts_duration_ms = 0
+        fts_candidates_count = len(fts_candidates)
+        candidates = _merge_chunks_by_id(vector_candidates, fts_candidates)
+        merged_candidates_count = len(candidates)
+        if debug:
+            yield _build_debug_event(
+                "retrieval",
+                {
+                    "vector_candidates_count": vector_candidates_count,
+                    "fts_candidates_count": fts_candidates_count,
+                    "merged_candidates_count": merged_candidates_count,
+                    "vector_duration_ms": vector_duration_ms,
+                    "fts_duration_ms": fts_duration_ms,
+                    "unit": {
+                        "vector_candidates_count": "候选数",
+                        "fts_candidates_count": "候选数",
+                        "merged_candidates_count": "候选数",
+                        "vector_duration_ms": "毫秒",
+                        "fts_duration_ms": "毫秒",
+                    },
+                },
+                conv_id=conv_id,
+            )
+        if not candidates:
+            _emit_rag_telemetry(
+                _build_rag_telemetry_payload(
+                    conversation_id=conv_id,
+                    knowledge_base_id=conv.knowledge_base_id,
+                    question=question,
                     retrieval_query=retrieval_query,
                     vector_candidates_count=vector_candidates_count,
                     fts_candidates_count=fts_candidates_count,
@@ -653,57 +633,57 @@ async def stream_answer(
                     fts_duration_ms=fts_duration_ms,
                     rerank_duration_ms=0,
                     generation_duration_ms=0,
-                ),
+                    total_duration_ms=_duration_ms(total_start, perf_counter()),
+                    outcome="error",
+                    error_code="no_knowledge_base",
+                )
             )
-        yield {"type": "error", "message": "请先导入知识库"}
-        return
+            if debug:
+                yield _build_debug_event(
+                    "terminal_error",
+                    _build_debug_error_data(
+                        code="no_knowledge_base",
+                        message="请先导入知识库",
+                        retrieval_query=retrieval_query,
+                        vector_candidates_count=vector_candidates_count,
+                        fts_candidates_count=fts_candidates_count,
+                        merged_candidates_count=merged_candidates_count,
+                        rerank_candidates_count=0,
+                        citations_count=0,
+                        rewrite_duration_ms=rewrite_duration_ms,
+                        vector_duration_ms=vector_duration_ms,
+                        fts_duration_ms=fts_duration_ms,
+                        rerank_duration_ms=0,
+                        generation_duration_ms=0,
+                    ),
+                )
+            yield {"type": "error", "message": "请先导入知识库"}
+            return
 
-    # Rerank
-    rerank_start = perf_counter()
-    top_chunks, rerank_scores = await _rerank(retrieval_query, candidates)
-    rerank_duration_ms = _duration_ms(rerank_start, perf_counter())
-    rerank_candidates_count = len(top_chunks)
-    if debug:
-        yield _build_debug_event(
-            "rerank",
-            {
-                "rerank_candidates_count": rerank_candidates_count,
-                "top_chunks": _debug_chunk_preview_with_score(top_chunks, rerank_scores),
-                "unit": {
-                    "relevance_score": "相关性分数 (0-1)",
-                    "rerank_candidates_count": "候选数",
-                },
-            },
-            conv_id=conv_id,
-        )
-    if not top_chunks:
-        _emit_rag_telemetry(
-            _build_rag_telemetry_payload(
-                conversation_id=conv_id,
-                knowledge_base_id=conv.knowledge_base_id,
-                question=question,
-                retrieval_query=retrieval_query,
-                vector_candidates_count=vector_candidates_count,
-                fts_candidates_count=fts_candidates_count,
-                merged_candidates_count=merged_candidates_count,
-                rerank_candidates_count=rerank_candidates_count,
-                citations_count=0,
-                rewrite_duration_ms=rewrite_duration_ms,
-                vector_duration_ms=vector_duration_ms,
-                fts_duration_ms=fts_duration_ms,
-                rerank_duration_ms=rerank_duration_ms,
-                generation_duration_ms=0,
-                total_duration_ms=_duration_ms(total_start, perf_counter()),
-                outcome="error",
-                error_code="no_relevant_context",
-            )
-        )
+        # Rerank
+        rerank_start = perf_counter()
+        top_chunks, rerank_scores = await _rerank(retrieval_query, candidates)
+        rerank_duration_ms = _duration_ms(rerank_start, perf_counter())
+        rerank_candidates_count = len(top_chunks)
         if debug:
             yield _build_debug_event(
-                "terminal_error",
-                _build_debug_error_data(
-                    code="no_relevant_context",
-                    message="根据已有文档，无法回答该问题",
+                "rerank",
+                {
+                    "rerank_candidates_count": rerank_candidates_count,
+                    "top_chunks": _debug_chunk_preview_with_score(top_chunks, rerank_scores),
+                    "unit": {
+                        "relevance_score": "相关性分数 (0-1)",
+                        "rerank_candidates_count": "候选数",
+                    },
+                },
+                conv_id=conv_id,
+            )
+        if not top_chunks:
+            _emit_rag_telemetry(
+                _build_rag_telemetry_payload(
+                    conversation_id=conv_id,
+                    knowledge_base_id=conv.knowledge_base_id,
+                    question=question,
                     retrieval_query=retrieval_query,
                     vector_candidates_count=vector_candidates_count,
                     fts_candidates_count=fts_candidates_count,
@@ -715,21 +695,47 @@ async def stream_answer(
                     fts_duration_ms=fts_duration_ms,
                     rerank_duration_ms=rerank_duration_ms,
                     generation_duration_ms=0,
-                ),
+                    total_duration_ms=_duration_ms(total_start, perf_counter()),
+                    outcome="error",
+                    error_code="no_relevant_context",
+                )
             )
-        yield {"type": "error", "message": "根据已有文档，无法回答该问题"}
+            if debug:
+                yield _build_debug_event(
+                    "terminal_error",
+                    _build_debug_error_data(
+                        code="no_relevant_context",
+                        message="根据已有文档，无法回答该问题",
+                        retrieval_query=retrieval_query,
+                        vector_candidates_count=vector_candidates_count,
+                        fts_candidates_count=fts_candidates_count,
+                        merged_candidates_count=merged_candidates_count,
+                        rerank_candidates_count=rerank_candidates_count,
+                        citations_count=0,
+                        rewrite_duration_ms=rewrite_duration_ms,
+                        vector_duration_ms=vector_duration_ms,
+                        fts_duration_ms=fts_duration_ms,
+                        rerank_duration_ms=rerank_duration_ms,
+                        generation_duration_ms=0,
+                    ),
+                )
+            yield {"type": "error", "message": "根据已有文档，无法回答该问题"}
+            return
+
+        # 构建 prompt
+        messages = _build_prompt(question, top_chunks, recent, conv.summary)
+        is_first_message = (conv.message_count or 0) == 0
+
+        # 写入用户消息
+        await qa_repository.create_message(db, conv_id, "user", question)
+
+        # 更新对话标题（第一条消息）
+        if is_first_message:
+            await qa_repository.update_conversation_title(db, conv_id, truncate_title(question))
+    except Exception as e:
+        logger.error("Error in stream_answer preamble: %s", e, exc_info=True)
+        yield {"type": "error", "message": f"检索初始化失败: {str(e)}"}
         return
-
-    # 构建 prompt
-    messages = _build_prompt(question, top_chunks, recent, conv.summary)
-    is_first_message = (conv.message_count or 0) == 0
-
-    # 写入用户消息
-    await qa_repository.create_message(db, conv_id, "user", question)
-
-    # 更新对话标题（第一条消息）
-    if is_first_message:
-        await qa_repository.update_conversation_title(db, conv_id, truncate_title(question))
 
     # gpt-4o streaming
     client = _openai_client()
