@@ -128,23 +128,3 @@ async def debug_health_check(db: AsyncSession = Depends(get_db)):
     }
 
     return results
-
-
-@router.post("/run-migrations")
-async def debug_run_migrations():
-    """手动触发数据库迁移（建表）。"""
-
-    from backend.app.db import engine as db_engine
-    from backend.app.db import Base
-    import backend.app.models  # noqa: F401 确保所有模型注册到 Base.metadata
-
-    try:
-        tables_before = Base.metadata.tables.keys()
-        async with db_engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
-        return {
-            "status": "成功",
-            "tables_created": list(Base.metadata.tables.keys()),
-        }
-    except Exception as exc:
-        return {"status": "失败", "error": str(exc)[:500]}
