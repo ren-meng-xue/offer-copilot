@@ -1,7 +1,8 @@
 from functools import lru_cache
 from pathlib import Path
+from typing import Optional
 
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # 指向 backend 根目录，便于统一定位 .env。
@@ -31,8 +32,10 @@ class Settings(BaseSettings):
 
     # 基础设施配置，后续 auth、数据库和任务系统都会依赖这些变量。
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5433/offercopilot"
-    ALEMBIC_DATABASE_URL: str = "postgresql+psycopg2://postgres:postgres@localhost:5433/offercopilot"
+    ALEMBIC_DATABASE_URL: Optional[str] = None
 
+    # Redis 基础配置
+    REDIS_URL: Optional[str] = None
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
     REDIS_DB: int = 0
@@ -66,8 +69,8 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_COOKIE_SAMESITE: str = "lax"
 
     # Celery broker/backend 都指向 Redis，DB 编号与主 Redis 隔离。
-    CELERY_BROKER_URL: str = "redis://localhost:6379/1"
-    CELERY_RESULT_BACKEND: str = "redis://localhost:6379/1"
+    CELERY_BROKER_URL: Optional[str] = None
+    CELERY_RESULT_BACKEND: Optional[str] = None
 
     FIRECRAWL_API_KEY: str | None = None
     OPENAI_API_KEY: str | None = None
@@ -86,6 +89,11 @@ class Settings(BaseSettings):
 
         scheme, rest = value.split("://", 1)
         if "+" in scheme:
+            # 如果已经带了驱动（如 postgresql+asyncpg），则按原样返回，但确保是 postgresql 前缀。
+            # asyncpg 有时只认 postgresql+asyncpg，不认 postgres+asyncpg。
+            if scheme.startswith("postgres+") or scheme.startswith("postgresql+"):
+                driver = scheme.split("+")[1]
+                return f"postgresql+{driver}://{rest}"
             return value
 
         if scheme in {"postgres", "postgresql"}:
@@ -98,10 +106,37 @@ class Settings(BaseSettings):
     def normalize_database_url(cls, value: str) -> str:
         return cls._normalize_postgres_url(str(value), "postgresql+asyncpg")
 
-    @field_validator("ALEMBIC_DATABASE_URL", mode="before")
-    @classmethod
-    def normalize_alembic_database_url(cls, value: str) -> str:
-        return cls._normalize_postgres_url(str(value), "postgresql+psycopg2")
+    @model_validator(mode="after")
+    def validate_infrastructure_urls(self) -> "Settings":
+        """在所有字段加载后，处理跨字段的 fallback 逻辑。"""
+
+        # 1. 自动推导 ALEMBIC_DATABASE_URL (同步驱动)
+        if not self.ALEMBIC_DATABASE_URL:
+            self.ALEMBIC_DATABASE_URL = self._normalize_postgres_url(
+                self.DATABASE_URL, "postgresql+psycopg2"
+            )
+
+        # 2. 自动处理 Redis 相关的 fallback
+        # 如果提供了 REDIS_URL (Railway 默认提供)，则优先使用它。
+        if self.REDIS_URL:
+            # 简单校验，如果是 redis:// 或 rediss:// 开头
+            if not self.CELERY_BROKER_URL:
+                # Celery 默认使用 REDIS_URL 的 DB 0 或由 URL 指定。
+                self.CELERY_BROKER_URL = self.REDIS_URL
+            if not self.CELERY_RESULT_BACKEND:
+                self.CELERY_RESULT_BACKEND = self.REDIS_URL
+        else:
+            # 回退到传统的 HOST/PORT 组合
+            if not self.CELERY_BROKER_URL:
+                # 默认给 Celery 分配 DB 1 避免与主缓存冲突。
+                self.CELERY_BROKER_URL = f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/1"
+                if self.REDIS_PASSWORD:
+                    self.CELERY_BROKER_URL = f"redis://:{self.REDIS_PASSWORD}@{self.REDIS_HOST}:{self.REDIS_PORT}/1"
+
+            if not self.CELERY_RESULT_BACKEND:
+                self.CELERY_RESULT_BACKEND = self.CELERY_BROKER_URL
+
+        return self
 
     @property
     def cors_allow_origins(self) -> list[str]:
