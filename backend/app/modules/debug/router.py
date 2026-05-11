@@ -119,20 +119,14 @@ async def debug_health_check(db: AsyncSession = Depends(get_db)):
 
 @router.post("/run-migrations")
 async def debug_run_migrations():
-    """手动触发数据库迁移（建表）。"""
+    """手动触发数据库迁移（建表）。使用 SQLAlchemy create_all 确保和 API 连同一个库。"""
+
+    from backend.app.db import engine as db_engine
+    from backend.app.db import Base
 
     try:
-        from alembic import command
-        from alembic.config import Config as AlembicConfig
-        from backend.app.core.config import BASE_DIR
-
-        alembic_ini = BASE_DIR / "alembic.ini"
-        if not alembic_ini.exists():
-            return {"status": "失败", "error": f"找不到 alembic.ini: {alembic_ini}"}
-
-        alembic_cfg = AlembicConfig(str(alembic_ini))
-        alembic_cfg.set_main_option("sqlalchemy.url", settings.ALEMBIC_DATABASE_URL)
-        command.upgrade(alembic_cfg, "head")
-        return {"status": "成功", "message": "数据库迁移完成"}
+        async with db_engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        return {"status": "成功", "message": "表创建完成"}
     except Exception as exc:
         return {"status": "失败", "error": str(exc)[:500]}
