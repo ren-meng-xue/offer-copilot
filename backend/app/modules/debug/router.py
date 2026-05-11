@@ -1,13 +1,12 @@
 import logging
 
 import redis as sync_redis
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.core.config import settings
 from backend.app.db import get_db
-from fastapi import Depends
 
 logger = logging.getLogger(__name__)
 
@@ -27,30 +26,46 @@ async def debug_health_check(db: AsyncSession = Depends(get_db)):
     except Exception as exc:
         results["database"] = f"失败: {exc}"
 
-    # 2. Redis / Celery broker 连通性
+    # 2. Redis / Celery broker 连通性（使用 CELERY_BROKER_URL）
     try:
-        r = sync_redis.from_url(
-            f"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}/{settings.REDIS_DB}",
-            password=settings.REDIS_PASSWORD,
-            decode_responses=True,
-            socket_connect_timeout=5,
-        )
-        if r.ping():
-            results["redis"] = "ok"
-            # 查看 Celery 队列积压
-            try:
-                queue_len = r.llen("celery")
-                results["celery_queue_pending_tasks"] = queue_len
-            except Exception:
-                results["celery_queue_pending_tasks"] = "无法读取"
+        broker_url = settings.CELERY_BROKER_URL
+        if broker_url:
+            r = sync_redis.from_url(
+                broker_url,
+                decode_responses=True,
+                socket_connect_timeout=5,
+            )
+            if r.ping():
+                results["redis"] = "ok"
+                try:
+                    queue_len = r.llen("celery")
+                    results["celery_queue_pending_tasks"] = queue_len
+                except Exception:
+                    results["celery_queue_pending_tasks"] = "无法读取"
+            else:
+                results["redis"] = "ping 返回 False"
+            r.close()
         else:
-            results["redis"] = "ping 返回 False"
-        r.close()
+            results["redis"] = "CELERY_BROKER_URL 未设置"
     except Exception as exc:
         results["redis"] = f"失败: {exc}"
         results["celery_queue_pending_tasks"] = "N/A（Redis 不可达）"
 
-    # 3. 知识库 #9 状态
+    # 3. 检查 knowledge_base 表是否存在
+    try:
+        row = await db.execute(
+            text(
+                "SELECT EXISTS (SELECT FROM information_schema.tables "
+                "WHERE table_name = 'knowledge_base')"
+            )
+        )
+        table_exists = row.scalar()
+        results["knowledge_base_table_exists"] = table_exists
+    except Exception as exc:
+        await db.rollback()
+        results["knowledge_base_table_exists"] = f"检查失败: {exc}"
+
+    # 4. 知识库 #9 状态
     try:
         row = await db.execute(
             text(
@@ -72,9 +87,10 @@ async def debug_health_check(db: AsyncSession = Depends(get_db)):
                 "updated_at": str(kb[6]) if kb[6] else None,
             }
     except Exception as exc:
+        await db.rollback()
         results["kb_9"] = f"查询失败: {exc}"
 
-    # 4. 所有知识库列表（确认表是否有数据）
+    # 5. 所有知识库列表
     try:
         row = await db.execute(
             text("SELECT id, name, status, created_at FROM knowledge_base ORDER BY id DESC LIMIT 20")
@@ -86,13 +102,12 @@ async def debug_health_check(db: AsyncSession = Depends(get_db)):
             for r in all_kbs
         ]
     except Exception as exc:
+        await db.rollback()
         results["all_knowledge_bases"] = f"查询失败: {exc}"
 
-    # 5. 环境变量摘要
+    # 6. 环境变量摘要
     results["env"] = {
-        "DATABASE_URL_type": (
-            "已设置" if settings.DATABASE_URL else "未设置"
-        ),
+        "DATABASE_URL_type": "已设置" if settings.DATABASE_URL else "未设置",
         "REDIS_HOST": settings.REDIS_HOST,
         "REDIS_PORT": settings.REDIS_PORT,
         "CELERY_BROKER_URL": settings.CELERY_BROKER_URL,
