@@ -21,11 +21,12 @@
 
 ### 3.1 `/chat` 首问流程
 
-1. 用户输入问题并发送。
+1. 用户选择知识库、输入问题并发送。
 2. 前端先调用 `POST /qa/conversations` 创建会话。
-3. 跳转到 `/chat/{conv_id}`。
-4. 插入 user optimistic message + assistant draft message。
-5. 调用 `POST /qa/conversations/{conv_id}/ask`，开始读取 SSE。
+3. 在当前页先插入 user optimistic message + assistant draft message。
+4. 输入框在 optimistic message 建立后立即清空。
+5. 跳转到 `/chat/{conv_id}`，并继续展示当前知识库上下文。
+6. 调用 `POST /qa/conversations/{conv_id}/ask`，开始读取 SSE。
 
 ### 3.2 `/chat/[conversationId]` 提问流程
 
@@ -71,6 +72,8 @@
    - 否则标记 `assistant_done`。
 4. 收到 `error` 时标记 `assistant_error`，并保存 `errorCode/errorMessage`。
 5. 错误码为 `no_knowledge_base` 或 `no_relevant_context`（或 message 命中“知识库/没有相关”）时，展示“去导入文档”引导。
+6. 输入框清空时机以前端进入 optimistic exchange 为准，不依赖 SSE 最终成功结束。
+7. 首问从 `/chat` 跳到 `/chat/[conversationId]` 时，需要保留当前会话的知识库上下文展示。
 
 ---
 
@@ -101,6 +104,8 @@
 - [x] done 时执行 citations 契约校验。
 - [x] error 时可展示错误并恢复输入可用状态。
 - [x] 会话切换/离开可中断 stream，旧流不污染新会话。
+- [ ] 首问进入 optimistic exchange 后输入框立即清空。
+- [ ] 首问跳转后仍可见当前知识库上下文。
 
 ---
 

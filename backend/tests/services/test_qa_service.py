@@ -12,6 +12,7 @@ from backend.app.services.qa_service import (
     _build_rag_telemetry_payload,
     _build_query_rewrite_messages,
     _debug_chunk_preview,
+    _debug_chunk_preview_with_score,
     _emit_rag_telemetry,
     _extract_citations,
     _filter_rerank_results,
@@ -743,3 +744,46 @@ async def test_stream_answer_blocks_debug_events_when_app_debug_is_disabled(
         events.append(event)
 
     assert [event["type"] for event in events] == ["token", "citations", "done"]
+
+
+def test_debug_chunk_preview_with_score():
+    """测试带分数的 chunk 预览"""
+    chunk1 = DocumentChunk(
+        id=1,
+        source_url="https://example.com/doc1",
+        heading_path="Chapter 1",
+        chunk_index=0,
+        content="Content 1",
+        embedding=[0.1] * 10,
+        knowledge_base_id=1,
+    )
+    chunk2 = DocumentChunk(
+        id=2,
+        source_url="https://example.com/doc2",
+        heading_path="Chapter 2",
+        chunk_index=1,
+        content="Content 2",
+        embedding=[0.2] * 10,
+        knowledge_base_id=1,
+    )
+
+    # 带分数
+    scores = [0.92, 0.85]
+    preview = _debug_chunk_preview_with_score([chunk1, chunk2], scores, limit=2)
+
+    assert len(preview) == 2
+    assert preview[0]["chunk_id"] == "1"
+    assert preview[0]["relevance_score"] == 0.92
+    assert preview[1]["relevance_score"] == 0.85
+
+    # 不带分数
+    preview_no_score = _debug_chunk_preview_with_score([chunk1, chunk2], limit=2)
+
+    assert len(preview_no_score) == 2
+    assert "relevance_score" not in preview_no_score[0]
+
+    # limit 参数
+    preview_limited = _debug_chunk_preview_with_score(
+        [chunk1, chunk2], scores, limit=1
+    )
+    assert len(preview_limited) == 1

@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field, HttpUrl, ConfigDict
+from datetime import datetime
 
 from backend.app.models.knowledge_base import KnowledgeBaseStatus
 
@@ -18,6 +19,7 @@ class CreateKnowledgeResponse(BaseModel):
     """
 
     knowledge_base_id: int
+    task_id: str
     status: KnowledgeBaseStatus
 
     # 允许直接从 ORM 对象构造响应模型，减少路由层手动映射字段。
@@ -35,4 +37,18 @@ class KnowledgeStatusResponse(BaseModel):
     error_message: str | None = None
 
     # 状态查询通常直接返回数据库实体，开启 from_attributes 保持与其他 schema 一致。
+    model_config = ConfigDict(from_attributes=True)
+
+
+class KnowledgeBaseListItem(BaseModel):
+    """知识库列表项，用于前端知识库页面展示当前用户的导入记录。"""
+
+    knowledge_base_id: int
+    name: str
+    source_url: str
+    status: KnowledgeBaseStatus
+    error_message: str | None = None
+    created_at: datetime
+    updated_at: datetime
+
     model_config = ConfigDict(from_attributes=True)

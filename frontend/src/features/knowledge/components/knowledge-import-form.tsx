@@ -10,12 +10,16 @@ import { Label } from "@/components/ui/label";
 type KnowledgeImportFormProps = {
   isSubmitting: boolean;
   errorMessage: string | null;
+  searchQuery: string;
+  onSearchQueryChange: (value: string) => void;
   onSubmit: (payload: { source_url: string; name?: string }) => Promise<void>;
 };
 
 export function KnowledgeImportForm({
   isSubmitting,
   errorMessage,
+  searchQuery,
+  onSearchQueryChange,
   onSubmit,
 }: KnowledgeImportFormProps) {
   const [sourceUrl, setSourceUrl] = useState("");
@@ -49,15 +53,26 @@ export function KnowledgeImportForm({
       onSubmit={handleSubmit}
       className="border-b border-slate-200 bg-white px-4 py-5 sm:px-6 lg:px-8"
     >
-      <div className="max-w-4xl space-y-4">
-        <div>
-          <h1 className="text-xl font-semibold text-slate-950">Knowledge</h1>
-          <p className="mt-1 text-sm text-slate-600">
-            导入开发者文档 URL，索引完成后即可在 Chat 中引用回答。
-          </p>
+      <div className="max-w-5xl space-y-4">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <h1 className="text-xl font-semibold text-slate-950">Knowledge</h1>
+            <p className="mt-1 text-sm text-slate-600">
+              导入开发者文档 URL，索引完成后即可在 Chat 中引用回答。
+            </p>
+          </div>
+          <div className="w-full max-w-sm space-y-2">
+            <Label htmlFor="knowledge-search">搜索知识库</Label>
+            <Input
+              id="knowledge-search"
+              value={searchQuery}
+              placeholder="按名称或 URL 搜索"
+              onChange={(event) => onSearchQueryChange(event.target.value)}
+            />
+          </div>
         </div>
 
-        <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_220px_auto] md:items-end">
+        <div className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:grid-cols-[minmax(0,1fr)_220px_auto] md:items-end">
           <div className="space-y-2">
             <Label htmlFor="knowledge-source-url">文档 URL</Label>
             <Input
@@ -81,8 +96,13 @@ export function KnowledgeImportForm({
             />
           </div>
 
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "导入中" : "导入文档"}
+          <Button
+            type="submit"
+            size="lg"
+            className="h-10 rounded-xl bg-violet-600 px-5 text-white hover:bg-violet-700"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "导入中..." : "导入文档"}
           </Button>
         </div>
 

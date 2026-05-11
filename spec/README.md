@@ -4,8 +4,9 @@
 
 ## 目录结构
 
-- `frontend/*.md`：前端 spec
-- `backend/*.md`：后端 spec
+- `frontend/*.md`：前端主 spec
+- `backend/*.md`：后端主 spec
+- `backend/addenda/*.md`：后端增量 / 归档 spec
 - `devops/*.md`：部署运维 spec（预留）
 - `assets/*.png`：兼容性更好的位图预览
 
@@ -33,7 +34,8 @@
 ## 当前主 spec（已整合）
 
 - `backend/knowledge-ingestion.md`：知识库导入链路
-- `backend/qa.md`：问答后端与 citations 契约
+- `backend/qa.md`：问答后端主链路
+- `backend/README.md`：后端主 spec 与增量 spec 索引
 - `frontend/frontend-workspace.md`：前端工作台总览（按当前实现对齐）
 - `frontend/chat-streaming-interaction.md`：聊天流式交互状态机（按当前实现对齐）
 - `frontend/chat-ui-polish.md`：聊天 UI/UX（按当前实现对齐）
@@ -43,5 +45,5 @@
 | 分类 | 文件 |
 | --- | --- |
 | 前端（Frontend） | `frontend/frontend-workspace.md`, `frontend/chat-streaming-interaction.md`, `frontend/chat-ui-polish.md` |
-| 后端（Backend） | `backend/knowledge-ingestion.md`, `backend/qa.md` |
+| 后端（Backend） | `backend/knowledge-ingestion.md`, `backend/qa.md`, `backend/addenda/*.md` |
 | 部署运维（DevOps） | `devops/*.md`（预留） |

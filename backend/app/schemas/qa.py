@@ -4,13 +4,19 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 
+class CreateConversationRequest(BaseModel):
+    knowledge_base_id: int = Field(..., ge=1)
+
+
 class CreateConversationResponse(BaseModel):
     conv_id: uuid.UUID
+    knowledge_base_id: int
     created_at: datetime
 
 
 class ConversationListItem(BaseModel):
     conv_id: uuid.UUID
+    knowledge_base_id: int | None
     title: str | None
     created_at: datetime
     updated_at: datetime

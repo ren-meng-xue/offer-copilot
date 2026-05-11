@@ -1,5 +1,6 @@
 export type ConversationListItem = {
   conv_id: string;
+  knowledge_base_id: number | null;
   title: string | null;
   created_at: string;
   updated_at: string;

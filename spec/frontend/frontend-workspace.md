@@ -61,9 +61,11 @@
 ### 3.5 Knowledge 页面
 
 1. 用户输入 `source_url`（必填）与 `name`（可选）提交导入。
-2. 列表展示知识库条目与状态。
-3. 对 `pending/processing` 条目每 3 秒轮询状态。
-4. 支持失败提示与重试加载列表。
+2. 列表展示知识库条目、状态与来源 URL。
+3. 页面提供本地搜索/筛选入口，帮助用户快速定位知识库。
+4. 对 `pending/processing` 条目每 3 秒轮询状态。
+5. `done/failed` 条目支持删除；`pending/processing` 条目不可删除。
+6. 支持失败提示与重试加载列表。
 
 ---
 
@@ -77,6 +79,7 @@
 - `POST /api/v1/knowledge`
 - `GET /api/v1/knowledge`
 - `GET /api/v1/knowledge/{id}/status`
+- `DELETE /api/v1/knowledge/{id}`（本次补充）
 
 ---
 
@@ -86,6 +89,7 @@
 - 输入框 placeholder 当前固定为“问我任何文档问题”，尚未接入“按知识库状态变化文案”。
 - assistant 消息当前无头像展示。
 - 会话列表在中小屏隐藏（仅 `md` 及以上显示）。
+- 知识库查询入口以本地筛选为主，暂不提供服务端搜索与分页。
 
 ---
 
@@ -97,6 +101,11 @@
 - [x] SSE 可流式渲染回答与 citations。
 - [x] 会话支持删除并二次确认。
 - [x] `/knowledge` 可导入 URL 并查看状态轮询结果。
+- [ ] `/chat` 首问发送后输入框立即清空。
+- [ ] `/chat` 首问跳转后知识库上下文仍可见。
+- [ ] `/knowledge` 支持本地搜索/筛选。
+- [ ] `/knowledge` 支持删除 `done/failed` 条目。
+- [ ] `/knowledge` 导入按钮具备更明显的主操作样式。
 
 ---
 
@@ -109,16 +118,22 @@ flowchart TD
   B -- 是 --> D[渲染 AppShell + Sidebar]
 
   D --> E[进入 /chat]
-  E --> F[加载会话列表]
+  E --> F[加载会话列表与可用知识库]
   F --> G{发送消息?}
   G -- 是 --> H{已有 conv_id?}
   H -- 否 --> I[创建会话]
-  H -- 是 --> J[直接提问]
-  I --> J
-  J --> K[SSE token/citations/done]
+  I --> J[建立 optimistic messages 并清空输入]
+  J --> K[跳转 /chat/conv_id 并展示只读知识库上下文]
+  H -- 是 --> L[直接提问]
+  L --> M[SSE token/citations/done]
+  K --> M
 
-  D --> L[进入 /knowledge]
-  L --> M[提交 URL 导入]
-  M --> N[展示 pending/processing]
-  N --> O[轮询状态直到 done/failed]
+  D --> N[进入 /knowledge]
+  N --> O[提交 URL 导入]
+  O --> P[展示 pending/processing]
+  P --> Q[轮询状态直到 done/failed]
+  N --> R[本地搜索/筛选知识库]
+  Q --> S{状态可删除?}
+  S -- 是 --> T[删除知识库]
+  S -- 否 --> U[按钮禁用]
 ```

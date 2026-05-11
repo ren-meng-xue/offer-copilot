@@ -10,6 +10,7 @@ import {
   getConversationMessages,
   listConversations,
 } from "@/services/qa";
+import { listKnowledgeBases } from "@/services/knowledge";
 
 import { ChatPage } from "./chat-page";
 
@@ -42,11 +43,16 @@ vi.mock("@/services/qa", () => ({
   listConversations: vi.fn(),
 }));
 
+vi.mock("@/services/knowledge", () => ({
+  listKnowledgeBases: vi.fn(),
+}));
+
 const mockedAskConversation = vi.mocked(askConversation);
 const mockedCreateConversation = vi.mocked(createConversation);
 const mockedDeleteConversation = vi.mocked(deleteConversation);
 const mockedGetConversationMessages = vi.mocked(getConversationMessages);
 const mockedListConversations = vi.mocked(listConversations);
+const mockedListKnowledgeBases = vi.mocked(listKnowledgeBases);
 
 describe("ChatPage", () => {
   beforeEach(() => {
@@ -54,10 +60,22 @@ describe("ChatPage", () => {
     mockedAskConversation.mockResolvedValue(new Response(""));
     mockedCreateConversation.mockResolvedValue({
       conv_id: "conv_new",
+      knowledge_base_id: 101,
       created_at: "2026-05-06T00:00:00Z",
     });
     mockedGetConversationMessages.mockResolvedValue([]);
     mockedListConversations.mockResolvedValue([]);
+    mockedListKnowledgeBases.mockResolvedValue([
+      {
+        knowledge_base_id: 101,
+        name: "FastAPI Docs",
+        source_url: "https://fastapi.tiangolo.com/",
+        status: "done",
+        error_message: null,
+        created_at: "2026-05-06T00:00:00Z",
+        updated_at: "2026-05-06T00:00:00Z",
+      },
+    ]);
     mockedDeleteConversation.mockResolvedValue(null);
   });
 
@@ -105,6 +123,7 @@ describe("ChatPage", () => {
     mockedListConversations.mockResolvedValueOnce([
       {
         conv_id: "conv_1",
+        knowledge_base_id: 101,
         title: "Existing conversation",
         created_at: "2026-05-06T00:00:00Z",
         updated_at: "2026-05-06T00:00:00Z",
@@ -145,8 +164,35 @@ describe("ChatPage", () => {
     expect(input).toHaveFocus();
   });
 
+  it("clears the input immediately after the first draft message is sent", async () => {
+    const user = userEvent.setup();
+    mockedAskConversation.mockResolvedValueOnce(
+      new Response('data: {"type":"done"}\n\n', {
+        headers: {
+          "Content-Type": "text/event-stream",
+        },
+      }),
+    );
+
+    render(<ChatPage />);
+
+    const input = await screen.findByLabelText("技术问题");
+    await user.type(input, "How does FastAPI dependency injection work?");
+    await user.click(screen.getByRole("button", { name: "发送" }));
+
+    await screen.findByText("How does FastAPI dep");
+    expect(input).toHaveValue("");
+  });
+
   it("creates a titled conversation when sending the first draft message", async () => {
     const user = userEvent.setup();
+    mockedAskConversation.mockResolvedValueOnce(
+      new Response('data: {"type":"done"}\n\n', {
+        headers: {
+          "Content-Type": "text/event-stream",
+        },
+      }),
+    );
 
     render(<ChatPage />);
 
@@ -156,16 +202,23 @@ describe("ChatPage", () => {
     );
     await user.click(screen.getByRole("button", { name: "发送" }));
 
-    expect(mockedCreateConversation).toHaveBeenCalled();
+    expect(mockedCreateConversation).toHaveBeenCalledWith(101);
     expect(mockedAskConversation).toHaveBeenCalledWith(
       "conv_new",
       "How does FastAPI dependency injection work?",
       expect.any(AbortSignal),
     );
-    expect(push).toHaveBeenCalledWith("/chat/conv_new");
     expect(
       await screen.findByText("How does FastAPI dep"),
     ).toBeInTheDocument();
+    expect(push).toHaveBeenCalledWith("/chat/conv_new");
+  });
+
+  it("shows the current knowledge base after navigating to the created conversation", async () => {
+    render(<ChatPage conversationId="conv_new" />);
+
+    expect(await screen.findByText("当前知识库")).toBeInTheDocument();
+    expect(screen.getByText("FastAPI Docs")).toBeInTheDocument();
   });
 
   it("deletes an existing conversation and returns to draft chat", async () => {
@@ -173,6 +226,7 @@ describe("ChatPage", () => {
     mockedListConversations.mockResolvedValueOnce([
       {
         conv_id: "conv_1",
+        knowledge_base_id: 101,
         title: "Existing conversation",
         created_at: "2026-05-06T00:00:00Z",
         updated_at: "2026-05-06T00:00:00Z",

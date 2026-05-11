@@ -19,7 +19,8 @@ export function isNoKnowledgeEvent(event: StreamEvent): boolean {
 
   if (
     event.code === "no_knowledge_base" ||
-    event.code === "no_relevant_context"
+    event.code === "no_relevant_context" ||
+    event.code === "knowledge_base_not_ready"
   ) {
     return true;
   }
@@ -91,7 +92,7 @@ export function markAssistantDone(
       return message;
     }
 
-    if (!hasCitations(message.citations)) {
+    if (!hasCitations(message.citations) && !isGreetingLikeReply(message.content)) {
       return {
         ...message,
         status: "assistant_error",
@@ -130,6 +131,16 @@ export function markAssistantError(
         }
       : message,
   );
+}
+
+function isGreetingLikeReply(content: string): boolean {
+  const text = content.trim();
+
+  if (!text) {
+    return false;
+  }
+
+  return /^(你好|您好|嗨|hello|hi|hey|在吗|谢谢|早上好|下午好|晚上好)/i.test(text);
 }
 
 export function markAssistantAborted(

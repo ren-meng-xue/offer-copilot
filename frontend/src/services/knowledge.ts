@@ -1,4 +1,4 @@
-import { get, post } from "@/lib/http";
+import { del, get, post } from "@/lib/http";
 import type { KnowledgeBaseListItem as ChatKnowledgeBaseListItem } from "@/features/chat/types";
 
 export type KnowledgeStatus = "pending" | "processing" | "done" | "failed";
@@ -12,6 +12,7 @@ export type CreateKnowledgeBasePayload = {
 
 export type CreateKnowledgeBaseResult = {
   knowledge_base_id: number;
+  task_id: string;
   status: KnowledgeStatus;
 };
 
@@ -37,6 +38,12 @@ export function getKnowledgeBaseStatus(
   id: number,
 ): Promise<KnowledgeBaseStatusResult> {
   return get<KnowledgeBaseStatusResult>(`/knowledge/${id}/status`, {
+    auth: true,
+  });
+}
+
+export function deleteKnowledgeBase(id: number): Promise<null> {
+  return del<null>(`/knowledge/${id}`, {
     auth: true,
   });
 }

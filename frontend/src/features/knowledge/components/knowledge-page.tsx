@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   createKnowledgeBase,
+  deleteKnowledgeBase,
   getKnowledgeBaseStatus,
   listKnowledgeBases,
   type KnowledgeBaseListItem,
@@ -22,6 +23,8 @@ export function KnowledgePage() {
   const [items, setItems] = useState<KnowledgeBaseListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deletingKnowledgeBaseId, setDeletingKnowledgeBaseId] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const [loadError, setLoadError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -29,6 +32,18 @@ export function KnowledgePage() {
     () => items.filter(isIndexing).map((item) => item.knowledge_base_id),
     [items],
   );
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const visibleItems = useMemo(() => {
+    if (!normalizedQuery) {
+      return items;
+    }
+
+    return items.filter((item) => {
+      const name = item.name.toLowerCase();
+      const sourceUrl = item.source_url.toLowerCase();
+      return name.includes(normalizedQuery) || sourceUrl.includes(normalizedQuery);
+    });
+  }, [items, normalizedQuery]);
 
   const loadItems = useCallback(async (showLoading = true) => {
     if (showLoading) {
@@ -140,17 +155,37 @@ export function KnowledgePage() {
     }
   };
 
+  const handleDelete = async (knowledgeBaseId: number) => {
+    setDeletingKnowledgeBaseId(knowledgeBaseId);
+    setLoadError(null);
+
+    try {
+      await deleteKnowledgeBase(knowledgeBaseId);
+      setItems((currentItems) =>
+        currentItems.filter((item) => item.knowledge_base_id !== knowledgeBaseId),
+      );
+    } catch (error) {
+      setLoadError(error instanceof Error ? error.message : "删除知识库失败");
+    } finally {
+      setDeletingKnowledgeBaseId(null);
+    }
+  };
+
   return (
     <section className="min-h-screen bg-slate-50">
       <KnowledgeImportForm
         isSubmitting={isSubmitting}
         errorMessage={submitError}
+        searchQuery={searchQuery}
+        onSearchQueryChange={setSearchQuery}
         onSubmit={handleImport}
       />
       <KnowledgeList
-        items={items}
+        items={visibleItems}
         isLoading={isLoading}
         errorMessage={loadError}
+        deletingKnowledgeBaseId={deletingKnowledgeBaseId}
+        onDelete={handleDelete}
         onRetry={() => void loadItems()}
       />
     </section>

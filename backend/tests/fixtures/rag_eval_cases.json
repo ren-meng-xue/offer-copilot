@@ -1,0 +1,143 @@
+[
+  {
+    "id": "langchain_overview_exact_term",
+    "category": "answer",
+    "knowledge_base_id": 3,
+    "knowledge_base_source_url": "https://chatgpt.com/share/69fc0a66-d814-83a2-b3df-4204f87e7fe3",
+    "history": [],
+    "question": "LangChain 是什么？",
+    "expected_mode": "answer",
+    "expected_retrieval_query_contains": ["LangChain"],
+    "expected_answer_contains": ["框架", "LLM"],
+    "expected_citation_urls": ["https://chatgpt.com/share/69fc0a66-d814-83a2-b3df-4204f87e7fe3"]
+  },
+  {
+    "id": "langchain_rag_definition",
+    "category": "answer",
+    "knowledge_base_id": 3,
+    "knowledge_base_source_url": "https://chatgpt.com/share/69fc0a66-d814-83a2-b3df-4204f87e7fe3",
+    "history": [],
+    "question": "RAG 是什么？",
+    "expected_mode": "answer",
+    "expected_retrieval_query_contains": ["RAG"],
+    "expected_answer_contains": ["RAG", "向量检索", "AI知识库"],
+    "expected_citation_urls": ["https://chatgpt.com/share/69fc0a66-d814-83a2-b3df-4204f87e7fe3"]
+  },
+  {
+    "id": "langchain_followup_tools",
+    "category": "rewrite",
+    "knowledge_base_id": 3,
+    "knowledge_base_source_url": "https://chatgpt.com/share/69fc0a66-d814-83a2-b3df-4204f87e7fe3",
+    "history": [
+      {
+        "role": "user",
+        "content": "LangChain 里有哪些核心模块？"
+      },
+      {
+        "role": "assistant",
+        "content": "它包含 Prompt、LLM、Chain、Tool、Agent 等模块。[1]"
+      }
+    ],
+    "question": "它还能做什么？",
+    "expected_mode": "answer",
+    "expected_retrieval_query_contains": ["对话生成", "文本分析", "问答系统"],
+    "expected_answer_contains": ["调用大语言模型", "Agent"],
+    "expected_citation_urls": ["https://chatgpt.com/share/69fc0a66-d814-83a2-b3df-4204f87e7fe3"]
+  },
+  {
+    "id": "langchain_out_of_scope_product_question",
+    "category": "refusal",
+    "knowledge_base_id": 3,
+    "knowledge_base_source_url": "https://chatgpt.com/share/69fc0a66-d814-83a2-b3df-4204f87e7fe3",
+    "history": [],
+    "question": "这个公司今年营收多少？",
+    "expected_mode": "refusal",
+    "expected_retrieval_query_contains": [],
+    "expected_answer_contains": [],
+    "expected_citation_urls": []
+  },
+  {
+    "id": "langchain_prompt_template",
+    "category": "answer",
+    "knowledge_base_id": 3,
+    "knowledge_base_source_url": "https://chatgpt.com/share/69fc0a66-d814-83a2-b3df-4204f87e7fe3",
+    "history": [],
+    "question": "PromptTemplate 是什么？",
+    "expected_mode": "answer",
+    "expected_retrieval_query_contains": ["PromptTemplate"],
+    "expected_answer_contains": ["参数化", "模板"],
+    "expected_citation_urls": ["https://chatgpt.com/share/69fc0a66-d814-83a2-b3df-4204f87e7fe3"]
+  },
+  {
+    "id": "langchain_chain_concept",
+    "category": "answer",
+    "knowledge_base_id": 3,
+    "knowledge_base_source_url": "https://chatgpt.com/share/69fc0a66-d814-83a2-b3df-4204f87e7fe3",
+    "history": [],
+    "question": "Chain 是什么？",
+    "expected_mode": "answer",
+    "expected_retrieval_query_contains": ["Chain"],
+    "expected_answer_contains": ["多个步骤", "Runnable"],
+    "expected_citation_urls": ["https://chatgpt.com/share/69fc0a66-d814-83a2-b3df-4204f87e7fe3"]
+  },
+  {
+    "id": "langchain_tool_concept",
+    "category": "answer",
+    "knowledge_base_id": 3,
+    "knowledge_base_source_url": "https://chatgpt.com/share/69fc0a66-d814-83a2-b3df-4204f87e7fe3",
+    "history": [],
+    "question": "Tool 是做什么的？",
+    "expected_mode": "answer",
+    "expected_retrieval_query_contains": ["Tool"],
+    "expected_answer_contains": ["外部能力", "API"],
+    "expected_citation_urls": ["https://chatgpt.com/share/69fc0a66-d814-83a2-b3df-4204f87e7fe3"]
+  },
+  {
+    "id": "langchain_agent_concept",
+    "category": "answer",
+    "knowledge_base_id": 3,
+    "knowledge_base_source_url": "https://chatgpt.com/share/69fc0a66-d814-83a2-b3df-4204f87e7fe3",
+    "history": [],
+    "question": "Agent 是什么？",
+    "expected_mode": "answer",
+    "expected_retrieval_query_contains": ["Agent"],
+    "expected_answer_contains": ["LLM", "工具"],
+    "expected_citation_urls": ["https://chatgpt.com/share/69fc0a66-d814-83a2-b3df-4204f87e7fe3"]
+  },
+  {
+    "id": "langchain_vector_db",
+    "category": "answer",
+    "knowledge_base_id": 3,
+    "knowledge_base_source_url": "https://chatgpt.com/share/69fc0a66-d814-83a2-b3df-4204f87e7fe3",
+    "history": [],
+    "question": "向量数据库有哪些？",
+    "expected_mode": "answer",
+    "expected_retrieval_query_contains": ["向量数据库"],
+    "expected_answer_contains": ["Chroma", "Milvus"],
+    "expected_citation_urls": ["https://chatgpt.com/share/69fc0a66-d814-83a2-b3df-4204f87e7fe3"]
+  },
+  {
+    "id": "langchain_langsmith",
+    "category": "answer",
+    "knowledge_base_id": 3,
+    "knowledge_base_source_url": "https://chatgpt.com/share/69fc0a66-d814-83a2-b3df-4204f87e7fe3",
+    "history": [],
+    "question": "LangSmith 用于什么？",
+    "expected_mode": "answer",
+    "expected_retrieval_query_contains": ["LangSmith"],
+    "expected_answer_contains": ["调试", "评估"],
+    "expected_citation_urls": ["https://chatgpt.com/share/69fc0a66-d814-83a2-b3df-4204f87e7fe3"]
+  },
+  {
+    "id": "langchain_langserve",
+    "category": "answer",
+    "knowledge_base_id": 3,
+    "knowledge_base_source_url": "https://chatgpt.com/share/69fc0a66-d814-83a2-b3df-4204f87e7fe3",
+    "history": [],
+    "question": "LangServe 做什么？",
+    "expected_mode": "answer",
+    "expected_retrieval_query_contains": ["LangServe"],
+    "expected_answer_contains": ["API", "部署"],
+    "expected_citation_urls": ["https://chatgpt.com/share/69fc0a66-d814-83a2-b3df-4204f87e7fe3"]
+  }
+]

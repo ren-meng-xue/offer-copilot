@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { get, post } from "../lib/http";
+import { del, get, post } from "../lib/http";
 import {
   createKnowledgeBase,
+  deleteKnowledgeBase,
   getKnowledgeBaseStatus,
   listKnowledgeBases,
   type CreateKnowledgeBasePayload,
@@ -12,10 +13,12 @@ import {
 } from "./knowledge";
 
 vi.mock("../lib/http", () => ({
+  del: vi.fn(),
   get: vi.fn(),
   post: vi.fn(),
 }));
 
+const mockedDel = vi.mocked(del);
 const mockedGet = vi.mocked(get);
 const mockedPost = vi.mocked(post);
 
@@ -50,6 +53,7 @@ describe("knowledge service", () => {
     };
     const result: CreateKnowledgeBaseResult = {
       knowledge_base_id: 2,
+      task_id: "task-2",
       status: "pending",
     };
     mockedPost.mockResolvedValueOnce(result);
@@ -72,6 +76,16 @@ describe("knowledge service", () => {
     await expect(getKnowledgeBaseStatus(3)).resolves.toEqual(result);
 
     expect(mockedGet).toHaveBeenCalledWith("/knowledge/3/status", {
+      auth: true,
+    });
+  });
+
+  it("calls protected delete endpoint", async () => {
+    mockedDel.mockResolvedValueOnce(null);
+
+    await expect(deleteKnowledgeBase(5)).resolves.toBeNull();
+
+    expect(mockedDel).toHaveBeenCalledWith("/knowledge/5", {
       auth: true,
     });
   });

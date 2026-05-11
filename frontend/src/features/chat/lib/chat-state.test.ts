@@ -55,6 +55,20 @@ describe("chat-state", () => {
     });
   });
 
+  it("allows greeting replies to finish without citations", () => {
+    const state = startOptimisticExchange([], {
+      conversationId: "conv_1",
+      question: "你好",
+      clientId: "m1",
+    });
+    const withAnswer = appendAssistantToken(state, "m1", "你好！有什么我可以帮助您的吗？");
+    const done = markAssistantDone(withAnswer, "m1");
+
+    expect(done[1]).toMatchObject({
+      status: "assistant_done",
+    });
+  });
+
   it("attaches citations before marking done", () => {
     const state = startOptimisticExchange([], {
       conversationId: "conv_1",

@@ -34,6 +34,7 @@ RAG 流程：URL → Firecrawl → Markdown → Chunking(512/64) → Embedding �
 
 ## 核心约束
 
+* 每次回复都需要用中文回复。
 * 所有答案必须附带 citations
 * chunk metadata 必须包含：source_url、heading_path、chunk_index
 * 禁止生成无来源答案 / 跳过 rerank / 直接访问 DB（必须走 services）

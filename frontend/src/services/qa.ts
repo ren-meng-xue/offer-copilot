@@ -11,13 +11,17 @@ export type MessageItem = ChatMessage;
 
 type CreateConversationResponse = {
   conv_id: string;
+  knowledge_base_id: number;
   created_at: string;
 };
 
-export function createConversation(signal?: AbortSignal) {
+export function createConversation(
+  knowledgeBaseId: number,
+  signal?: AbortSignal,
+) {
   return post<CreateConversationResponse>(
     "/qa/conversations",
-    {},
+    { knowledge_base_id: knowledgeBaseId },
     { auth: true, signal },
   );
 }

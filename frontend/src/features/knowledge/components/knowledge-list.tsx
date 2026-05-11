@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import type { KnowledgeBaseListItem } from "@/services/knowledge";
 
 import { KnowledgeStatusBadge } from "./knowledge-status-badge";
@@ -6,6 +7,8 @@ type KnowledgeListProps = {
   items: KnowledgeBaseListItem[];
   isLoading: boolean;
   errorMessage: string | null;
+  deletingKnowledgeBaseId: number | null;
+  onDelete: (knowledgeBaseId: number) => void;
   onRetry: () => void;
 };
 
@@ -13,6 +16,8 @@ export function KnowledgeList({
   items,
   isLoading,
   errorMessage,
+  deletingKnowledgeBaseId,
+  onDelete,
   onRetry,
 }: KnowledgeListProps) {
   if (isLoading) {
@@ -62,15 +67,16 @@ export function KnowledgeList({
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-        <div className="grid grid-cols-[1fr_auto] gap-4 border-b border-slate-200 px-4 py-3 text-sm font-medium text-slate-700">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] gap-4 border-b border-slate-200 px-4 py-3 text-sm font-medium text-slate-700">
           <span>知识库</span>
           <span>状态</span>
+          <span>操作</span>
         </div>
         <ul className="divide-y divide-slate-200">
           {items.map((item) => (
             <li
               key={item.knowledge_base_id}
-              className="grid gap-3 px-4 py-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-start"
+              className="grid gap-3 px-4 py-4 md:grid-cols-[minmax(0,1fr)_auto_auto] md:items-start"
             >
               <div className="min-w-0">
                 <p className="font-medium text-slate-950">
@@ -92,6 +98,24 @@ export function KnowledgeList({
                 ) : null}
               </div>
               <KnowledgeStatusBadge status={item.status} />
+              <div className="flex flex-col items-start gap-2 md:items-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={
+                    item.status === "pending" ||
+                    item.status === "processing" ||
+                    deletingKnowledgeBaseId === item.knowledge_base_id
+                  }
+                  onClick={() => onDelete(item.knowledge_base_id)}
+                >
+                  {deletingKnowledgeBaseId === item.knowledge_base_id ? "删除中..." : "删除"}
+                </Button>
+                {item.status === "pending" || item.status === "processing" ? (
+                  <p className="text-xs text-slate-500">索引中暂不可删除</p>
+                ) : null}
+              </div>
             </li>
           ))}
         </ul>

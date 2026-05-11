@@ -14,6 +14,18 @@ async def create_conversation(db: AsyncSession, user_id: int) -> Conversation:
     return conv
 
 
+async def create_conversation_with_knowledge_base(
+    db: AsyncSession,
+    user_id: int,
+    knowledge_base_id: int,
+) -> Conversation:
+    conv = Conversation(user_id=user_id, knowledge_base_id=knowledge_base_id)
+    db.add(conv)
+    await db.commit()
+    await db.refresh(conv)
+    return conv
+
+
 async def get_conversation_by_id(db: AsyncSession, conv_id: uuid.UUID) -> Conversation | None:
     stmt = select(Conversation).where(Conversation.id == conv_id)
     result = await db.execute(stmt)

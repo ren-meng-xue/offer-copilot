@@ -12,7 +12,7 @@ type ChatInputProps = {
   question: string;
   focusPulseToken: number;
   onQuestionChange: (question: string) => void;
-  onSubmit: (question: string) => Promise<boolean>;
+  onSubmit: (question: string) => Promise<void>;
 };
 
 export const ChatInput = forwardRef<HTMLInputElement, ChatInputProps>(function ChatInput({
@@ -30,11 +30,7 @@ export const ChatInput = forwardRef<HTMLInputElement, ChatInputProps>(function C
       return;
     }
 
-    const didComplete = await onSubmit(trimmedQuestion);
-
-    if (didComplete) {
-      onQuestionChange("");
-    }
+    await onSubmit(trimmedQuestion);
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {

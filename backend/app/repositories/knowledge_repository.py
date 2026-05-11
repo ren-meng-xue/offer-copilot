@@ -22,6 +22,42 @@ async def get_knowledge_base_by_id(db: AsyncSession, kb_id: int) -> KnowledgeBas
     return result.scalars().one_or_none()
 
 
+async def get_knowledge_base_by_source_url(db: AsyncSession, source_url: str) -> KnowledgeBase | None:
+    """按 source_url 查询知识库，供评测 fixture 解析稳定作用域使用。"""
+
+    stmt = (
+        select(KnowledgeBase)
+        .where(KnowledgeBase.source_url == source_url)
+        .order_by(KnowledgeBase.updated_at.desc())
+    )
+    result = await db.execute(stmt)
+    return result.scalars().first()
+
+
+async def get_latest_knowledge_base_by_name(db: AsyncSession, name: str) -> KnowledgeBase | None:
+    """按名称查询最近更新的一条知识库，避免 fixture 依赖固定主键。"""
+
+    stmt = (
+        select(KnowledgeBase)
+        .where(KnowledgeBase.name == name)
+        .order_by(KnowledgeBase.updated_at.desc())
+    )
+    result = await db.execute(stmt)
+    return result.scalars().first()
+
+
+async def list_knowledge_bases_by_user(db: AsyncSession, user_id: int) -> list[KnowledgeBase]:
+    """按用户查询知识库列表，避免跨用户展示导入记录。"""
+
+    stmt = (
+        select(KnowledgeBase)
+        .where(KnowledgeBase.user_id == user_id)
+        .order_by(KnowledgeBase.updated_at.desc())
+    )
+    result = await db.execute(stmt)
+    return list(result.scalars().all())
+
+
 async def update_knowledge_base_status(
     db: AsyncSession,
     kb_id: int,
@@ -49,6 +85,13 @@ async def update_knowledge_base_name(db: AsyncSession, kb_id: int, name: str) ->
     if kb is None:
         return
     kb.name = name
+    await db.commit()
+
+
+async def delete_knowledge_base(db: AsyncSession, kb: KnowledgeBase) -> None:
+    """删除知识库及其关联 chunks。"""
+
+    await db.delete(kb)
     await db.commit()
 
 
