@@ -51,26 +51,26 @@ async def debug_health_check(db: AsyncSession = Depends(get_db)):
         results["redis"] = f"失败: {exc}"
         results["celery_queue_pending_tasks"] = "N/A（Redis 不可达）"
 
-    # 3. 检查 knowledge_base 表是否存在
+    # 3. 检查 knowledge_bases 表是否存在
     try:
         row = await db.execute(
             text(
                 "SELECT EXISTS (SELECT FROM information_schema.tables "
-                "WHERE table_name = 'knowledge_base')"
+                "WHERE table_name = 'knowledge_bases')"
             )
         )
         table_exists = row.scalar()
-        results["knowledge_base_table_exists"] = table_exists
+        results["knowledge_bases_table_exists"] = table_exists
     except Exception as exc:
         await db.rollback()
-        results["knowledge_base_table_exists"] = f"检查失败: {exc}"
+        results["knowledge_bases_table_exists"] = f"检查失败: {exc}"
 
     # 4. 知识库 #9 状态
     try:
         row = await db.execute(
             text(
                 "SELECT id, name, status, source_url, error_message, created_at, updated_at "
-                "FROM knowledge_base WHERE id = 9"
+                "FROM knowledge_bases WHERE id = 9"
             )
         )
         kb = row.fetchone()
@@ -93,7 +93,7 @@ async def debug_health_check(db: AsyncSession = Depends(get_db)):
     # 5. 所有知识库列表
     try:
         row = await db.execute(
-            text("SELECT id, name, status, created_at FROM knowledge_base ORDER BY id DESC LIMIT 20")
+            text("SELECT id, name, status, created_at FROM knowledge_bases ORDER BY id DESC LIMIT 20")
         )
         all_kbs = row.fetchall()
         results["all_knowledge_bases_count"] = len(all_kbs)
