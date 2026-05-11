@@ -25,8 +25,7 @@ class Settings(BaseSettings):
 
     # 基础设施配置，后续 auth、数据库和任务系统都会依赖这些变量。
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5433/offercopilot"
-
-
+    ALEMBIC_DATABASE_URL: str = "postgresql+psycopg2://postgres:postgres@localhost:5433/offercopilot"
 
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379

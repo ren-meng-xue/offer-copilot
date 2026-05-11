@@ -6,7 +6,7 @@ from backend.app.core.config import settings
 
 # 全局异步引擎，统一复用连接池配置。
 engine = create_async_engine(
-settings.DATABASE_URL,
+    settings.DATABASE_URL,
     echo=settings.DEBUG,
     pool_pre_ping=True,
 )
