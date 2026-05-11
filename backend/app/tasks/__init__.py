@@ -13,6 +13,8 @@ celery_app = Celery(
 )
 
 celery_app.conf.update(
+    # 生产环境容器内存有限，限制并发数避免 OOM。
+    worker_concurrency=1,
     # 任务参数统一用 JSON，避免 pickle 带来的安全风险。
     task_serializer="json",
     # 任务结果也用 JSON，便于接口读取和调试。
