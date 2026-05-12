@@ -81,26 +81,26 @@ function ResetPasswordForm() {
     <section className="space-y-6 lg:space-y-7">
       <div className="space-y-5 text-center sm:space-y-6">
         <div className="flex justify-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600">
+          <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600 dark:border-slate-700 dark:bg-[#2f2f2f] dark:text-[#8e8ea0]">
             <ShieldCheck className="size-3.5" />
             Reset Password
           </span>
         </div>
         <div className="space-y-2">
-          <h1 className="text-3xl font-semibold tracking-tight text-slate-950 sm:text-[2.2rem]">
+          <h1 className="text-3xl font-semibold tracking-tight text-slate-950 sm:text-[2.2rem] dark:text-[#ececec]">
             设置新密码
           </h1>
-          <p className="mx-auto max-w-[44ch] text-sm leading-6 text-slate-500">
+          <p className="mx-auto max-w-[44ch] text-sm leading-6 text-slate-500 dark:text-[#8e8ea0]">
             请输入新的登录密码，设置完成后即可返回登录页使用新密码继续访问。
           </p>
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-[640px] rounded-[28px] border border-slate-200/80 bg-white p-8 shadow-[0_30px_80px_-40px_rgba(15,23,42,0.32)] sm:p-9 md:p-10">
+      <div className="mx-auto w-full max-w-[640px] rounded-[28px] border border-slate-200/80 bg-white p-8 shadow-[0_30px_80px_-40px_rgba(15,23,42,0.32)] sm:p-9 md:p-10 dark:border-slate-700 dark:bg-[#2f2f2f] dark:shadow-none">
         {isSuccess ? (
           <div className="space-y-5">
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm leading-6 text-emerald-700">
-              <div className="flex items-center gap-2 font-medium text-emerald-800">
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm leading-6 text-emerald-700 dark:border-emerald-800/50 dark:bg-emerald-900/20 dark:text-emerald-400">
+              <div className="flex items-center gap-2 font-medium text-emerald-800 dark:text-emerald-300">
                 <CheckCircle2 className="size-4" />
                 密码已更新
               </div>
@@ -111,7 +111,7 @@ function ResetPasswordForm() {
 
             <Link
               href="/auth/login"
-              className="inline-flex h-12 w-full items-center justify-center gap-1.5 rounded-xl bg-slate-950 px-4 text-sm font-medium text-white transition-colors hover:bg-slate-800"
+              className="inline-flex h-12 w-full items-center justify-center gap-1.5 rounded-xl bg-slate-950 px-4 text-sm font-medium text-white transition-colors hover:bg-slate-800 dark:bg-[#ececec] dark:text-[#212121] dark:hover:bg-slate-200"
             >
               返回登录
               <ArrowLeft className="size-4" />
@@ -120,47 +120,47 @@ function ResetPasswordForm() {
         ) : (
           <form className="space-y-5" onSubmit={handleSubmit}>
             {email ? (
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-sm leading-6 text-slate-600">
-                正在为账号 <span className="font-medium text-slate-900">{email}</span> 设置新密码。
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-sm leading-6 text-slate-600 dark:border-slate-700 dark:bg-[#212121] dark:text-[#8e8ea0]">
+                正在为账号 <span className="font-medium text-slate-900 dark:text-[#ececec]">{email}</span> 设置新密码。
               </div>
             ) : null}
 
             <div className="space-y-2.5">
-              <Label htmlFor="new-password" className="text-sm font-medium text-slate-800">
+              <Label htmlFor="new-password" className="text-sm font-medium text-slate-800 dark:text-slate-200">
                 新密码
               </Label>
               <div className="relative">
-                <KeyRound className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                <KeyRound className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
                 <Input
                   id="new-password"
                   type="password"
                   value={newPassword}
                   onChange={(event) => setNewPassword(event.target.value)}
                   placeholder="请输入新密码"
-                  className="h-12 rounded-xl border-slate-200 bg-white pl-10 text-sm shadow-sm focus-visible:border-slate-900 focus-visible:ring-slate-900/10"
+                  className="h-12 rounded-xl border-slate-200 bg-white pl-10 text-sm shadow-sm focus-visible:border-slate-900 focus-visible:ring-slate-900/10 dark:border-slate-700 dark:bg-[#212121] dark:focus-visible:border-[#4f8ef7] dark:focus-visible:ring-[#4f8ef7]/10"
                 />
               </div>
             </div>
 
             <div className="space-y-2.5">
-              <Label htmlFor="confirm-password" className="text-sm font-medium text-slate-800">
+              <Label htmlFor="confirm-password" className="text-sm font-medium text-slate-800 dark:text-slate-200">
                 确认新密码
               </Label>
               <div className="relative">
-                <KeyRound className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                <KeyRound className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
                 <Input
                   id="confirm-password"
                   type="password"
                   value={confirmPassword}
                   onChange={(event) => setConfirmPassword(event.target.value)}
                   placeholder="再次输入新密码"
-                  className="h-12 rounded-xl border-slate-200 bg-white pl-10 text-sm shadow-sm focus-visible:border-slate-900 focus-visible:ring-slate-900/10"
+                  className="h-12 rounded-xl border-slate-200 bg-white pl-10 text-sm shadow-sm focus-visible:border-slate-900 focus-visible:ring-slate-900/10 dark:border-slate-700 dark:bg-[#212121] dark:focus-visible:border-[#4f8ef7] dark:focus-visible:ring-[#4f8ef7]/10"
                 />
               </div>
             </div>
 
             {error ? (
-              <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+              <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600 dark:border-rose-800/50 dark:bg-rose-900/20 dark:text-rose-400">
                 {error}
               </div>
             ) : null}
@@ -169,15 +169,15 @@ function ResetPasswordForm() {
               type="submit"
               size="lg"
               disabled={isSubmitting}
-              className="h-12 w-full rounded-xl bg-slate-950 text-white hover:bg-slate-800"
+              className="h-12 w-full rounded-xl bg-slate-950 text-white hover:bg-slate-800 dark:bg-[#ececec] dark:text-[#212121] dark:hover:bg-slate-200"
             >
               {isSubmitting ? "提交中..." : "确认重置密码"}
             </Button>
 
-            <div className="border-t border-slate-100 pt-5 text-center text-sm text-slate-500">
+            <div className="border-t border-slate-100 pt-5 text-center text-sm text-slate-500 dark:border-slate-800 dark:text-[#8e8ea0]">
               <Link
                 href="/auth/login"
-                className="inline-flex items-center gap-1 font-medium text-slate-900 underline-offset-4 hover:underline"
+                className="inline-flex items-center gap-1 font-medium text-slate-900 underline-offset-4 hover:underline dark:text-[#ececec]"
               >
                 <ArrowLeft className="size-4" />
                 返回登录

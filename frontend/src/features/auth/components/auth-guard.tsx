@@ -40,9 +40,9 @@ export function AuthGuard({ children }: AuthGuardProps) {
 
   if (!isChecked) {
     return (
-      <div className="grid min-h-screen place-items-center bg-slate-50 text-sm text-slate-500">
+      <div className="grid min-h-screen place-items-center bg-[#fafafa] text-sm text-slate-500 dark:bg-[#212121] dark:text-[#8e8ea0]">
         <div className="flex items-center gap-3">
-          <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700" />
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700 dark:border-slate-600 dark:border-t-slate-300" />
           <span>正在加载工作区...</span>
         </div>
       </div>

@@ -87,6 +87,7 @@ export function KnowledgeImportForm({
               文档 URL
             </label>
             <input
+              key="url-input"
               id="knowledge-source-url"
               type="url"
               className={inputClass}
@@ -105,6 +106,7 @@ export function KnowledgeImportForm({
               选择文件 (.md, .txt)
             </label>
             <input
+              key="file-input"
               id="knowledge-file"
               type="file"
               accept=".md,.txt"

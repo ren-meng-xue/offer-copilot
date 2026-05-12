@@ -68,13 +68,13 @@ export function UserMenu({ isCollapsed = false }: UserMenuProps) {
     >
       {!isCollapsed ? (
         <div className="flex min-w-0 items-center gap-2">
-          <UserCircle className="size-5 shrink-0 text-slate-500" />
+          <UserCircle className="size-5 shrink-0 text-slate-500 dark:text-[#8e8ea0]" />
           <div className="min-w-0">
-            <p className="truncate text-sm font-medium text-slate-900">
+            <p className="truncate text-sm font-medium text-slate-900 dark:text-[#ececec]">
               {displayName}
             </p>
             {currentUser?.email ? (
-              <p className="truncate text-xs text-slate-500">
+              <p className="truncate text-xs text-slate-500 dark:text-[#8e8ea0]">
                 {currentUser.email}
               </p>
             ) : null}
@@ -95,7 +95,7 @@ export function UserMenu({ isCollapsed = false }: UserMenuProps) {
           <LogOut />
         </Button>
         {isCollapsed ? (
-          <span className="pointer-events-none absolute bottom-1/2 left-full z-30 ml-2 translate-y-1/2 whitespace-nowrap rounded-md bg-slate-950 px-2 py-1 text-xs font-medium text-white opacity-0 shadow-sm transition-opacity group-hover/user-logout:opacity-100 group-focus-within/user-logout:opacity-100">
+          <span className="pointer-events-none absolute bottom-1/2 left-full z-30 ml-2 translate-y-1/2 whitespace-nowrap rounded-md bg-slate-950 px-2 py-1 text-xs font-medium text-white opacity-0 shadow-sm transition-opacity group-hover/user-logout:opacity-100 group-focus-within/user-logout:opacity-100 dark:bg-[#ececec] dark:text-[#212121]">
             {displayName}，退出登录
           </span>
         ) : null}

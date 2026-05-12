@@ -62,7 +62,9 @@ export async function request<TResponse>(
   const { method = "GET", body, headers, token, auth = false, signal } = options;
   const requestHeaders = new Headers(headers);
 
-  if (!requestHeaders.has("Content-Type") && body !== undefined) {
+  const isFormData = body instanceof FormData;
+
+  if (!requestHeaders.has("Content-Type") && body !== undefined && !isFormData) {
     requestHeaders.set("Content-Type", "application/json");
   }
 
@@ -75,7 +77,7 @@ export async function request<TResponse>(
   let response = await fetch(buildUrl(path), {
     method,
     headers: requestHeaders,
-    body: body === undefined ? undefined : JSON.stringify(body),
+    body: body === undefined ? undefined : isFormData ? (body as any) : JSON.stringify(body),
     signal,
     credentials: "include",
   });

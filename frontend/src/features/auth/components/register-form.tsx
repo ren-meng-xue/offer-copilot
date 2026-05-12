@@ -5,12 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, BriefcaseBusiness, Mail, UserRound } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { ApiError } from "@/lib/http";
 import { PasswordInput } from "@/features/auth/components/password-input";
 import { register } from "@/services/auth";
+
+const inputClass =
+  "h-12 w-full rounded-xl border border-slate-200 bg-white pl-10 text-sm text-slate-900 shadow-sm outline-none placeholder:text-slate-400 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-[#212121] dark:text-[#ececec] dark:placeholder:text-[#8e8ea0] dark:focus:border-slate-600 dark:focus:ring-slate-600/10";
 
 export function RegisterForm() {
   const router = useRouter();
@@ -58,30 +58,30 @@ export function RegisterForm() {
     <section className="space-y-6 lg:space-y-7">
       <div className="space-y-5 text-center sm:space-y-6">
         <div className="flex justify-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600">
+          <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600 dark:border-slate-700 dark:bg-[#2f2f2f] dark:text-[#8e8ea0]">
             <ArrowRight className="size-3.5" />
             Get Started
           </span>
         </div>
         <div className="space-y-2">
-          <h1 className="text-3xl font-semibold tracking-tight text-slate-950 sm:text-[2.2rem]">
+          <h1 className="text-3xl font-semibold tracking-tight text-slate-950 dark:text-[#ececec] sm:text-[2.2rem]">
             创建账号
           </h1>
-          <p className="mx-auto max-w-[40ch] text-sm leading-6 text-slate-500">
+          <p className="mx-auto max-w-[40ch] text-sm leading-6 text-slate-500 dark:text-[#8e8ea0]">
             创建账号，导入你的技术文档，让文档助手基于真实内容回答问题。
           </p>
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-[640px] rounded-[28px] border border-slate-200/80 bg-white p-8 shadow-[0_30px_80px_-40px_rgba(15,23,42,0.32)] sm:p-9 md:p-10">
+      <div className="mx-auto w-full max-w-[640px] rounded-[28px] border border-slate-200/80 bg-white p-8 shadow-[0_30px_80px_-40px_rgba(15,23,42,0.32)] dark:border-slate-700 dark:bg-[#2f2f2f] dark:shadow-none sm:p-9 md:p-10">
         <form className="space-y-5" onSubmit={handleSubmit}>
           <div className="space-y-2.5">
-            <Label htmlFor="username" className="text-sm font-medium text-slate-800">
+            <label htmlFor="username" className="block text-sm font-medium text-slate-800 dark:text-slate-200">
               用户名
-            </Label>
+            </label>
             <div className="relative">
-              <UserRound className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-              <Input
+              <UserRound className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+              <input
                 id="username"
                 type="text"
                 value={username}
@@ -89,36 +89,36 @@ export function RegisterForm() {
                 autoComplete="username"
                 placeholder="你的昵称"
                 disabled={isSubmitting}
-                className="h-12 rounded-xl border-slate-200 bg-white pl-10 text-sm shadow-sm focus-visible:border-slate-900 focus-visible:ring-slate-900/10"
+                className={inputClass}
               />
             </div>
           </div>
 
           <div className="space-y-2.5">
-            <Label htmlFor="status" className="text-sm font-medium text-slate-800">
+            <label htmlFor="status" className="block text-sm font-medium text-slate-800 dark:text-slate-200">
               当前角色
-            </Label>
+            </label>
             <div className="relative">
-              <BriefcaseBusiness className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-              <Input
+              <BriefcaseBusiness className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+              <input
                 id="status"
                 type="text"
                 value={currentIdentity}
                 onChange={(event) => setCurrentIdentity(event.target.value)}
                 placeholder="如：后端开发者"
                 disabled={isSubmitting}
-                className="h-12 rounded-xl border-slate-200 bg-white pl-10 text-sm shadow-sm focus-visible:border-slate-900 focus-visible:ring-slate-900/10"
+                className={inputClass}
               />
             </div>
           </div>
 
           <div className="space-y-2.5">
-            <Label htmlFor="email" className="text-sm font-medium text-slate-800">
+            <label htmlFor="email" className="block text-sm font-medium text-slate-800 dark:text-slate-200">
               邮箱
-            </Label>
+            </label>
             <div className="relative">
-              <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-              <Input
+              <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+              <input
                 id="email"
                 type="email"
                 value={email}
@@ -126,15 +126,15 @@ export function RegisterForm() {
                 autoComplete="email"
                 placeholder="you@example.com"
                 disabled={isSubmitting}
-                className="h-12 rounded-xl border-slate-200 bg-white pl-10 text-sm shadow-sm focus-visible:border-slate-900 focus-visible:ring-slate-900/10"
+                className={inputClass}
               />
             </div>
           </div>
 
           <div className="space-y-2.5">
-            <Label htmlFor="password" className="text-sm font-medium text-slate-800">
+            <label htmlFor="password" className="block text-sm font-medium text-slate-800 dark:text-slate-200">
               密码
-            </Label>
+            </label>
             <PasswordInput
               id="password"
               placeholder="至少 8 位"
@@ -146,33 +146,32 @@ export function RegisterForm() {
           </div>
 
           {error ? (
-            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600 dark:border-rose-800/50 dark:bg-rose-900/20 dark:text-rose-400">
               {error}
             </div>
           ) : null}
 
           {success ? (
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-800/50 dark:bg-emerald-900/20 dark:text-emerald-400">
               {success}
             </div>
           ) : null}
 
-          <Button
+          <button
             type="submit"
-            size="lg"
             disabled={isSubmitting}
-            className="h-12 w-full rounded-xl bg-slate-950 text-white hover:bg-slate-800"
+            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-slate-950 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-[#ececec] dark:text-[#212121] dark:hover:bg-white"
           >
             {isSubmitting ? "注册中..." : "创建账号"}
             <ArrowRight className="size-4" />
-          </Button>
+          </button>
         </form>
 
-        <div className="mt-6 border-t border-slate-100 pt-5 text-center text-sm text-slate-500">
+        <div className="mt-6 border-t border-slate-100 pt-5 text-center text-sm text-slate-500 dark:border-slate-800 dark:text-[#8e8ea0]">
           已经有账号？
           <Link
             href="/auth/login"
-            className="ml-1 font-medium text-slate-900 underline-offset-4 hover:underline"
+            className="ml-1 font-medium text-slate-900 underline-offset-4 hover:underline dark:text-[#ececec]"
           >
             去登录
           </Link>

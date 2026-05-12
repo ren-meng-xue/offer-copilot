@@ -2,10 +2,7 @@
 
 import type { KeyboardEvent } from "react";
 import { forwardRef } from "react";
-import { ArrowUp, CornerDownLeft } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+import { ArrowUp } from "lucide-react";
 
 type ChatInputProps = {
   disabled: boolean;
@@ -18,7 +15,6 @@ type ChatInputProps = {
 export const ChatInput = forwardRef<HTMLInputElement, ChatInputProps>(function ChatInput({
   disabled,
   question,
-  focusPulseToken,
   onQuestionChange,
   onSubmit,
 }: ChatInputProps, ref) {
@@ -41,15 +37,12 @@ export const ChatInput = forwardRef<HTMLInputElement, ChatInputProps>(function C
   };
 
   return (
-    <div className="border-t border-slate-200/80 bg-white/95 p-3 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+    <div className="border-t border-[rgba(148,163,184,0.24)] bg-[#fafafa] p-3 dark:border-[rgba(51,65,85,0.60)] dark:bg-[#212121]">
       <div className="mx-auto max-w-4xl">
-        <Label htmlFor="chat-question" className="sr-only">
+        <label htmlFor="chat-question" className="sr-only">
           技术问题
-        </Label>
-        <div
-          className="flex items-center gap-2 rounded-full border border-slate-300 bg-white py-1.5 pl-3 pr-2 shadow-sm focus-within:border-violet-300 focus-within:ring-2 focus-within:ring-violet-100 data-[pulse='true']:animate-pulse"
-          data-pulse={focusPulseToken > 0 ? "true" : "false"}
-        >
+        </label>
+        <div className="flex items-center gap-2 rounded-2xl border border-[rgba(148,163,184,0.24)] bg-white px-4 py-3 shadow-md focus-within:ring-2 focus-within:ring-[#2f6df6]/20 dark:border-slate-700 dark:bg-[#2f2f2f]">
           <input
             ref={ref}
             id="chat-question"
@@ -64,25 +57,18 @@ export const ChatInput = forwardRef<HTMLInputElement, ChatInputProps>(function C
             placeholder="问我任何文档问题"
             onChange={(event) => onQuestionChange(event.target.value)}
             onKeyDown={handleKeyDown}
-            className="h-8 min-w-0 flex-1 border-0 bg-transparent px-2 text-base text-slate-900 outline-none placeholder:text-slate-500 disabled:cursor-not-allowed disabled:text-slate-400"
+            className="min-w-0 flex-1 border-0 bg-transparent text-sm text-[#0f172a] outline-none placeholder:text-[#64748b] disabled:cursor-not-allowed disabled:opacity-50 dark:text-[#ececec] dark:placeholder:text-[#8e8ea0]"
           />
-          <div className="group relative flex items-center">
-            <Button
-              type="button"
-              size="icon"
-              aria-label="发送"
-              title="发送"
-              disabled={!canSubmit}
-              className="size-9 rounded-full bg-violet-500 text-white shadow-sm hover:bg-violet-600"
-              onClick={() => void submitQuestion()}
-            >
-              <ArrowUp className="size-5" />
-            </Button>
-            <span className="pointer-events-none absolute -bottom-7 left-1/2 hidden -translate-x-1/2 items-center gap-1 rounded-md bg-black px-2 py-1 text-xs leading-none whitespace-nowrap text-white group-focus-within:flex group-hover:flex">
-              发送提示
-              <CornerDownLeft className="size-3.5" />
-            </span>
-          </div>
+          <button
+            type="button"
+            aria-label="发送"
+            title="发送 (Enter)"
+            disabled={!canSubmit}
+            onClick={() => void submitQuestion()}
+            className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#2f6df6] text-white transition-colors hover:bg-[#1d5fe5] disabled:cursor-not-allowed disabled:opacity-40 dark:bg-[#4f8ef7] dark:hover:bg-[#3d7df5]"
+          >
+            <ArrowUp className="size-4" />
+          </button>
         </div>
       </div>
     </div>

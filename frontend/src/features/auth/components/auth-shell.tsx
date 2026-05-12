@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 
+import { ThemeToggle } from "@/features/workspace/components/theme-toggle";
 import { AuthAnimatedCharacters } from "@/features/auth/components/auth-animated-characters";
 
 type AuthShellProps = {
@@ -11,7 +12,10 @@ export function AuthShell({ children }: AuthShellProps) {
   return (
     <div className="grid min-h-screen select-none lg:h-screen lg:grid-cols-[1fr_1fr] lg:overflow-hidden xl:grid-cols-[0.96fr_1.04fr]">
       <AuthAside />
-      <section className="flex items-center justify-center bg-white px-5 py-8 sm:px-8 lg:px-8 lg:py-6 xl:px-12">
+      <section className="relative flex items-center justify-center bg-[#fafafa] px-5 py-8 dark:bg-[#212121] sm:px-8 lg:px-8 lg:py-6 xl:px-12">
+        <div className="absolute right-4 top-4">
+          <ThemeToggle />
+        </div>
         <div className="w-full max-w-[760px]">
           <div className="mb-8 flex items-center justify-center lg:hidden">
             <AuthBrand />
@@ -25,7 +29,7 @@ export function AuthShell({ children }: AuthShellProps) {
 
 function AuthAside() {
   return (
-    <aside className="relative hidden overflow-hidden lg:flex lg:flex-col lg:justify-between lg:bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.22),_transparent_28%),linear-gradient(145deg,_#64748b_0%,_#475569_45%,_#0f172a_100%)] lg:px-10 lg:py-8 lg:text-white xl:px-12 xl:py-10">
+    <aside className="relative hidden overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.22),_transparent_28%),linear-gradient(145deg,_#64748b_0%,_#475569_45%,_#0f172a_100%)] lg:flex lg:flex-col lg:justify-between lg:px-10 lg:py-8 lg:text-white xl:px-12 xl:py-10">
       <div className="relative z-10">
         <AuthBrand />
       </div>
@@ -55,8 +59,8 @@ function AuthAside() {
       </div>
 
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.06)_1px,transparent_1px)] bg-[size:22px_22px] opacity-30" />
-      <div className="absolute right-20 top-24 size-56 rounded-full bg-white/10 blur-3xl" />
-      <div className="absolute bottom-16 left-12 size-72 rounded-full bg-sky-300/10 blur-3xl" />
+      <div className="absolute right-20 top-24 size-56 rounded-full bg-indigo-400/10 blur-3xl" />
+      <div className="absolute bottom-16 left-12 size-72 rounded-full bg-indigo-600/10 blur-3xl" />
     </aside>
   );
 }
@@ -64,14 +68,14 @@ function AuthAside() {
 function AuthBrand() {
   return (
     <Link href="/" className="inline-flex items-center gap-3">
-      <div className="flex size-10 items-center justify-center rounded-2xl bg-slate-950 text-sm font-semibold text-white shadow-sm lg:bg-white/12 lg:text-white">
+      <div className="flex size-10 items-center justify-center rounded-2xl bg-slate-950 text-sm font-semibold text-white shadow-sm dark:bg-[#2f2f2f] lg:bg-white/12 lg:text-white">
         OP
       </div>
       <div className="space-y-0.5">
-        <p className="text-sm font-medium text-slate-950 lg:text-white">
+        <p className="text-sm font-medium text-slate-950 dark:text-[#ececec] lg:text-white">
           文档助手
         </p>
-        <p className="text-xs text-slate-500 lg:text-slate-200">
+        <p className="text-xs text-slate-500 dark:text-[#8e8ea0] lg:text-slate-200">
           让技术文档开口回答
         </p>
       </div>

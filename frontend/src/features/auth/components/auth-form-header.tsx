@@ -19,10 +19,10 @@ export function AuthFormHeader({
         </div>
       ) : null}
       <div className="space-y-2">
-        <h1 className="text-3xl font-semibold tracking-tight text-slate-950 sm:text-[2.2rem]">
+        <h1 className="text-3xl font-semibold tracking-tight text-slate-950 dark:text-[#ececec] sm:text-[2.2rem]">
           {title}
         </h1>
-        <p className="mx-auto max-w-[40ch] text-sm leading-6 text-slate-500">
+        <p className="mx-auto max-w-[40ch] text-sm leading-6 text-slate-500 dark:text-[#8e8ea0]">
           {description}
         </p>
       </div>

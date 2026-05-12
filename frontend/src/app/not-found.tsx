@@ -4,7 +4,7 @@ import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 export default function NotFound() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-white p-6">
+    <main className="flex min-h-screen items-center justify-center bg-white p-6 dark:bg-[#212121]">
       <DotLottieReact
         src="/error-404.lottie"
         autoplay

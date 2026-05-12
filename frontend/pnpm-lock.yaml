@@ -38,6 +38,9 @@ importers:
       react-hook-form:
         specifier: ^7.73.1
         version: 7.73.1(react@19.2.4)
+      react-theme-switch-animation:
+        specifier: ^1.0.0
+        version: 1.0.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       shadcn:
         specifier: ^4.4.0
         version: 4.4.0(@types/node@20.19.39)(typescript@5.9.3)
@@ -2902,6 +2905,13 @@ packages:
   react-refresh@0.18.0:
     resolution: {integrity: sha512-QgT5//D3jfjJb6Gsjxv0Slpj23ip+HtOpnNgnb2S5zU3CB26G/IDPGoy4RJB42wzFE46DRsstbW6tKHoKbhAxw==}
     engines: {node: '>=0.10.0'}
+
+  react-theme-switch-animation@1.0.0:
+    resolution: {integrity: sha512-RiV++V5D9HQEt3ZutYQAO37Gmd1uVQBuUBvyptobV+wkpN38iUGmCireJrSlLAEP04B2jT87YD1ABU7Nl7dpsw==}
+    engines: {node: '>=18.17.0'}
+    peerDependencies:
+      react: ^17.0.0 || ^18.0.0
+      react-dom: ^17.0.0 || ^18.0.0
 
   react@19.2.4:
     resolution: {integrity: sha512-9nfp2hYpCwOjAN+8TZFGhtWEwgvWHXqESH8qT89AT/lWklpLON22Lc8pEtnpsZz7VmawabSU0gCjnj8aC0euHQ==}
@@ -6467,6 +6477,11 @@ snapshots:
   react-is@17.0.2: {}
 
   react-refresh@0.18.0: {}
+
+  react-theme-switch-animation@1.0.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+    dependencies:
+      react: 19.2.4
+      react-dom: 19.2.4(react@19.2.4)
 
   react@19.2.4: {}
 

@@ -8,10 +8,7 @@ import { listKnowledgeBases } from "@/services/knowledge";
 import {
   askConversation,
   createConversation,
-  deleteConversation,
   getConversationMessages,
-  listConversations,
-  type ConversationListItem,
   type MessageItem,
 } from "@/services/qa";
 
@@ -25,7 +22,6 @@ import {
 } from "../lib/chat-state";
 import type { KnowledgeBaseListItem, LocalChatMessage } from "../types";
 import { ChatInput } from "./chat-input";
-import { ConversationList } from "./conversation-list";
 import { MessageList } from "./message-list";
 
 type DraftConversationCache = {
@@ -37,16 +33,12 @@ type ChatPageProps = {
   conversationId?: string;
 };
 
-const conversationCacheKey = "__offercopilot_conversations_cache__";
 const messageCacheKey = "__offercopilot_chat_messages_cache__";
 const draftConversationCacheKey = "__offercopilot_chat_draft_conversation__";
 
 export function ChatPage({ conversationId }: ChatPageProps) {
   const router = useRouter();
   const draftConversationCache = readDraftConversationCache();
-  const [conversations, setConversations] = useState<ConversationListItem[]>(
-    () => readConversationCache(),
-  );
   const [messages, setMessages] = useState<LocalChatMessage[]>(
     () => readMessageCache(conversationId),
   );
@@ -54,12 +46,9 @@ export function ChatPage({ conversationId }: ChatPageProps) {
   const [isLoadingMessages, setIsLoadingMessages] = useState(() =>
     conversationId ? readMessageCache(conversationId).length === 0 : false,
   );
-  const [deletingConversationId, setDeletingConversationId] = useState<string | null>(
-    null,
-  );
   const [messageError, setMessageError] = useState<string | null>(null);
   const [questionDraft, setQuestionDraft] = useState("");
-  const [focusPulseToken, setFocusPulseToken] = useState(0);
+  const [focusPulseToken] = useState(0);
   const [readyKnowledgeBases, setReadyKnowledgeBases] = useState<KnowledgeBaseListItem[]>([]);
   const [selectedKnowledgeBaseId, setSelectedKnowledgeBaseId] = useState<number | null>(
     () => draftConversationCache?.knowledgeBaseId ?? null,
@@ -76,30 +65,6 @@ export function ChatPage({ conversationId }: ChatPageProps) {
   const activeKnowledgeBase = readyKnowledgeBases.find(
     (item) => item.knowledge_base_id === activeKnowledgeBaseId,
   );
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadConversations = async () => {
-      try {
-        const result = await listConversations();
-
-        if (isMounted) {
-          const visibleConversations = result.filter(hasConversationTitle);
-          writeConversationCache(visibleConversations);
-          setConversations(visibleConversations);
-        }
-      } catch {
-        // Keep current list on failure to avoid sidebar flicker during route switches.
-      }
-    };
-
-    void loadConversations();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -156,6 +121,17 @@ export function ChatPage({ conversationId }: ChatPageProps) {
             return mappedMessages;
           });
           setMessageError(null);
+
+          const lastAiMessage = [...mappedMessages]
+            .reverse()
+            .find((m) => m.role === "assistant");
+          if (lastAiMessage?.citations.length) {
+            window.dispatchEvent(
+              new CustomEvent("active-citations-updated", {
+                detail: lastAiMessage.citations,
+              }),
+            );
+          }
         }
       } catch (error) {
         if (isMounted) {
@@ -211,31 +187,6 @@ export function ChatPage({ conversationId }: ChatPageProps) {
     }
   }, [conversationId, isLoadingMessages, isStreaming]);
 
-  const focusQuestionInput = () => {
-    window.setTimeout(() => {
-      inputRef.current?.focus();
-    }, 0);
-  };
-
-  const handleNewConversation = () => {
-    if (isStreaming) {
-      return;
-    }
-
-    if (questionDraft.trim()) {
-      focusQuestionInput();
-      setFocusPulseToken((current) => current + 1);
-      return;
-    }
-
-    if (conversationId) {
-      router.push("/chat");
-    }
-
-    focusQuestionInput();
-    setFocusPulseToken((current) => current + 1);
-  };
-
   const handleSubmit = async (question: string) => {
     if (isStreaming) {
       return;
@@ -259,21 +210,7 @@ export function ChatPage({ conversationId }: ChatPageProps) {
           conversationId: conversation.conv_id,
           knowledgeBaseId: selectedKnowledgeBaseId,
         });
-        const title = createConversationTitle(question);
-        setConversations((current) => {
-          const next = [
-            {
-              conv_id: conversation.conv_id,
-              knowledge_base_id: conversation.knowledge_base_id,
-              title,
-              created_at: conversation.created_at,
-              updated_at: conversation.created_at,
-            },
-            ...current,
-          ];
-          writeConversationCache(next);
-          return next;
-        });
+        window.dispatchEvent(new CustomEvent("conversation-created"));
       }
 
       if (!targetConversationId) {
@@ -289,15 +226,6 @@ export function ChatPage({ conversationId }: ChatPageProps) {
       });
       writeMessageCache(activeConversationId, optimisticMessages);
       setQuestionDraft("");
-      setConversations((current) => {
-        const next = current.map((conversation) =>
-          conversation.conv_id === activeConversationId && !conversation.title
-            ? { ...conversation, title: createConversationTitle(question) }
-            : conversation,
-        );
-        writeConversationCache(next);
-        return next;
-      });
       const abortController = new AbortController();
       abortControllerRef.current = abortController;
       activeClientIdRef.current = clientId;
@@ -339,6 +267,9 @@ export function ChatPage({ conversationId }: ChatPageProps) {
               writeMessageCache(activeConversationId, next);
               return next;
             },
+          );
+          window.dispatchEvent(
+            new CustomEvent("active-citations-updated", { detail: event.data }),
           );
         }
 
@@ -394,45 +325,20 @@ export function ChatPage({ conversationId }: ChatPageProps) {
     }
   };
 
-  const handleDeleteConversation = async (targetConversationId: string) => {
-    try {
-      setDeletingConversationId(targetConversationId);
-      await deleteConversation(targetConversationId);
-      setConversations((current) => {
-        const next = current.filter(
-          (conversation) => conversation.conv_id !== targetConversationId,
-        );
-        writeConversationCache(next);
-        return next;
-      });
-
-      if (conversationId === targetConversationId) {
-        router.push("/chat");
-      }
-    } catch (error) {
-      setMessageError(error instanceof Error ? error.message : "删除会话失败");
-    } finally {
-      setDeletingConversationId(null);
-    }
-  };
-
   return (
-    <div className="flex h-screen min-h-0 bg-slate-50">
-        <ConversationList
-          conversations={conversations}
-          activeConversationId={conversationId}
-          onNewConversation={handleNewConversation}
-          disableNewConversation={isStreaming}
-          onDeleteConversation={handleDeleteConversation}
-          deletingConversationId={deletingConversationId}
-        />
-      <section className="flex min-w-0 flex-1 flex-col">
+    <div className="flex h-full min-h-0 flex-col bg-[#fafafa] dark:bg-[#212121]">
+      <MessageList
+        messages={messages}
+        isLoading={isLoadingMessages}
+        errorMessage={messageError}
+      />
+      <div className="shrink-0">
         {!conversationId ? (
-          <div className="border-b border-slate-200 bg-white px-6 py-3">
-            <label className="flex max-w-sm flex-col gap-1 text-sm text-slate-600">
-              <span>知识库</span>
+          <div className="mx-auto max-w-4xl px-4 pt-2">
+            <label className="flex items-center gap-2 text-sm text-[#64748b] dark:text-[#8e8ea0]">
+              <span className="shrink-0">知识库：</span>
               <select
-                className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
+                className="rounded-md border border-[rgba(148,163,184,0.32)] bg-white px-2 py-1 text-sm text-[#0f172a] dark:border-[rgba(51,65,85,0.60)] dark:bg-[#2f2f2f] dark:text-[#ececec]"
                 value={selectedKnowledgeBaseId ?? ""}
                 onChange={(event) => {
                   const value = event.target.value;
@@ -443,31 +349,14 @@ export function ChatPage({ conversationId }: ChatPageProps) {
                   <option value="">暂无可用知识库</option>
                 ) : null}
                 {readyKnowledgeBases.map((item) => (
-                  <option
-                    key={item.knowledge_base_id}
-                    value={item.knowledge_base_id}
-                  >
+                  <option key={item.knowledge_base_id} value={item.knowledge_base_id}>
                     {item.name}
                   </option>
                 ))}
               </select>
             </label>
           </div>
-        ) : activeKnowledgeBase ? (
-          <div className="border-b border-slate-200 bg-white px-6 py-3">
-            <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600">
-              <span className="font-medium text-slate-700">当前知识库</span>
-              <span className="rounded-full bg-violet-50 px-3 py-1 text-violet-700">
-                {activeKnowledgeBase.name}
-              </span>
-            </div>
-          </div>
         ) : null}
-        <MessageList
-          messages={messages}
-          isLoading={isLoadingMessages}
-          errorMessage={messageError}
-        />
         <ChatInput
           ref={inputRef}
           disabled={isStreaming}
@@ -476,7 +365,7 @@ export function ChatPage({ conversationId }: ChatPageProps) {
           onQuestionChange={setQuestionDraft}
           onSubmit={handleSubmit}
         />
-      </section>
+      </div>
     </div>
   );
 }
@@ -504,28 +393,6 @@ function createClientId() {
   }
 
   return `msg_${Date.now()}`;
-}
-
-function createConversationTitle(question: string) {
-  return question.trim().slice(0, 20);
-}
-
-function hasConversationTitle(conversation: ConversationListItem) {
-  return Boolean(conversation.title?.trim());
-}
-
-function readConversationCache(): ConversationListItem[] {
-  if (process.env.NODE_ENV === "test" || typeof window === "undefined") {
-    return [];
-  }
-
-  const cached = (
-    window as Window & {
-      [conversationCacheKey]?: ConversationListItem[];
-    }
-  )[conversationCacheKey];
-
-  return Array.isArray(cached) ? cached : [];
 }
 
 function readMessageCache(conversationId?: string): LocalChatMessage[] {
@@ -566,18 +433,6 @@ function clearMessageCache() {
   delete (window as Window & { [messageCacheKey]?: Record<string, LocalChatMessage[]> })[
     messageCacheKey
   ];
-}
-
-function writeConversationCache(conversations: ConversationListItem[]) {
-  if (process.env.NODE_ENV === "test" || typeof window === "undefined") {
-    return;
-  }
-
-  (
-    window as Window & {
-      [conversationCacheKey]?: ConversationListItem[];
-    }
-  )[conversationCacheKey] = conversations;
 }
 
 type DraftConversationWindow = Window & {

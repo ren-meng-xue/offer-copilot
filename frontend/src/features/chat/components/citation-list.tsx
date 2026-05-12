@@ -10,7 +10,7 @@ export function CitationList({ citations }: CitationListProps) {
   }
 
   return (
-    <div className="mt-3 space-y-2">
+    <div className="mt-3 flex flex-wrap gap-1.5">
       {citations.map((citation) => (
         <a
           key={`${citation.index}-${citation.chunk_id}`}
@@ -18,19 +18,44 @@ export function CitationList({ citations }: CitationListProps) {
           target="_blank"
           rel="noreferrer"
           title={citation.source_url}
-          className="block rounded-md border border-slate-200 bg-white p-3 text-sm transition-colors hover:border-slate-300 hover:bg-slate-50"
+          className="inline-flex items-center gap-1 rounded-full border border-[rgba(148,163,184,0.32)] bg-white px-2 py-0.5 text-xs text-[#64748b] transition-colors hover:border-[#2f6df6]/40 hover:text-[#2f6df6] dark:border-[rgba(51,65,85,0.60)] dark:bg-[#2f2f2f] dark:text-[#8e8ea0] dark:hover:border-[#4f8ef7]/40 dark:hover:text-[#4f8ef7]"
         >
-          <div className="flex items-center justify-between gap-3">
-            <span className="font-medium text-slate-950">
-              [{citation.index}] {citation.heading_path || "Source"}
-            </span>
-            <span className="truncate text-xs text-slate-500">
-              {citation.source_url}
-            </span>
-          </div>
-          <p className="mt-2 line-clamp-3 text-slate-600">
-            {citation.snippet}
+          <span className="font-medium">[{citation.index}]</span>
+          <span className="max-w-[160px] truncate">
+            {citation.heading_path || "Source"}
+          </span>
+        </a>
+      ))}
+    </div>
+  );
+}
+
+export function CitationPanel({ citations }: CitationListProps) {
+  if (citations.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="space-y-2 p-3">
+      {citations.map((citation) => (
+        <a
+          key={`${citation.index}-${citation.chunk_id}`}
+          href={citation.source_url}
+          target="_blank"
+          rel="noreferrer"
+          className="block rounded-xl border border-[rgba(148,163,184,0.24)] bg-white p-3 text-sm shadow-sm transition-transform hover:-translate-y-0.5 dark:border-slate-700 dark:bg-[#2f2f2f]"
+        >
+          <p className="truncate font-medium text-[#0f172a] dark:text-[#ececec]">
+            [{citation.index}] {citation.heading_path || "Source"}
           </p>
+          <p className="mt-1 truncate text-xs text-[#64748b] dark:text-[#8e8ea0]">
+            {citation.source_url}
+          </p>
+          {citation.snippet ? (
+            <p className="mt-2 line-clamp-2 text-xs text-[#64748b] dark:text-[#8e8ea0]">
+              {citation.snippet}
+            </p>
+          ) : null}
         </a>
       ))}
     </div>

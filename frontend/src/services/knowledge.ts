@@ -34,6 +34,22 @@ export function createKnowledgeBase(
   return post<CreateKnowledgeBaseResult>("/knowledge", payload, { auth: true });
 }
 
+export function uploadKnowledgeBase(payload: {
+  file: File;
+  name?: string;
+}): Promise<CreateKnowledgeBaseResult> {
+  const formData = new FormData();
+  formData.append("file", payload.file);
+  if (payload.name) {
+    formData.append("name", payload.name);
+  }
+
+  // 我们将 formData 强制转换为 any 传给 post，稍后会在 http.ts 中处理 Content-Type。
+  return post<CreateKnowledgeBaseResult>("/knowledge/upload", formData as any, {
+    auth: true,
+  });
+}
+
 export function getKnowledgeBaseStatus(
   id: number,
 ): Promise<KnowledgeBaseStatusResult> {
