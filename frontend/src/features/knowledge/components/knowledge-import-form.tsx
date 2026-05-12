@@ -3,115 +3,149 @@
 import type { FormEvent } from "react";
 import { useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import type { ImportPayload } from "../hooks/use-knowledge-base";
 
 type KnowledgeImportFormProps = {
   isSubmitting: boolean;
   errorMessage: string | null;
-  searchQuery: string;
-  onSearchQueryChange: (value: string) => void;
-  onSubmit: (payload: { source_url: string; name?: string }) => Promise<void>;
+  onSubmit: (payload: ImportPayload) => Promise<void>;
 };
 
 export function KnowledgeImportForm({
   isSubmitting,
   errorMessage,
-  searchQuery,
-  onSearchQueryChange,
   onSubmit,
 }: KnowledgeImportFormProps) {
+  const [importMode, setImportMode] = useState<"url" | "file">("url");
   const [sourceUrl, setSourceUrl] = useState("");
+  const [file, setFile] = useState<File | null>(null);
   const [name, setName] = useState("");
   const [localError, setLocalError] = useState<string | null>(null);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
-    const trimmedSourceUrl = sourceUrl.trim();
     const trimmedName = name.trim();
 
-    if (!trimmedSourceUrl) {
-      setLocalError("请输入文档 URL");
-      return;
+    if (importMode === "url") {
+      const trimmedSourceUrl = sourceUrl.trim();
+      if (!trimmedSourceUrl) {
+        setLocalError("请输入文档 URL");
+        return;
+      }
+      setLocalError(null);
+      await onSubmit({
+        source_url: trimmedSourceUrl,
+        ...(trimmedName ? { name: trimmedName } : {}),
+      });
+      setSourceUrl("");
+    } else {
+      if (!file) {
+        setLocalError("请选择要上传的文件");
+        return;
+      }
+      setLocalError(null);
+      await onSubmit({
+        file,
+        ...(trimmedName ? { name: trimmedName } : {}),
+      });
+      setFile(null);
     }
-
-    setLocalError(null);
-    await onSubmit({
-      source_url: trimmedSourceUrl,
-      ...(trimmedName ? { name: trimmedName } : {}),
-    });
-    setSourceUrl("");
     setName("");
   };
 
   const visibleError = localError ?? errorMessage;
 
-  return (
-    <form
-      onSubmit={handleSubmit}
-      className="border-b border-slate-200 bg-white px-4 py-5 sm:px-6 lg:px-8"
-    >
-      <div className="max-w-5xl space-y-4">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <h1 className="text-xl font-semibold text-slate-950">Knowledge</h1>
-            <p className="mt-1 text-sm text-slate-600">
-              导入开发者文档 URL，索引完成后即可在 Chat 中引用回答。
-            </p>
-          </div>
-          <div className="w-full max-w-sm space-y-2">
-            <Label htmlFor="knowledge-search">搜索知识库</Label>
-            <Input
-              id="knowledge-search"
-              value={searchQuery}
-              placeholder="按名称或 URL 搜索"
-              onChange={(event) => onSearchQueryChange(event.target.value)}
-            />
-          </div>
-        </div>
+  const inputClass =
+    "w-full rounded-xl border border-[rgba(148,163,184,0.32)] bg-white px-3 py-2 text-sm text-[#0f172a] outline-none placeholder:text-[#64748b] focus:border-[#2f6df6]/50 focus:ring-2 focus:ring-[#2f6df6]/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-[#212121] dark:text-[#ececec] dark:placeholder:text-[#8e8ea0]";
 
-        <div className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:grid-cols-[minmax(0,1fr)_220px_auto] md:items-end">
-          <div className="space-y-2">
-            <Label htmlFor="knowledge-source-url">文档 URL</Label>
-            <Input
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="inline-flex rounded-full bg-[#f2f2f2] p-1 dark:bg-[#1a1a1a]">
+        {(["url", "file"] as const).map((mode) => (
+          <button
+            key={mode}
+            type="button"
+            onClick={() => setImportMode(mode)}
+            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all ${
+              importMode === mode
+                ? "bg-white text-[#0f172a] shadow-sm dark:bg-[#2f2f2f] dark:text-[#ececec]"
+                : "text-[#64748b] hover:text-[#0f172a] dark:text-[#8e8ea0] dark:hover:text-[#ececec]"
+            }`}
+          >
+            {mode === "url" ? "URL 导入" : "文件上传"}
+          </button>
+        ))}
+      </div>
+
+      <div className="space-y-3">
+        {importMode === "url" ? (
+          <div className="space-y-1">
+            <label
+              htmlFor="knowledge-source-url"
+              className="text-xs font-medium text-[#64748b] dark:text-[#8e8ea0]"
+            >
+              文档 URL
+            </label>
+            <input
               id="knowledge-source-url"
               type="url"
+              className={inputClass}
               value={sourceUrl}
               disabled={isSubmitting}
               placeholder="https://docs.example.com"
-              onChange={(event) => setSourceUrl(event.target.value)}
+              onChange={(e) => setSourceUrl(e.target.value)}
             />
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="knowledge-name">名称</Label>
-            <Input
-              id="knowledge-name"
-              value={name}
+        ) : (
+          <div className="space-y-1">
+            <label
+              htmlFor="knowledge-file"
+              className="text-xs font-medium text-[#64748b] dark:text-[#8e8ea0]"
+            >
+              选择文件 (.md, .txt)
+            </label>
+            <input
+              id="knowledge-file"
+              type="file"
+              accept=".md,.txt"
               disabled={isSubmitting}
-              placeholder="可选"
-              onChange={(event) => setName(event.target.value)}
+              className={inputClass}
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
             />
           </div>
+        )}
 
-          <Button
-            type="submit"
-            size="lg"
-            className="h-10 rounded-xl bg-violet-600 px-5 text-white hover:bg-violet-700"
-            disabled={isSubmitting}
+        <div className="space-y-1">
+          <label
+            htmlFor="knowledge-name"
+            className="text-xs font-medium text-[#64748b] dark:text-[#8e8ea0]"
           >
-            {isSubmitting ? "导入中..." : "导入文档"}
-          </Button>
+            名称（可选）
+          </label>
+          <input
+            id="knowledge-name"
+            className={inputClass}
+            value={name}
+            disabled={isSubmitting}
+            placeholder="留空则自动识别标题"
+            onChange={(e) => setName(e.target.value)}
+          />
         </div>
-
-        {visibleError ? (
-          <p role="alert" className="text-sm text-rose-700">
-            {visibleError}
-          </p>
-        ) : null}
       </div>
+
+      {visibleError ? (
+        <p role="alert" className="text-sm text-rose-600 dark:text-rose-400">
+          {visibleError}
+        </p>
+      ) : null}
+
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        className="w-full rounded-xl bg-[#2f6df6] py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#1d5fe5] disabled:cursor-not-allowed disabled:opacity-50 dark:bg-[#4f8ef7] dark:hover:bg-[#3d7df5]"
+      >
+        {isSubmitting ? "处理中..." : importMode === "url" ? "导入文档" : "开始上传"}
+      </button>
     </form>
   );
 }

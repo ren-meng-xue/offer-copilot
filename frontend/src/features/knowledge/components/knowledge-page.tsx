@@ -1,192 +1,59 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 
-import {
-  createKnowledgeBase,
-  deleteKnowledgeBase,
-  getKnowledgeBaseStatus,
-  listKnowledgeBases,
-  type KnowledgeBaseListItem,
-} from "@/services/knowledge";
-
-import { KnowledgeImportForm } from "./knowledge-import-form";
+import { useKnowledgeBase } from "../hooks/use-knowledge-base";
+import { KnowledgeFilterTabs } from "./knowledge-filter-tabs";
+import { KnowledgeHeader } from "./knowledge-header";
+import { KnowledgeImportDialog } from "./knowledge-import-dialog";
 import { KnowledgeList } from "./knowledge-list";
 
-const POLL_INTERVAL_MS = 3000;
-
-function isIndexing(item: KnowledgeBaseListItem) {
-  return item.status === "pending" || item.status === "processing";
-}
-
 export function KnowledgePage() {
-  const [items, setItems] = useState<KnowledgeBaseListItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [deletingKnowledgeBaseId, setDeletingKnowledgeBaseId] = useState<number | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-
-  const indexingIds = useMemo(
-    () => items.filter(isIndexing).map((item) => item.knowledge_base_id),
-    [items],
-  );
-  const normalizedQuery = searchQuery.trim().toLowerCase();
-  const visibleItems = useMemo(() => {
-    if (!normalizedQuery) {
-      return items;
-    }
-
-    return items.filter((item) => {
-      const name = item.name.toLowerCase();
-      const sourceUrl = item.source_url.toLowerCase();
-      return name.includes(normalizedQuery) || sourceUrl.includes(normalizedQuery);
-    });
-  }, [items, normalizedQuery]);
-
-  const loadItems = useCallback(async (showLoading = true) => {
-    if (showLoading) {
-      setIsLoading(true);
-    }
-    setLoadError(null);
-
-    try {
-      const result = await listKnowledgeBases();
-      setItems(result);
-    } catch (error) {
-      setLoadError(
-        error instanceof Error ? error.message : "知识库列表加载失败",
-      );
-    } finally {
-      if (showLoading) {
-        setIsLoading(false);
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadInitialItems = async () => {
-      try {
-        const result = await listKnowledgeBases();
-
-        if (isMounted) {
-          setItems(result);
-          setLoadError(null);
-        }
-      } catch (error) {
-        if (isMounted) {
-          setLoadError(
-            error instanceof Error ? error.message : "知识库列表加载失败",
-          );
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    void loadInitialItems();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (indexingIds.length === 0) {
-      return;
-    }
-
-    const interval = window.setInterval(() => {
-      indexingIds.forEach((id) => {
-        void getKnowledgeBaseStatus(id)
-          .then((statusResult) => {
-            setItems((currentItems) =>
-              currentItems.map((item) =>
-                item.knowledge_base_id === statusResult.knowledge_base_id
-                  ? {
-                      ...item,
-                      status: statusResult.status,
-                      error_message: statusResult.error_message,
-                    }
-                  : item,
-              ),
-            );
-          })
-          .catch(() => {
-            setLoadError("部分知识库状态刷新失败，请稍后重试");
-          });
-      });
-    }, POLL_INTERVAL_MS);
-
-    return () => window.clearInterval(interval);
-  }, [indexingIds]);
-
-  const handleImport = async (payload: {
-    source_url: string;
-    name?: string;
-  }) => {
-    setIsSubmitting(true);
-    setSubmitError(null);
-
-    try {
-      const result = await createKnowledgeBase(payload);
-      const now = new Date().toISOString();
-      setItems((currentItems) => [
-        {
-          knowledge_base_id: result.knowledge_base_id,
-          name: payload.name ?? payload.source_url,
-          source_url: payload.source_url,
-          status: result.status,
-          error_message: null,
-          created_at: now,
-          updated_at: now,
-        },
-        ...currentItems,
-      ]);
-    } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : "导入失败");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleDelete = async (knowledgeBaseId: number) => {
-    setDeletingKnowledgeBaseId(knowledgeBaseId);
-    setLoadError(null);
-
-    try {
-      await deleteKnowledgeBase(knowledgeBaseId);
-      setItems((currentItems) =>
-        currentItems.filter((item) => item.knowledge_base_id !== knowledgeBaseId),
-      );
-    } catch (error) {
-      setLoadError(error instanceof Error ? error.message : "删除知识库失败");
-    } finally {
-      setDeletingKnowledgeBaseId(null);
-    }
-  };
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const {
+    visibleItems,
+    counts,
+    isLoading,
+    isSubmitting,
+    deletingKnowledgeBaseId,
+    loadError,
+    submitError,
+    activeTab,
+    searchQuery,
+    setActiveTab,
+    setSearchQuery,
+    handleImport,
+    handleDelete,
+    handleRetry,
+  } = useKnowledgeBase();
 
   return (
-    <section className="min-h-screen bg-slate-50">
-      <KnowledgeImportForm
+    <section className="flex h-full min-h-0 flex-col overflow-y-auto bg-[#fafafa] dark:bg-[#212121]">
+      <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 lg:px-8 space-y-4">
+        <KnowledgeHeader onAddClick={() => setIsDialogOpen(true)} />
+        <KnowledgeFilterTabs
+          activeTab={activeTab}
+          counts={counts}
+          searchQuery={searchQuery}
+          onTabChange={setActiveTab}
+          onSearchChange={setSearchQuery}
+        />
+        <KnowledgeList
+          items={visibleItems}
+          isLoading={isLoading}
+          errorMessage={loadError}
+          deletingKnowledgeBaseId={deletingKnowledgeBaseId}
+          activeTab={activeTab}
+          onDelete={handleDelete}
+          onRetry={handleRetry}
+        />
+      </div>
+      <KnowledgeImportDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
         isSubmitting={isSubmitting}
         errorMessage={submitError}
-        searchQuery={searchQuery}
-        onSearchQueryChange={setSearchQuery}
         onSubmit={handleImport}
-      />
-      <KnowledgeList
-        items={visibleItems}
-        isLoading={isLoading}
-        errorMessage={loadError}
-        deletingKnowledgeBaseId={deletingKnowledgeBaseId}
-        onDelete={handleDelete}
-        onRetry={() => void loadItems()}
       />
     </section>
   );
