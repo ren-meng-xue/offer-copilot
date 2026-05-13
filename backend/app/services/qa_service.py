@@ -627,34 +627,23 @@ async def stream_answer(
                 },
                 conv_id=conv_id,
             )
+        # 获取知识库摘要以增强全局理解
+        kb_summary = None
+        if conv.knowledge_base_id:
+            kb = await knowledge_repository.get_knowledge_base_by_id(db, conv.knowledge_base_id)
+            if kb:
+                kb_summary = kb.summary
+
         if not candidates:
-            _emit_rag_telemetry(
-                _build_rag_telemetry_payload(
-                    conversation_id=conv_id,
-                    knowledge_base_id=conv.knowledge_base_id,
-                    question=question,
-                    retrieval_query=retrieval_query,
-                    vector_candidates_count=vector_candidates_count,
-                    fts_candidates_count=fts_candidates_count,
-                    merged_candidates_count=merged_candidates_count,
-                    rerank_candidates_count=0,
-                    citations_count=0,
-                    rewrite_duration_ms=rewrite_duration_ms,
-                    vector_duration_ms=vector_duration_ms,
-                    fts_duration_ms=fts_duration_ms,
-                    rerank_duration_ms=0,
-                    generation_duration_ms=0,
-                    total_duration_ms=_duration_ms(total_start, perf_counter()),
-                    outcome="error",
-                    error_code="no_knowledge_base",
-                )
-            )
-            if debug:
-                yield _build_debug_event(
-                    "terminal_error",
-                    _build_debug_error_data(
-                        code="no_knowledge_base",
-                        message="请先导入知识库",
+            if kb_summary:
+                # 如果有全局摘要，即使没搜到切片也继续，让 LLM 根据摘要回答
+                candidates = []
+            else:
+                _emit_rag_telemetry(
+                    _build_rag_telemetry_payload(
+                        conversation_id=conv_id,
+                        knowledge_base_id=conv.knowledge_base_id,
+                        question=question,
                         retrieval_query=retrieval_query,
                         vector_candidates_count=vector_candidates_count,
                         fts_candidates_count=fts_candidates_count,
@@ -666,30 +655,25 @@ async def stream_answer(
                         fts_duration_ms=fts_duration_ms,
                         rerank_duration_ms=0,
                         generation_duration_ms=0,
-                    ),
+                        total_duration_ms=_duration_ms(total_start, perf_counter()),
+                        outcome="error",
+                        error_code="no_knowledge_base",
+                    )
                 )
-            yield {"type": "error", "message": "请先导入知识库"}
-            return
+                yield {"type": "error", "message": "根据已有文档，无法回答该问题"}
+                return
 
         # Rerank
         rerank_start = perf_counter()
-        top_chunks, rerank_scores = await _rerank(retrieval_query, candidates)
+        if candidates:
+            top_chunks, rerank_scores = await _rerank(retrieval_query, candidates)
+        else:
+            top_chunks, rerank_scores = [], []
+            
         rerank_duration_ms = _duration_ms(rerank_start, perf_counter())
         rerank_candidates_count = len(top_chunks)
-        if debug:
-            yield _build_debug_event(
-                "rerank",
-                {
-                    "rerank_candidates_count": rerank_candidates_count,
-                    "top_chunks": _debug_chunk_preview_with_score(top_chunks, rerank_scores),
-                    "unit": {
-                        "relevance_score": "相关性分数 (0-1)",
-                        "rerank_candidates_count": "候选数",
-                    },
-                },
-                conv_id=conv_id,
-            )
-        if not top_chunks:
+        
+        if not top_chunks and not kb_summary:
             _emit_rag_telemetry(
                 _build_rag_telemetry_payload(
                     conversation_id=conv_id,
@@ -711,34 +695,8 @@ async def stream_answer(
                     error_code="no_relevant_context",
                 )
             )
-            if debug:
-                yield _build_debug_event(
-                    "terminal_error",
-                    _build_debug_error_data(
-                        code="no_relevant_context",
-                        message="根据已有文档，无法回答该问题",
-                        retrieval_query=retrieval_query,
-                        vector_candidates_count=vector_candidates_count,
-                        fts_candidates_count=fts_candidates_count,
-                        merged_candidates_count=merged_candidates_count,
-                        rerank_candidates_count=rerank_candidates_count,
-                        citations_count=0,
-                        rewrite_duration_ms=rewrite_duration_ms,
-                        vector_duration_ms=vector_duration_ms,
-                        fts_duration_ms=fts_duration_ms,
-                        rerank_duration_ms=rerank_duration_ms,
-                        generation_duration_ms=0,
-                    ),
-                )
             yield {"type": "error", "message": "根据已有文档，无法回答该问题"}
             return
-
-        # 获取知识库摘要以增强全局理解
-        kb_summary = None
-        if conv.knowledge_base_id:
-            kb = await knowledge_repository.get_knowledge_base_by_id(db, conv.knowledge_base_id)
-            if kb:
-                kb_summary = kb.summary
 
         # 构建 prompt
         messages = _build_prompt(question, top_chunks, recent, conv.summary, kb_summary)
@@ -817,8 +775,11 @@ async def stream_answer(
     generation_duration_ms = _duration_ms(generation_start, perf_counter())
 
     # 提取并校验 citations；无有效引用的答案不能作为可信回答入库。
+    # 优化：如果是基于全局摘要回答且没有切片，则放宽校验。
     try:
-        citations = _require_citations(full_answer, top_chunks)
+        citations = _extract_citations(full_answer, top_chunks)
+        if not citations and not kb_summary:
+            raise CitationValidationError("Generated answer has no valid citations")
     except CitationValidationError:
         _emit_rag_telemetry(
             _build_rag_telemetry_payload(
