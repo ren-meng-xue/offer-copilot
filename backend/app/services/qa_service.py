@@ -413,6 +413,55 @@ async def _rewrite_query(
         return question
 
 
+async def _classify_intent(question: str) -> str:
+    """
+    预判用户意图：
+    - GENERAL: 招呼、自我介绍、闲聊、感谢、通用询问
+    - RETRIEVAL: 涉及具体的文档内容、配置、API、操作步骤等
+    """
+    try:
+        client = _openai_client()
+        resp = await client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "你是一个意图分类助手。请判断用户输入属于哪种类别：\n"
+                        "1. GENERAL: 招呼(你好)、闲聊、身份询问(你是谁)、简单常识、纯礼貌性回复。\n"
+                        "2. RETRIEVAL: 涉及技术文档、具体的业务知识、操作指南、代码实现或配置等。\n"
+                        "只输出类别名称（GENERAL 或 RETRIEVAL），不要输出其他任何内容。"
+                    )
+                },
+                {"role": "user", "content": question}
+            ],
+            temperature=0,
+            max_tokens=10,
+        )
+        intent = (resp.choices[0].message.content or "RETRIEVAL").strip().upper()
+        return intent if intent in ["GENERAL", "RETRIEVAL"] else "RETRIEVAL"
+    except Exception as e:
+        logger.warning(f"Intent classification failed: {e}")
+        return "RETRIEVAL"  # 失败时保底走 RAG
+
+
+def _build_general_prompt(
+    question: str,
+    recent_messages: list[Message],
+) -> list[dict[str, str]]:
+    """为通用闲聊构建 Prompt。"""
+    messages: list[dict[str, str]] = [
+        {
+            "role": "system",
+            "content": "你是一个专业的技术文档助手 OfferPilot。对于用户的招呼或闲聊，请礼貌且简洁地回复，并告知用户你可以基于文档提供专业的技术问答支持。"
+        }
+    ]
+    for msg in recent_messages:
+        messages.append({"role": msg.role, "content": msg.content})
+    messages.append({"role": "user", "content": question})
+    return messages
+
+
 def _build_prompt(
     question: str,
     chunks: list[DocumentChunk],
@@ -551,6 +600,44 @@ async def stream_answer(
             }
             return
 
+        # 1. 意图识别：如果是简单打招呼或闲聊，跳过 RAG 检索
+        intent = await _classify_intent(question)
+        
+        if intent == "GENERAL":
+            recent = await qa_repository.get_recent_messages(db, conv_id, limit=KEEP_RECENT)
+            messages = _build_general_prompt(question, recent)
+            
+            # 跳过所有检索逻辑，直接进入流式生成
+            client = _openai_client()
+            full_answer = ""
+            try:
+                # 记录用户消息
+                await qa_repository.create_message(db, conv_id, "user", question)
+                is_first_message = (conv.message_count or 0) == 0
+                if is_first_message:
+                    await qa_repository.update_conversation_title(db, conv_id, truncate_title(question))
+
+                resp = await client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=messages, # type: ignore[arg-type]
+                    stream=True,
+                )
+                async for chunk in resp:
+                    token = chunk.choices[0].delta.content or ""
+                    if token:
+                        full_answer += token
+                        yield {"type": "token", "content": token}
+                
+                # 写入 assistant 消息 (无引用)
+                await qa_repository.create_message(db, conv_id, "assistant", full_answer, None)
+                yield {"type": "done"}
+                return
+            except Exception as e:
+                logger.error(f"General chat failed: {e}")
+                yield {"type": "error", "message": "生成回答失败，请稍后重试"}
+                return
+
+        # 2. 知识检索意图 (RETRIEVAL)：走原有 RAG 流程
         recent = await qa_repository.get_recent_messages(db, conv_id, limit=KEEP_RECENT)
         rewrite_start = perf_counter()
         retrieval_query = await _rewrite_query(question, recent, conv.summary)
