@@ -16,6 +16,11 @@ type LoginEnvelope = {
   };
 };
 
+type StoredCurrentUser = {
+  username?: string | null;
+  email?: string | null;
+};
+
 let refreshPromise: Promise<string | null> | null = null;
 let restorePromise: Promise<boolean> | null = null;
 let isRedirectingToLogin = false;
@@ -98,6 +103,30 @@ export function setStoredCurrentUser(currentUser: unknown) {
   }
 
   window.localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(currentUser));
+}
+
+export function getStoredCurrentUser(): StoredCurrentUser | null {
+  if (!isBrowser()) {
+    return null;
+  }
+
+  const rawCurrentUser = window.localStorage.getItem(CURRENT_USER_KEY);
+
+  if (!rawCurrentUser) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(rawCurrentUser) as unknown;
+
+    if (parsed && typeof parsed === "object") {
+      return parsed as StoredCurrentUser;
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
 }
 
 export function clearSession() {

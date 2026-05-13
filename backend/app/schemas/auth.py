@@ -4,7 +4,7 @@ Time           : 2026/4/22 10:09
 Author         : xuebao
 File           : auth.py
 """
-from pydantic import BaseModel, Field, ConfigDict, EmailStr
+from pydantic import BaseModel, Field, ConfigDict, EmailStr, field_validator
 
 from backend.app.models.enums import UserStatus
 
@@ -33,7 +33,7 @@ class LoginResponse(BaseModel):
 class RegisterRequest(BaseModel):
     """前端注册请求体"""
     email: EmailStr = Field(..., description="用户邮箱")
-    username: str = Field(..., description="用户名")
+    username: str = Field(..., min_length=1, max_length=50, description="用户名")
     current_identity: str | None = Field(default=None, description="当前身份")
     password: str = Field(
         ...,
@@ -41,6 +41,14 @@ class RegisterRequest(BaseModel):
         max_length=128,
         description="登录密码",
     )
+
+    @field_validator("username")
+    @classmethod
+    def validate_username(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("用户名不能为空")
+        return normalized
 
 
 class UserInfoResponse(BaseModel):

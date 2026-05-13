@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+import { getStoredCurrentUser } from "@/lib/session";
 import { readSseStream } from "@/lib/stream";
 import { listKnowledgeBases } from "@/services/knowledge";
 import {
@@ -49,6 +50,7 @@ export function ChatPage({ conversationId }: ChatPageProps) {
   const [messageError, setMessageError] = useState<string | null>(null);
   const [questionDraft, setQuestionDraft] = useState("");
   const [focusPulseToken] = useState(0);
+  const [displayName, setDisplayName] = useState("用户");
   const [readyKnowledgeBases, setReadyKnowledgeBases] = useState<KnowledgeBaseListItem[]>([]);
   const [selectedKnowledgeBaseId, setSelectedKnowledgeBaseId] = useState<number | null>(
     () => draftConversationCache?.knowledgeBaseId ?? null,
@@ -65,6 +67,12 @@ export function ChatPage({ conversationId }: ChatPageProps) {
   const activeKnowledgeBase = readyKnowledgeBases.find(
     (item) => item.knowledge_base_id === activeKnowledgeBaseId,
   );
+
+  useEffect(() => {
+    const user = getStoredCurrentUser();
+    const resolvedDisplayName = user?.username?.trim() || user?.email?.trim() || "用户";
+    setDisplayName(resolvedDisplayName);
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -335,6 +343,7 @@ export function ChatPage({ conversationId }: ChatPageProps) {
         messages={messages}
         isLoading={isLoadingMessages}
         errorMessage={messageError}
+        displayName={displayName}
       />
       <div className="shrink-0">
         {!conversationId ? (

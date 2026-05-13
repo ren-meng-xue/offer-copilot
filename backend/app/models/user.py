@@ -25,7 +25,8 @@ class User(Base,TimestampMixin):
     # 用户名字【必填】
     username: Mapped[str] = mapped_column(
         String(50), unique=True,  # 唯一索引
-        index=True
+        index=True,
+        nullable=False,
     )
 
     # 当前身份，例如求职中、在职、在校等，先作为可选的用户画像信息。

@@ -5,12 +5,14 @@ type MessageListProps = {
   messages: LocalChatMessage[];
   isLoading: boolean;
   errorMessage: string | null;
+  displayName?: string;
 };
 
 export function MessageList({
   messages,
   isLoading,
   errorMessage,
+  displayName,
 }: MessageListProps) {
   if (isLoading) {
     return (
@@ -31,10 +33,12 @@ export function MessageList({
   }
 
   if (messages.length === 0) {
+    const safeDisplayName = displayName?.trim() || "用户";
+
     return (
       <div className="flex flex-1 items-start justify-center px-6 pt-[calc(22vh+140px)]">
         <h1 className="text-center text-2xl font-medium tracking-tight text-[#64748b] dark:text-[#8e8ea0]">
-          你好，雪宝。准备好开始了吗？
+          {`你好，${safeDisplayName}。准备好开始了吗？`}
         </h1>
       </div>
     );

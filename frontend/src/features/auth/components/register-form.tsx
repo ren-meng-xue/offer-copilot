@@ -29,13 +29,19 @@ export function RegisterForm() {
       return;
     }
 
+    const trimmedUsername = username.trim();
+    if (!trimmedUsername) {
+      setError("请输入用户名");
+      return;
+    }
+
     setError("");
     setSuccess("");
     setIsSubmitting(true);
 
     try {
       await register({
-        username,
+        username: trimmedUsername,
         current_identity: currentIdentity || undefined,
         email,
         password,
@@ -88,6 +94,7 @@ export function RegisterForm() {
                 onChange={(event) => setUsername(event.target.value)}
                 autoComplete="username"
                 placeholder="你的昵称"
+                required
                 disabled={isSubmitting}
                 className={inputClass}
               />

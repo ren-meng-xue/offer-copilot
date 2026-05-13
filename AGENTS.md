@@ -1,118 +1,58 @@
-# CLAUDE.md
+# Job Intel Agent - Codex 主控规范
 
-## 项目概述
+本文件是从项目 `CLAUDE.md` 与 `.claude/` 配置同步给 Codex 的项目级规则。Codex CLI 约定读取 `AGENTS.md`，因此本文件是项目内 Codex 的入口规范。
 
-开发者技术文档问答助手（RAG 模块）。用户粘贴技术文档 URL 或上传 PDF，系统异步爬取并建立向量知识库，支持自然语言问答，并附带可点击的引用溯源。
+## 全局约束
 
-核心目标：**为开发者提供可追溯答案的技术问答系统（引用溯源不可妥协）**
+1. 始终使用**简体中文**回复。
+2. 所有配置走环境变量，**禁止硬编码** Key / Secret。
+3. 禁止读取 `.env`、`.env.local`、`.env.production`、`.env.development`、`.env.staging`、`.env.test` 等环境文件；如需变量名，优先查看 `.env.example` 或让用户确认。
+4. commit / push 前必须等待用户回复「**1**」，否则不执行。
+5. LLM 调用只在 `services/` 层，`api/` 层禁止直接调用。
+6. 实时状态用 SSE + Redis Pub/Sub，**禁止轮询**。
+7. 数据库变更必须走 Alembic，禁止直接改表结构。
+8. commit 前，若新增或修改了 ORM 模型（`models/` 下任意文件），必须完成：
+   - `alembic revision --autogenerate -m "描述"` 已执行并 review
+   - `alembic upgrade head` 本地运行成功（表/字段与模型一致）
+   - 迁移文件已纳入本次 commit
+9. 开发新功能前必须先在 `docs/specs/YYYY-MM-DD-<feature>/` 创建 spec 文件（含 `spec.md` + `flow.html` 流程图），经用户确认后方可进入实现阶段。
+10. 本地开发环境通过 `./dev.sh` 启动（混合模式：Docker 跑 postgres + redis，其余服务直接在本机跑）。新增或删除服务时，**必须同步更新 `dev.sh`**，保持脚本与实际架构一致。
+11. 修改 Python 文件后，按项目习惯运行 `black` 与 `isort`；修改 TS/TSX 文件后，按项目习惯运行 `prettier`。若工具不可用，要在最终回复中说明。
+12. 删除任何文件、目录、数据、分支或远程资源前，必须先说明删除目标与影响范围，并等待用户明确允许后再删除。
 
-当前阶段：原型开发，优先跑通核心链路。
+## Skill 路由表
 
----
+遇到以下情境时，先主动读取对应 `.claude/skills/*.md` 文件，并按其中流程执行。Claude 专用的 `superpowers:*`、`gstack:*`、MCP 配置在 Codex 中不可直接等价时，使用本会话可用的 Codex skill、工具或手工流程替代，并说明替代方式。
 
-## 技术栈
+| 触发情境 | 读取 Skill |
+|---|---|
+| 讨论产品方向、功能边界、用户价值、竞品对比 | `.claude/skills/product.md` |
+| 开发任何新功能之前（写 spec + 流程图） | `.claude/skills/spec.md` |
+| 开发新功能、新 API、新模块 | `.claude/skills/feature-dev.md` |
+| 修复 Bug、排查问题、分析报错 | `.claude/skills/bug-fix.md` |
+| 编写测试、输出测试报告 | `.claude/skills/testing.md` |
+| 前端 UI 开发、页面验证、设计审计 | `.claude/skills/frontend.md` |
+| 部署上线、环境配置、迁移 | `.claude/skills/deploy.md` |
+| 生成独立 HTML 页面 / 视觉设计 / 海报 / 落地页 | `.claude/skills/frontend-design.md` |
+| 代码审查（任意场景） | Codex review stance / 可用 review skill |
+| 并行子任务开发（多模块同步） | 仅在用户明确要求子代理或并行 agent 时使用 Codex 子代理 |
 
-* 前端：Next.js + TypeScript + Tailwind
-* 后端：FastAPI（Python 3.12）
-* 向量数据库：PostgreSQL + pgvector
-* 任务队列：Celery + Redis
-* 存储：AWS S3
-* Embedding：OpenAI text-embedding-3-small
-* LLM：OpenAI gpt-4o
-* 爬虫：Firecrawl
-* ORM：SQLAlchemy + Alembic
-* 工具链：LangChain
-* 容器：Docker Compose
+## `.claude` 配置映射
 
----
+- `.claude/settings.json`
+  - Claude 配置禁止读取环境文件；Codex 也必须遵守。
+  - Claude 的 Bash/Write/Edit hooks 不会在 Codex 中自动执行；Codex 应在执行命令前清楚说明意图，并在编辑后主动运行相应格式化工具。
+  - Claude 启用了 `superpowers@claude-plugins-official`；Codex 中按可用 skill/tool 能力替代。
+- `.claude/settings.local.json`
+  - 其中的本地 `DATABASE_URL` 只作为 Claude 本地环境注入配置，不写入代码、不写入文档、不在回复中展开。
+  - 其中的 allow 权限、MCP server 列表是 Claude 专用配置，不代表 Codex 自动获得同等权限。
 
-## 核心架构（不可修改）
+## 技术栈快速参考
 
-RAG 流程：URL → Firecrawl → Markdown → Chunking(512/64) → Embedding → pgvector → 检索(向量+BM25+Rerank) → gpt-4o → 答案+citations
-
----
-
-## 核心约束
-
-* 每次回复都需要用中文回复。
-* 所有答案必须附带 citations
-* chunk metadata 必须包含：source_url、heading_path、chunk_index
-* 禁止生成无来源答案 / 跳过 rerank / 直接访问 DB（必须走 services）
-* 所有函数必须类型注解 / 所有配置走环境变量 / 不允许硬编码 key
-* 数据库变更必须走 Alembic
-
----
-
-## 代码结构（严格分层）
-
-* api/：只处理请求/响应
-* services/：业务逻辑
-* tasks/：Celery 异步任务
-* models/：数据库模型
-
----
-
-## Feature 开发流程
-
-### Step 1：Spec（路径：spec/{feature}.md）
-
-使用 `spec/_template.md` 作为起点，必须包含：
-
-* 功能目标 / API 设计 / 数据结构 / 依赖模块 / 边界情况 / 测试点 / 验收 checklist
-
-**spec 完成后必须生成 Mermaid 流程图**，附在 spec 文件末尾，格式：
-
-```mermaid
-flowchart TD
-  ...
-```
-
-流程图须覆盖：主流程、异常分支、状态流转。
-
-### Step 2：Design
-
-* 数据流 / 系统结构 / 与现有模块关系
-
-### Step 3：Plan
-
-* 拆分为小任务（每步 < 1 小时），标明修改文件
-
-### Step 4：Execute
-
-* 一次只执行一个步骤，完成后必须测试
-
-### Step 5：Review
-
-* 是否符合 CLAUDE.md / 是否符合测试要求
-* 逐项确认验收 checklist
-
----
-
-## AI 执行规则（强约束）
-
-1. 禁止直接写代码，必须先确认 spec 存在且完整
-2. 必须遵循流程：spec → design → plan → execute → test → review
-3. 每次只实现一个小步骤，不跨模块修改
-4. 每次执行必须输出：修改文件 / 如何验证 / 下一步
-5. spec 不清晰时必须提问，不允许猜测
-6. 不确定时必须提出方案对比，每次只改必要代码
-7. 完成后必须自检（lint + test）
-
----
-
-## 测试策略（必须执行）
-
-* 单元测试：services 层逻辑
-* 集成测试：FastAPI API / 知识库流程
-* RAG 专项：citations 正确 / source_url 可追溯 / 不允许 hallucination
-* 异常测试：爬取失败 / embedding 失败 / 空输入
-* 每个 feature 必须新增测试，测试失败禁止继续开发，PR 前必须全部通过
-
----
-
-## 压缩保留信息
-
-本项目是开发者文档 RAG 系统。核心是 citations 可追溯。
-技术栈：FastAPI + Next.js + pgvector + OpenAI。
-流程：爬取 → chunk → embedding → 检索 → 生成。
-严格分层：api / services / tasks。必须使用 spec 驱动开发。
+- 后端：FastAPI + **uvicorn**（ASGI）+ Celery + Redis + SQLAlchemy（异步）
+- Agent 编排：**LangGraph**（多步调研 Agent 图、Human-in-the-Loop 节点）
+- 前端：Next.js + TypeScript + Tailwind CSS
+- LLM：`gpt-4o`（主推理）/ `gpt-4o-mini`（轻量任务）
+- 爬取：Firecrawl | 搜索：Tavily API | 数据库：PostgreSQL + pgvector
+- 包管理：**uv**（后端，Python 3.12，`pyproject.toml` + `uv sync`）/ **pnpm**（前端）
+- 目录：`backend/`（FastAPI + Alembic）/ `frontend/`（Next.js）/ `dev.sh`（一键启动）

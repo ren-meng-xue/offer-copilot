@@ -1,9 +1,0 @@
-[mcp_servers.github-mcp]
-args = [
-    "-y",
-    "@modelcontextprotocol/server-github",
-]
-command = "npx"
-
-[mcp_servers.github-mcp.env]
-GITHUB_TOKEN = ""
