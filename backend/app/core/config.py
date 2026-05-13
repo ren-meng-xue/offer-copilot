@@ -27,9 +27,10 @@ class Settings(BaseSettings):
         "http://localhost:3000,"
         "http://127.0.0.1:3000,"
         "https://offer-copilot-frontend.vercel.app,"
-        "https://offer-copilot-git-main-ren-meng-xues-projects.vercel.app"
+        "https://offer-copilot-git-main-ren-meng-xues-projects.vercel.app,"
+        "https://offer-copilot.vercel.app"
     )
-    BACKEND_CORS_ORIGIN_REGEX: str | None = r"https://offer-copilot-.*\.vercel\.app"
+    BACKEND_CORS_ORIGIN_REGEX: str | None = r"https://offer-copilot.*\.vercel\.app"
 
     # 基础设施配置，后续 auth、数据库和任务系统都会依赖这些变量。
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5433/offercopilot"
