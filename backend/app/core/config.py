@@ -46,7 +46,7 @@ class Settings(BaseSettings):
     # 鉴权相关配置，后续 JWT 生成和校验会使用。
     SECRET_KEY: str = "change-me-in-production"
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 7 * 24 * 60
     # 密码重置链接有效期，单位分钟。
     PASSWORD_RESET_TOKEN_EXPIRE_MINUTES: int = 30
