@@ -294,7 +294,10 @@ export function ChatPage({ conversationId }: ChatPageProps) {
       });
 
       if (shouldNavigateAfterStream) {
-        router.push(`/chat/${activeConversationId}`);
+        // 增加短暂延迟，防止状态更新与路由跳转冲突导致的闪烁
+        setTimeout(() => {
+          router.push(`/chat/${activeConversationId}`);
+        }, 500);
       }
 
       if (activeConversationId === draftConversationCache?.conversationId) {
