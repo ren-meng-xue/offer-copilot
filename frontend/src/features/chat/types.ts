@@ -28,6 +28,7 @@ export type KnowledgeBaseListItem = {
   source_url: string;
   status: "pending" | "processing" | "done" | "failed";
   error_message: string | null;
+  summary?: string | null;
   created_at: string;
   updated_at: string;
 };

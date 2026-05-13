@@ -32,15 +32,19 @@ def _get_sync_redis() -> sync_redis.Redis:
     )
 
 
-def _set_task_status(r: sync_redis.Redis, task_id: str, status: KnowledgeBaseStatus, user_id: int) -> None:
+def _set_task_status(r: sync_redis.Redis, task_id: str, status: KnowledgeBaseStatus, user_id: int, extra_data: dict | None = None) -> None:
     """将任务状态写入 Redis，并发布到用户专属频道供 SSE 实时通知。"""
+
+    data = {
+        "task_id": task_id,
+        "status": status.value
+    }
+    if extra_data:
+        data.update(extra_data)
 
     status_data = {
         "type": "knowledge_status",
-        "data": {
-            "task_id": task_id,
-            "status": status.value
-        }
+        "data": data
     }
     # 1. 写入缓存供轮询/兜底
     r.set(f"task:{task_id}:status", status.value, ex=3600)
@@ -60,7 +64,7 @@ async def _run_ingestion(kb_id: int, task_id: str, source_url: str, user_id: int
             await _process(db, kb_id, task_id, source_url, r, user_id)
         except Exception as exc:
             error_msg = str(exc)[:500]
-            _set_task_status(r, task_id, KnowledgeBaseStatus.FAILED, user_id)
+            _set_task_status(r, task_id, KnowledgeBaseStatus.FAILED, user_id, extra_data={"knowledge_base_id": kb_id, "error_message": error_msg})
             await knowledge_repository.update_knowledge_base_status(
                 db, kb_id, KnowledgeBaseStatus.FAILED, error_message=error_msg
             )
@@ -79,7 +83,7 @@ async def _process(
 ) -> None:
     """执行 来源 -> Markdown -> chunks -> embeddings -> pgvector 的主链路。"""
 
-    _set_task_status(r, task_id, KnowledgeBaseStatus.PROCESSING, user_id)
+    _set_task_status(r, task_id, KnowledgeBaseStatus.PROCESSING, user_id, extra_data={"knowledge_base_id": kb_id})
     await knowledge_repository.update_knowledge_base_status(db, kb_id, KnowledgeBaseStatus.PROCESSING)
 
     # 获取知识库详情以判断类型
@@ -113,6 +117,7 @@ async def _process(
         pass
 
     # 生成全局摘要并存储
+    summary = None
     try:
         summary = await generate_knowledge_base_summary(markdown)
         if summary:
@@ -146,7 +151,7 @@ async def _process(
     ]
     await knowledge_repository.bulk_create_chunks(db, db_chunks)
 
-    _set_task_status(r, task_id, KnowledgeBaseStatus.DONE, user_id)
+    _set_task_status(r, task_id, KnowledgeBaseStatus.DONE, user_id, extra_data={"knowledge_base_id": kb_id, "summary": summary})
     await knowledge_repository.update_knowledge_base_status(db, kb_id, KnowledgeBaseStatus.DONE)
 
 

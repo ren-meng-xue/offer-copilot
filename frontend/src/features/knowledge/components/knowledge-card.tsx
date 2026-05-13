@@ -37,6 +37,12 @@ export function KnowledgeCard({ item, isDeleting, onDelete }: KnowledgeCardProps
         {item.source_url}
       </a>
 
+      {item.summary ? (
+        <p className="line-clamp-3 text-xs leading-relaxed text-[#475569] dark:text-[#a1a1aa]">
+          {item.summary}
+        </p>
+      ) : null}
+
       {item.error_message ? (
         <p className="text-xs text-rose-600 dark:text-rose-400">{item.error_message}</p>
       ) : null}

@@ -120,6 +120,7 @@ export function useKnowledgeBase() {
                             ? "done"
                             : "failed",
                       error_message: data.error_message || null,
+                      summary: data.summary || item.summary,
                     }
                   : item,
               ),
@@ -175,6 +176,7 @@ export function useKnowledgeBase() {
           source_url: displaySourceUrl,
           status: result.status,
           error_message: null,
+          summary: null,
           created_at: now,
           updated_at: now,
         },
