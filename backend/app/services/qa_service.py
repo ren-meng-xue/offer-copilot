@@ -418,6 +418,7 @@ def _build_prompt(
     chunks: list[DocumentChunk],
     recent_messages: list[Message],
     summary: str | None,
+    kb_summary: str | None = None,
 ) -> list[dict[str, str]]:
     context_parts = [f"[{i+1}] {c.heading_path or ''}\n{c.content}" for i, c in enumerate(chunks)]
     context_str = "\n\n".join(context_parts)
@@ -428,8 +429,12 @@ def _build_prompt(
         "如果问题是学习路线、概念解释、总结或建议类问题，只要上下文包含相关概念，"
         "就必须基于相关上下文综合回答并引用来源。"
         "只有当上下文与问题完全无关时，才回答'根据已有文档，无法回答该问题'。"
-        f"\n\ncontext:\n{context_str}"
     )
+
+    if kb_summary:
+        system += f"\n\n知识库全局摘要（用于回答宏观问题）:\n{kb_summary}"
+
+    system += f"\n\n具体相关上下文片段:\n{context_str}"
 
     messages: list[dict[str, str]] = [{"role": "system", "content": system}]
 
@@ -728,8 +733,15 @@ async def stream_answer(
             yield {"type": "error", "message": "根据已有文档，无法回答该问题"}
             return
 
+        # 获取知识库摘要以增强全局理解
+        kb_summary = None
+        if conv.knowledge_base_id:
+            kb = await knowledge_repository.get_knowledge_base_by_id(db, conv.knowledge_base_id)
+            if kb:
+                kb_summary = kb.summary
+
         # 构建 prompt
-        messages = _build_prompt(question, top_chunks, recent, conv.summary)
+        messages = _build_prompt(question, top_chunks, recent, conv.summary, kb_summary)
         is_first_message = (conv.message_count or 0) == 0
 
         # 写入用户消息

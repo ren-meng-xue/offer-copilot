@@ -42,6 +42,8 @@ class KnowledgeBase(Base, TimestampMixin):
     )
     # 失败时记录错误原因。
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # 文档的全局摘要，用于提供上下文和前台展示。
+    summary: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # 知识库下的 chunks；删除知识库时一并删除。
     chunks: Mapped[list["DocumentChunk"]] = relationship(

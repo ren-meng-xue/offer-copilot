@@ -88,6 +88,16 @@ async def update_knowledge_base_name(db: AsyncSession, kb_id: int, name: str) ->
     await db.commit()
 
 
+async def update_knowledge_base_summary(db: AsyncSession, kb_id: int, summary: str) -> None:
+    """回写知识库摘要。"""
+
+    kb = await get_knowledge_base_by_id(db, kb_id)
+    if kb is None:
+        return
+    kb.summary = summary
+    await db.commit()
+
+
 async def delete_knowledge_base(db: AsyncSession, kb: KnowledgeBase) -> None:
     """删除知识库及其关联 chunks。"""
 

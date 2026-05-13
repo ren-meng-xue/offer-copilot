@@ -21,12 +21,13 @@ async def create_knowledge_base(
     name: str | None,
     user_id: int,
     task_id: str,
+    source_type: str = "url",
 ) -> CreateKnowledgeResponse:
     kb = KnowledgeBase(
         user_id=user_id,
         name=name or _default_name(source_url),
         source_url=source_url,
-        source_type="url",
+        source_type=source_type,
         status=KnowledgeBaseStatus.PENDING,
     )
     kb = await knowledge_repository.create_knowledge_base(db, kb)
