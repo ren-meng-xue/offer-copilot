@@ -148,6 +148,14 @@ export function RegisterForm() {
           {error ? (
             <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600 dark:border-rose-800/50 dark:bg-rose-900/20 dark:text-rose-400">
               {error}
+              {error === "邮箱已存在" && (
+                <Link
+                  href="/auth/login"
+                  className="ml-2 font-medium underline underline-offset-4 hover:text-rose-700 dark:hover:text-rose-300"
+                >
+                  直接登录
+                </Link>
+              )}
             </div>
           ) : null}
 

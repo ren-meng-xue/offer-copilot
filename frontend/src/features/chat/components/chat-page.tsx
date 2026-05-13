@@ -102,7 +102,11 @@ export function ChatPage({ conversationId }: ChatPageProps) {
     }
 
     let isMounted = true;
-    setIsLoadingMessages(true);
+    
+    const cachedMessages = readMessageCache(conversationId);
+    if (cachedMessages.length === 0) {
+      setIsLoadingMessages(true);
+    }
 
     const loadMessages = async () => {
       try {
@@ -294,10 +298,7 @@ export function ChatPage({ conversationId }: ChatPageProps) {
       });
 
       if (shouldNavigateAfterStream) {
-        // 增加短暂延迟，防止状态更新与路由跳转冲突导致的闪烁
-        setTimeout(() => {
-          router.push(`/chat/${activeConversationId}`);
-        }, 500);
+        router.push(`/chat/${activeConversationId}`);
       }
 
       if (activeConversationId === draftConversationCache?.conversationId) {

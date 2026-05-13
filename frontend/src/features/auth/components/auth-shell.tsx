@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 
-import { ThemeToggle } from "@/features/workspace/components/theme-toggle";
 import { AuthAnimatedCharacters } from "@/features/auth/components/auth-animated-characters";
 
 type AuthShellProps = {
@@ -13,9 +12,6 @@ export function AuthShell({ children }: AuthShellProps) {
     <div className="grid min-h-screen select-none lg:h-screen lg:grid-cols-[1fr_1fr] lg:overflow-hidden xl:grid-cols-[0.96fr_1.04fr]">
       <AuthAside />
       <section className="relative flex items-center justify-center bg-[#fafafa] px-5 py-8 dark:bg-[#212121] sm:px-8 lg:px-8 lg:py-6 xl:px-12">
-        <div className="absolute right-4 top-4">
-          <ThemeToggle />
-        </div>
         <div className="w-full max-w-[760px]">
           <div className="mb-8 flex items-center justify-center lg:hidden">
             <AuthBrand />

@@ -14,7 +14,6 @@ import {
   type ConversationListItem,
 } from "@/services/qa";
 
-import { ThemeToggle } from "./theme-toggle";
 import { UserMenu } from "./user-menu";
 
 const navItems = [
@@ -201,7 +200,6 @@ export function Sidebar() {
             )}
           </button>
 
-          <ThemeToggle isCollapsed={isCollapsed} />
           <UserMenu isCollapsed={isCollapsed} />
         </div>
       </div>
