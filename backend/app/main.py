@@ -27,14 +27,24 @@ async def lifespan(app: FastAPI):
 
     # 启动时自动运行数据库迁移，确保表结构始终与代码一致。
     try:
-        alembic_ini = BASE_DIR / "alembic.ini"
-        alembic_cfg = AlembicConfig(str(alembic_ini))
-        # 防止 alembic 读取 ini 中硬编码的本地数据库地址。
-        alembic_cfg.set_main_option("sqlalchemy.url", settings.ALEMBIC_DATABASE_URL)
+        # 尝试在 backend 目录下寻找 alembic.ini (适配不同部署路径)
+        ini_path = BASE_DIR / "alembic.ini"
+        if not ini_path.exists():
+            # 兜底：如果 backend 目录就是当前工作目录
+            ini_path = Path("alembic.ini")
+            
+        logger.info(f"使用迁移配置文件: {ini_path.absolute()}")
+        alembic_cfg = AlembicConfig(str(ini_path))
+        
+        # 确保 alembic 使用最新的同步驱动 URL
+        alembic_url = settings.ALEMBIC_DATABASE_URL or settings.DATABASE_URL.replace("postgresql+asyncpg", "postgresql+psycopg2")
+        alembic_cfg.set_main_option("sqlalchemy.url", alembic_url)
+        
+        # 执行迁移
         command.upgrade(alembic_cfg, "head")
-        logger.info("数据库迁移完成")
+        logger.info("✅ 数据库迁移成功完成")
     except Exception:
-        logger.exception("数据库迁移失败，继续启动服务")
+        logger.exception("❌ 数据库迁移失败，请检查数据库连接或迁移脚本")
 
     yield
     logger.info("应用关闭中")
