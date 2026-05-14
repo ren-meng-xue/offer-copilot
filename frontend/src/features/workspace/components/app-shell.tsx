@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
@@ -19,30 +19,26 @@ type AppShellProps = {
 function RightPanel() {
   const [citations, setCitations] = useState<Citation[]>([]);
   const [isPanelCollapsed, setIsPanelCollapsed] = useState(true);
-  const prevCitationsLen = useRef(0);
-  const pathname = usePathname();
-
-  useEffect(() => {
-    setCitations([]);
-    setIsPanelCollapsed(true);
-    prevCitationsLen.current = 0;
-  }, [pathname]);
-
-  useEffect(() => {
-    if (citations.length > 0 && prevCitationsLen.current === 0) {
-      setIsPanelCollapsed(false);
-    }
-    prevCitationsLen.current = citations.length;
-  }, [citations.length]);
 
   useEffect(() => {
     const handler = (event: Event) => {
       const customEvent = event as CustomEvent<Citation[]>;
       setCitations(customEvent.detail);
     };
+    const openHandler = () => {
+      setIsPanelCollapsed(false);
+    };
     window.addEventListener("active-citations-updated", handler);
-    return () => window.removeEventListener("active-citations-updated", handler);
+    window.addEventListener("open-citation-panel", openHandler);
+    return () => {
+      window.removeEventListener("active-citations-updated", handler);
+      window.removeEventListener("open-citation-panel", openHandler);
+    };
   }, []);
+
+  if (citations.length === 0 && isPanelCollapsed) {
+    return null;
+  }
 
   return (
     <aside
@@ -106,7 +102,7 @@ export function AppShell({ children }: AppShellProps) {
         <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
           {children}
         </main>
-        {showRightPanel && <RightPanel />}
+        {showRightPanel && <RightPanel key={pathname} />}
       </div>
     </AuthGuard>
   );
