@@ -788,6 +788,16 @@ def _is_greeting(question: str) -> bool:
     return bool(_GREETING_RE.match(question.strip()))
 
 
+_IDENTITY_RE = re.compile(
+    r"^(你是谁|您是谁|你叫什么|你叫什么名字|你是什么|你是什么助手|介绍.{0,4}自己|你能做什么|你有什么功能|你能帮.*什么)[\s，。！!？?]*$",
+    re.IGNORECASE,
+)
+
+
+def _is_identity_question(question: str) -> bool:
+    return bool(_IDENTITY_RE.match(question.strip()))
+
+
 async def _is_kb_listing(
     question: str, recent_messages: list[Message] | None = None
 ) -> bool:
@@ -928,7 +938,7 @@ def _build_weather_prompt(
     forecast_text = "\n".join(forecast_lines)
 
     system = (
-        "你是一个友好的助手 OfferPilot。请根据以下天气数据，用自然、简洁的中文回答用户的天气问题。\n\n"
+        "我是你的个人助手。请根据以下天气数据，用自然、简洁的中文回答用户的天气问题。\n\n"
         f"【实况】{live_text}\n"
         f"【预报】\n{forecast_text}"
     )
@@ -1032,7 +1042,7 @@ def _build_kb_listing_prompt(
         {
             "role": "system",
             "content": (
-                "你是一个专业的技术文档助手 OfferPilot。用户正在询问当前有哪些知识库或文档。\n"
+                "我是你的个人助手。用户正在询问当前有哪些知识库或文档。\n"
                 "请根据以下提供的知识库列表回答用户。如果列表为空，请告知用户当前没有文档，可以先导入文档。\n\n"
                 f"当前可用的知识库列表：\n{kb_list_str}\n\n"
                 "请礼貌且清晰地列出这些知识库，并鼓励用户针对这些内容进行提问。"
@@ -1054,7 +1064,7 @@ def _build_weather_ask_city_prompt(
         {
             "role": "system",
             "content": (
-                "你是一个友好的助手 OfferPilot。用户询问了天气，但未提供城市信息。"
+                "你是一个友好的个人助手。用户询问了天气，但未提供城市信息。"
                 "请简短、自然地询问用户想查询哪个城市的天气，不要超过两句话。"
             ),
         }
@@ -1074,8 +1084,28 @@ def _build_weather_fetch_error_prompt(
         {
             "role": "system",
             "content": (
-                "你是一个友好的助手 OfferPilot。用户询问了天气，但天气数据暂时无法获取。"
+                "你是一个友好的个人助手。用户询问了天气，但天气数据暂时无法获取。"
                 "请简短、友好地告知用户天气信息暂时获取失败，建议稍后重试，不要超过两句话。"
+            ),
+        }
+    ]
+    for msg in recent_messages:
+        messages.append({"role": msg.role, "content": msg.content})
+    messages.append({"role": "user", "content": question})
+    return messages
+
+
+def _build_identity_prompt(
+    question: str,
+    recent_messages: list[Message],
+) -> list[dict[str, str]]:
+    """为用户询问助手身份构建 Prompt。"""
+    messages: list[dict[str, str]] = [
+        {
+            "role": "system",
+            "content": (
+                "你是用户的个人助手。当用户询问你是谁时，请简短地介绍自己是用户的个人助手，"
+                "并告知可以帮助用户基于文档进行知识问答，以及回答天气等日常问题。"
             ),
         }
     ]
@@ -1094,7 +1124,7 @@ def _build_general_prompt(
     messages: list[dict[str, str]] = [
         {
             "role": "system",
-            "content": "你是一个专业的技术文档助手 OfferPilot。对于用户的招呼或闲聊，请礼貌且简洁地回复，并告知用户你可以基于文档提供专业的技术问答支持。",
+            "content": "你是一个友好的个人助手。对于用户的招呼或闲聊，请礼貌且简洁地回复，并告知用户你可以基于文档提供专业的技术问答支持。",
         }
     ]
     if summary:
@@ -1125,7 +1155,7 @@ def _build_prompt(
     context_str = "\n\n".join(context_parts)
 
     system = (
-        "你是技术文档助手。只基于提供的上下文回答问题。"
+        "你是一个友好的个人助手。只基于提供的上下文回答问题。"
         "回答中必须用 [1]、[2] 等编号引用对应的微观上下文来源。"
         "如果回答是基于知识库的全局摘要（摘要内容见下文），请在回答中明确提到知识库的名称（例如：根据《XXX知识库》的摘要...）。"
         "如果问题是学习路线、概念解释、总结或建议类问题，只要上下文或摘要包含相关概念，"
@@ -1309,6 +1339,18 @@ async def stream_answer(
                 _build_general_prompt(question, recent, conv.summary),
                 conv.message_count or 0,
                 "greeting",
+            ):
+                yield event
+            return
+
+        if _is_identity_question(question):
+            async for event in _send_general_response(
+                db,
+                conv_id,
+                question,
+                _build_identity_prompt(question, recent),
+                conv.message_count or 0,
+                "identity",
             ):
                 yield event
             return
