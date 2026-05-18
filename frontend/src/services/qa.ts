@@ -34,13 +34,16 @@ export function listConversations(signal?: AbortSignal) {
 }
 
 export function listMessages(conversationId: string, signal?: AbortSignal) {
-  return get<ChatMessage[]>(
-    `/qa/conversations/${conversationId}/messages`,
-    { auth: true, signal },
-  );
+  return get<ChatMessage[]>(`/qa/conversations/${conversationId}/messages`, {
+    auth: true,
+    signal,
+  });
 }
 
-export function deleteConversation(conversationId: string, signal?: AbortSignal) {
+export function deleteConversation(
+  conversationId: string,
+  signal?: AbortSignal,
+) {
   return del<null>(`/qa/conversations/${conversationId}`, {
     auth: true,
     signal,
@@ -54,30 +57,32 @@ export function getConversationMessages(
   return listMessages(conversationId, signal);
 }
 
+type LocationInput = { lat: number; lng: number } | null;
+
 export function askConversation(
   conversationId: string,
   question: string,
+  location?: LocationInput,
   signal?: AbortSignal,
 ): Promise<Response>;
 export async function askConversation(
   conversationId: string,
   question: string,
+  location?: LocationInput,
   signal?: AbortSignal,
 ): Promise<Response> {
-  return fetchAskConversation({
-    conversationId,
-    question,
-    signal,
-  });
+  return fetchAskConversation({ conversationId, question, location, signal });
 }
 
 async function fetchAskConversation({
   conversationId,
   question,
+  location,
   signal,
 }: {
   conversationId: string;
   question: string;
+  location?: LocationInput;
   signal?: AbortSignal;
 }) {
   const accessToken = await getValidAccessToken();
@@ -91,7 +96,7 @@ async function fetchAskConversation({
     method: "POST",
     headers,
     credentials: "include",
-    body: JSON.stringify({ question }),
+    body: JSON.stringify({ question, location: location ?? null }),
     signal,
   });
 }

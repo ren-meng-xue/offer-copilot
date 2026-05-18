@@ -139,7 +139,12 @@ async def ask(
 
     async def event_stream():
         async for event in qa_service.stream_answer(
-            db, conv_id, user_id, body.question, debug=debug_enabled
+            db,
+            conv_id,
+            user_id,
+            body.question,
+            debug=debug_enabled,
+            location=body.location,
         ):
             yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
             if event["type"] in ("done", "error"):

@@ -24,6 +24,7 @@ from backend.app.repositories import knowledge_repository, qa_repository
 from backend.app.services.embedding_service import generate_embeddings
 from backend.app.services.title_generation_service import generate_conversation_title
 from backend.app.services import weather_service
+from backend.app.schemas.qa import LocationInput
 from backend.app.services.weather_service import WeatherData
 
 logger = logging.getLogger(__name__)
@@ -1178,6 +1179,7 @@ async def stream_answer(
     question: str,
     *,
     debug: bool = False,
+    location: LocationInput | None = None,
 ) -> AsyncGenerator[dict[str, Any], None]:
     yield {"type": "ping"}
     debug = debug and settings.DEBUG and settings.RAG_DEBUG_ENABLED
@@ -1284,6 +1286,46 @@ async def stream_answer(
                 _build_kb_listing_prompt(question, knowledge_bases, recent),
                 conv.message_count or 0,
                 "kb_listing",
+            ):
+                yield event
+            return
+
+        if await _is_weather_query(question, recent):
+            adcode = await _resolve_city_adcode(question, location, recent)
+            if adcode is None:
+                async for event in _send_general_response(
+                    db,
+                    conv_id,
+                    question,
+                    _build_general_prompt(
+                        "您想查询哪里的天气呢？请告诉我城市名称。", recent, conv.summary
+                    ),
+                    conv.message_count or 0,
+                    "weather_ask_city",
+                ):
+                    yield event
+                return
+            weather_data = await weather_service.fetch_weather(adcode)
+            if weather_data is None:
+                async for event in _send_general_response(
+                    db,
+                    conv_id,
+                    question,
+                    _build_general_prompt(
+                        "暂时无法获取天气信息，请稍后重试。", recent, conv.summary
+                    ),
+                    conv.message_count or 0,
+                    "weather_fetch_error",
+                ):
+                    yield event
+                return
+            async for event in _send_general_response(
+                db,
+                conv_id,
+                question,
+                _build_weather_prompt(question, weather_data, recent),
+                conv.message_count or 0,
+                "weather",
             ):
                 yield event
             return

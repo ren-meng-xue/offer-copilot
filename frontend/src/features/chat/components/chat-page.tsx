@@ -60,6 +60,9 @@ export function ChatPage({ conversationId }: ChatPageProps) {
     );
   const [isResolvingKnowledgeScope, setIsResolvingKnowledgeScope] =
     useState(false);
+  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(
+    null,
+  );
   const inputRef = useRef<HTMLInputElement | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const activeClientIdRef = useRef<string | null>(null);
@@ -71,6 +74,15 @@ export function ChatPage({ conversationId }: ChatPageProps) {
     const resolvedDisplayName =
       user?.username?.trim() || user?.email?.trim() || "用户";
     setDisplayName(resolvedDisplayName);
+  }, []);
+
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) =>
+        setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => setLocation(null),
+    );
   }, []);
 
   useEffect(() => {
@@ -248,6 +260,7 @@ export function ChatPage({ conversationId }: ChatPageProps) {
       const response = await askConversation(
         activeConversationId,
         question,
+        location,
         abortController.signal,
       );
 

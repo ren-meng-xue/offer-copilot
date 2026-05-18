@@ -43,8 +43,8 @@ trap cleanup SIGINT
 echo "后台服务启动中..."
 
 echo "📡 [Backend] 启动中..."
-export PYTHONPATH=.
-uv run python backend/app/main.py > backend.log 2>&1 &
+export PYTHONPATH="$PWD"
+uv run --directory backend python app/main.py > backend.log 2>&1 &
 BACKEND_PID=$!
 
 echo "👷 [Celery] 启动中..."
