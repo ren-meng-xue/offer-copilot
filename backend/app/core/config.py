@@ -81,6 +81,7 @@ class Settings(BaseSettings):
     OPENAI_BASE_URL: str | None = None
     COHERE_API_KEY: str | None = None
     COHERE_BASE_URL: str | None = None
+    AMAP_API_KEY: str | None = None  # 高德开放平台 Web 服务 Key
     RAG_VECTOR_TOP_K: int = 20
     RAG_FTS_TOP_K: int = 20
     RAG_MIN_RERANK_SCORE: float = 0.15

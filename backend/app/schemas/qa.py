@@ -49,8 +49,14 @@ class ConversationListItem(BaseModel):
     updated_at: datetime
 
 
+class LocationInput(BaseModel):
+    lat: float
+    lng: float
+
+
 class AskRequest(BaseModel):
     question: str = Field(..., min_length=1, max_length=1000)
+    location: LocationInput | None = None
 
 
 class MessageItem(BaseModel):
