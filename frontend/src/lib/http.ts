@@ -85,9 +85,7 @@ export async function request<TResponse>(
   if (auth && response.status === 401) {
     const refreshedAccessToken = await refreshAccessToken();
 
-    if (!refreshedAccessToken) {
-      handleUnauthorizedSession();
-    } else {
+    if (refreshedAccessToken) {
       requestHeaders.set("Authorization", `Bearer ${refreshedAccessToken}`);
       response = await fetch(buildUrl(path), {
         method,
@@ -96,14 +94,16 @@ export async function request<TResponse>(
         signal,
         credentials: "include",
       });
+
+      // 用新 token 重试仍然 401，session 彻底失效
+      if (response.status === 401) {
+        handleUnauthorizedSession();
+      }
     }
+    // refreshedAccessToken 为 null 时，refreshAccessToken() 内部已调用 handleUnauthorizedSession
   }
 
   const payload = (await parseJson<ApiEnvelope<TResponse>>(response)) ?? null;
-
-  if (auth && response.status === 401) {
-    handleUnauthorizedSession();
-  }
 
   if (!response.ok) {
     throw new ApiError({

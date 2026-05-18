@@ -24,6 +24,24 @@ type StoredCurrentUser = {
 let refreshPromise: Promise<string | null> | null = null;
 let restorePromise: Promise<boolean> | null = null;
 let isRedirectingToLogin = false;
+let _authChannel: BroadcastChannel | null = null;
+
+function initAuthChannel() {
+  if (!isBrowser() || typeof BroadcastChannel === "undefined" || _authChannel) {
+    return;
+  }
+  _authChannel = new BroadcastChannel("auth_sync");
+  _authChannel.onmessage = (event: MessageEvent) => {
+    if (event.data?.type === "token_refreshed") {
+      setSessionTokens({
+        accessToken: event.data.accessToken,
+        tokenType: event.data.tokenType,
+        expiresIn: event.data.expiresIn,
+      });
+      refreshPromise = null;
+    }
+  };
+}
 
 export function hasStoredSession() {
   if (!isBrowser()) {
@@ -164,6 +182,8 @@ export async function refreshAccessToken() {
     return null;
   }
 
+  initAuthChannel();
+
   if (refreshPromise) {
     return refreshPromise;
   }
@@ -176,6 +196,11 @@ export async function refreshAccessToken() {
       });
 
       if (!response.ok) {
+        // 其他标签页可能已经刷新过了，先检查 localStorage 中是否已有有效 token
+        const currentToken = getAccessToken();
+        if (currentToken && !isAccessTokenExpiringSoon()) {
+          return currentToken;
+        }
         handleUnauthorizedSession();
         return null;
       }
@@ -193,8 +218,23 @@ export async function refreshAccessToken() {
         expiresIn: payload.data.expires_in,
       });
 
+      // 通知其他标签页使用新 token，避免它们用旧 token 再次发起 refresh
+      try {
+        _authChannel?.postMessage({
+          type: "token_refreshed",
+          accessToken: payload.data.access_token,
+          tokenType: payload.data.token_type,
+          expiresIn: payload.data.expires_in,
+        });
+      } catch {}
+
       return payload.data.access_token;
     } catch {
+      // 网络抖动时，先检查是否已有有效 token
+      const currentToken = getAccessToken();
+      if (currentToken && !isAccessTokenExpiringSoon()) {
+        return currentToken;
+      }
       handleUnauthorizedSession();
       return null;
     } finally {
@@ -235,22 +275,26 @@ export async function restoreSession() {
         credentials: "include",
       });
 
-      if (!response.ok) {
+      if (response.status === 401) {
         handleUnauthorizedSession();
+        return false;
+      }
+
+      if (!response.ok) {
+        // 服务器或网络错误，session 本身可能仍然有效，不强制退出
         return false;
       }
 
       const payload = (await parseJson<{ code: number; msg: string; data: unknown }>(response)) ?? null;
 
       if (!payload?.data) {
-        handleUnauthorizedSession();
         return false;
       }
 
       setStoredCurrentUser(payload.data);
       return true;
     } catch {
-      handleUnauthorizedSession();
+      // 网络抖动，不强制退出
       return false;
     } finally {
       restorePromise = null;
