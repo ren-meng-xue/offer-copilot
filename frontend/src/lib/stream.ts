@@ -1,6 +1,8 @@
 export type Citation = {
   index: number;
   chunk_id: string;
+  knowledge_base_id?: number | null;
+  knowledge_base_name?: string | null;
   source_url: string;
   heading_path: string;
   snippet: string;
@@ -11,6 +13,7 @@ export type SseEvent =
   | { type: "citations"; data: Citation[] }
   | { type: "ping" }
   | { type: "done" }
+  | { type: "no_citations_required" }
   | { type: "error"; code?: string; message: string };
 
 export class StreamFormatError extends Error {
@@ -177,6 +180,10 @@ function parseEvent(payload: unknown): SseEvent {
     return { type: "done" };
   }
 
+  if (payload.type === "no_citations_required") {
+    return { type: "no_citations_required" };
+  }
+
   if (payload.type === "error" && typeof payload.message === "string") {
     if (payload.code !== undefined && typeof payload.code !== "string") {
       throw new StreamFormatError("SSE error event code must be a string");
@@ -207,6 +214,14 @@ function parseCitation(value: unknown): Citation {
   return {
     index: value.index,
     chunk_id: value.chunk_id,
+    ...(typeof value.knowledge_base_id === "number" ||
+    value.knowledge_base_id === null
+      ? { knowledge_base_id: value.knowledge_base_id }
+      : {}),
+    ...(typeof value.knowledge_base_name === "string" ||
+    value.knowledge_base_name === null
+      ? { knowledge_base_name: value.knowledge_base_name }
+      : {}),
     source_url: value.source_url,
     heading_path: value.heading_path,
     snippet: value.snippet,

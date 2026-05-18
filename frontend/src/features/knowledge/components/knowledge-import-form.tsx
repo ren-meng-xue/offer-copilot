@@ -1,7 +1,9 @@
 "use client";
 
+import { useRef } from "react";
+import { UploadCloud, FileText, X } from "lucide-react";
 import type { FormEvent } from "react";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 
 import type { ImportPayload } from "../hooks/use-knowledge-base";
 
@@ -21,6 +23,53 @@ export function KnowledgeImportForm({
   const [file, setFile] = useState<File | null>(null);
   const [name, setName] = useState("");
   const [localError, setLocalError] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const droppedFile = e.dataTransfer.files?.[0];
+    if (droppedFile) {
+      const extension = droppedFile.name.split(".").pop()?.toLowerCase();
+      if (["md", "txt", "pdf"].includes(extension || "")) {
+        setFile(droppedFile);
+        setLocalError(null);
+      } else {
+        setLocalError("仅支持 .md, .txt 或 .pdf 文件");
+      }
+    }
+  }, []);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0] ?? null;
+    if (selectedFile) {
+      setFile(selectedFile);
+      setLocalError(null);
+    }
+  };
+
+  const clearFile = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -99,23 +148,67 @@ export function KnowledgeImportForm({
           </div>
         ) : (
           <div className="space-y-1">
-            <label
-              htmlFor="knowledge-file"
-              className="text-xs font-medium text-[#64748b] dark:text-[#8e8ea0]"
-            >
-              选择文件 (.md, .txt)
+            <label className="text-xs font-medium text-[#64748b] dark:text-[#8e8ea0]">
+              选择文件 (.md, .txt, .pdf)
             </label>
             <input
-              key="file-input"
+              ref={fileInputRef}
               id="knowledge-file"
               type="file"
-              accept=".md,.txt"
+              accept=".md,.txt,.pdf"
               disabled={isSubmitting}
-              className={inputClass}
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              className="hidden"
+              onChange={handleFileChange}
             />
+            <div
+              onClick={() => !isSubmitting && fileInputRef.current?.click()}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={`relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed py-8 transition-colors ${
+                isDragging
+                  ? "border-[#2f6df6] bg-[#2f6df6]/5 dark:border-[#4f8ef7] dark:bg-[#4f8ef7]/5"
+                  : "border-[rgba(148,163,184,0.32)] hover:border-[#2f6df6]/50 dark:border-slate-700 dark:hover:border-[#4f8ef7]/50"
+              } ${isSubmitting ? "cursor-not-allowed opacity-50" : ""}`}
+            >
+              {file ? (
+                <div className="flex items-center gap-3 px-4">
+                  <div className="flex size-10 items-center justify-center rounded-lg bg-[#2f6df6]/10 text-[#2f6df6] dark:bg-[#4f8ef7]/10 dark:text-[#4f8ef7]">
+                    <FileText className="size-6" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-[#0f172a] dark:text-[#ececec]">
+                      {file.name}
+                    </p>
+                    <p className="text-xs text-[#64748b] dark:text-[#8e8ea0]">
+                      {(file.size / 1024).toFixed(1)} KB
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={clearFile}
+                    className="rounded-full p-1 text-[#64748b] hover:bg-slate-100 hover:text-rose-600 dark:text-[#8e8ea0] dark:hover:bg-[#3a3a3a] dark:hover:text-rose-400"
+                  >
+                    <X className="size-4" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-2">
+                  <UploadCloud className="size-8 text-[#64748b] dark:text-[#8e8ea0]" />
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-[#0f172a] dark:text-[#ececec]">
+                      点击或将文件拖拽到此处
+                    </p>
+                    <p className="text-xs text-[#64748b] dark:text-[#8e8ea0]">
+                      支持 .md, .txt, .pdf
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
+
 
         <div className="space-y-1">
           <label

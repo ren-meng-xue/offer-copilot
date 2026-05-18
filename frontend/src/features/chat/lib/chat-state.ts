@@ -83,6 +83,17 @@ export function attachCitations(
   );
 }
 
+export function markNoCitationsRequired(
+  messages: LocalChatMessage[],
+  clientId: string,
+): LocalChatMessage[] {
+  return messages.map((message) =>
+    isTargetAssistantForClient(message, clientId)
+      ? { ...message, noCitationsRequired: true }
+      : message,
+  );
+}
+
 export function markAssistantDone(
   messages: LocalChatMessage[],
   clientId: string,
@@ -92,7 +103,12 @@ export function markAssistantDone(
       return message;
     }
 
-    if (!hasCitations(message.citations) && !isGreetingLikeReply(message.content)) {
+    // 只有当回复不属于"通用回复"（打招呼、自我介绍、无法回答引导等）且没有引用时，才报错
+    if (
+      !message.noCitationsRequired &&
+      !hasCitations(message.citations) &&
+      !isNonCitableReply(message.content)
+    ) {
       return {
         ...message,
         status: "assistant_error",
@@ -133,14 +149,36 @@ export function markAssistantError(
   );
 }
 
-function isGreetingLikeReply(content: string): boolean {
+/**
+ * 判断是否为无需引用的回复类型
+ */
+function isNonCitableReply(content: string): boolean {
   const text = content.trim();
 
   if (!text) {
     return false;
   }
 
-  return /^(你好|您好|嗨|hello|hi|hey|在吗|谢谢|早上好|下午好|晚上好)/i.test(text);
+  // 1. 基础招呼
+  const isGreeting =
+    /^(你好|您好|嗨|hello|hi|hey|在吗|谢谢|早上好|下午好|晚上好)/i.test(text);
+  if (isGreeting) return true;
+
+  // 2. 身份介绍与功能描述 (对应用户截图中的情况)
+  const isIntro =
+    /^(我是一个|我是|作为|我的功能是|我能为您提供|请问您想了解|我是技术文档助手)/i.test(
+      text,
+    );
+  if (isIntro) return true;
+
+  // 3. 拒答或引导 (由于检索不到内容时的礼貌回复)
+  const isGuidance =
+    /(具体告诉我|想了解的内容或主题|无法回答该问题|没有找到相关内容|请提供更多细节)/.test(
+      text,
+    );
+  if (isGuidance) return true;
+
+  return false;
 }
 
 export function markAssistantAborted(

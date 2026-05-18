@@ -4,6 +4,7 @@ import { getValidAccessToken } from "@/lib/session";
 import type {
   ChatMessage,
   ConversationListItem as ChatConversationListItem,
+  KnowledgeScope,
 } from "@/features/chat/types";
 
 export type ConversationListItem = ChatConversationListItem;
@@ -11,17 +12,16 @@ export type MessageItem = ChatMessage;
 
 type CreateConversationResponse = {
   conv_id: string;
-  knowledge_base_id: number;
+  knowledge_base_id: number | null;
+  knowledge_base_ids: number[];
+  knowledge_scope: KnowledgeScope | null;
   created_at: string;
 };
 
-export function createConversation(
-  knowledgeBaseId: number,
-  signal?: AbortSignal,
-) {
+export function createConversation(question: string, signal?: AbortSignal) {
   return post<CreateConversationResponse>(
     "/qa/conversations",
-    { knowledge_base_id: knowledgeBaseId },
+    { question },
     { auth: true, signal },
   );
 }

@@ -44,7 +44,7 @@ export function ConversationList({
           新建会话
         </Button>
       </div>
-      <nav className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
+      <nav className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-2 pb-2">
         {conversations.length === 0 ? (
           <p className="px-2 py-3 text-xs text-[#64748b] dark:text-[#8e8ea0]">
             发送消息开始第一次对话

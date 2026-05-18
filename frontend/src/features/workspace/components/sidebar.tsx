@@ -15,6 +15,7 @@ import {
 } from "@/services/qa";
 
 import { UserMenu } from "./user-menu";
+import { ThemeToggle } from "./theme-toggle";
 
 const navItems = [
   { href: "/chat", label: "Chat", icon: MessageSquare },
@@ -123,7 +124,7 @@ export function Sidebar() {
 
       {/* 中部：路由对应内容（折叠时隐藏） */}
       {!isCollapsed ? (
-        <div className="flex min-h-0 flex-1 flex-col">
+        <div className="no-scrollbar flex min-h-0 flex-1 flex-col">
           {isChatRoute ? (
             <ConversationList
               conversations={conversations}
@@ -201,6 +202,17 @@ export function Sidebar() {
           </button>
 
           <UserMenu isCollapsed={isCollapsed} />
+          <div className={cn(
+            "mt-1 flex items-center",
+            isCollapsed ? "justify-center" : "px-1 justify-start"
+          )}>
+            <ThemeToggle isCollapsed={isCollapsed} />
+            {!isCollapsed && (
+              <span className="ml-1 text-xs text-slate-500 dark:text-[#8e8ea0]">
+                外观设置
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </aside>

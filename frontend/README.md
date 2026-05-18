@@ -1,12 +1,13 @@
-# OfferPilot Frontend
+# Dev RAG Frontend
 
-这是 OfferPilot 的前端项目，基于 `Next.js + TypeScript + Tailwind CSS + pnpm` 初始化。
+这是 Dev RAG 的前端项目，基于 `Next.js + TypeScript + Tailwind CSS + pnpm` 构建。
 
 当前这个前端目录用于承载：
 
-- 官网和产品介绍页
-- 登录后的应用工作台
-- JD 输入、简历上传、匹配评分、内容改写、面试准备等前端交互
+- 登录、注册和应用工作台
+- 知识库 URL 导入、文件上传、索引状态查看与删除
+- Chat 问答、SSE 流式回答、引用展示和错误引导
+- 侧边栏会话 / 知识库导航与暗色主题体验
 
 ## 启动开发环境
 
@@ -54,12 +55,10 @@ BACKEND_PROXY_TARGET=http://127.0.0.1:8000
 - `TypeScript`
 - `Tailwind CSS`
 - `pnpm`
-
-后续计划补充：
-
-- `shadcn/ui`
+- `Base UI`
 - `react-hook-form`
 - `zod`
+- `lucide-react`
 - `SWR`
 
 ## 目录说明
@@ -69,7 +68,7 @@ BACKEND_PROXY_TARGET=http://127.0.0.1:8000
 - `src/app/`：页面和路由
 - `public/`：静态资源
 
-后续我们会根据 OfferPilot 的实际需求，逐步补充更适合业务的目录结构。
+后续我们会根据 Dev RAG 的实际需求，继续沉淀更清晰的业务目录结构。
 
 ## 开发说明
 
@@ -82,7 +81,7 @@ BACKEND_PROXY_TARGET=http://127.0.0.1:8000
 
 接下来可以按这个顺序继续完善前端：
 
-1. 清理默认首页内容，改成 OfferPilot 的起始页面
-2. 安装并初始化 `shadcn/ui`
-3. 规划 `src/` 下的业务目录结构
-4. 接入后端 API 和任务状态展示
+1. 完善多知识库选择的产品语义与交互约束
+2. 强化引用来源展示，让回答依据更容易被核对
+3. 补齐 Chat 首问跳转后的知识库上下文展示
+4. 完善 RAG 错误态、无命中态和导入引导

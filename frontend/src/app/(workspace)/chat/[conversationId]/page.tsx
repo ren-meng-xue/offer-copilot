@@ -9,5 +9,5 @@ export default async function ConversationRoute({
 }: ConversationRouteProps) {
   const { conversationId } = await params;
 
-  return <ChatPage conversationId={conversationId} />;
+  return <ChatPage key={conversationId} conversationId={conversationId} />;
 }

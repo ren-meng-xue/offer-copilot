@@ -233,3 +233,13 @@ a {
   );
   animation: offerpilot-beam 4.8s linear infinite;
 }
+
+/* 隐藏滚动条但保持滚动功能 */
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}

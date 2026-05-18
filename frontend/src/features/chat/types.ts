@@ -1,14 +1,32 @@
 export type ConversationListItem = {
   conv_id: string;
   knowledge_base_id: number | null;
+  knowledge_base_ids: number[];
+  knowledge_scope: KnowledgeScope | null;
   title: string | null;
   created_at: string;
   updated_at: string;
 };
 
+export type KnowledgeScopeItem = {
+  knowledge_base_id: number | null;
+  name: string;
+  source_url: string;
+  route_score?: number | null;
+  route_reason?: string | null;
+  deleted?: boolean;
+};
+
+export type KnowledgeScope = {
+  type: "question_routed";
+  items: KnowledgeScopeItem[];
+};
+
 export type Citation = {
   index: number;
   chunk_id: string;
+  knowledge_base_id?: number | null;
+  knowledge_base_name?: string | null;
   source_url: string;
   heading_path: string;
   snippet: string;
@@ -37,6 +55,7 @@ export type StreamEvent =
   | { type: "token"; content: string }
   | { type: "citations"; data: Citation[] }
   | { type: "done" }
+  | { type: "no_citations_required" }
   | { type: "error"; code?: string; message: string };
 
 export type LocalMessageStatus =
@@ -60,6 +79,7 @@ export type LocalChatMessage = {
   errorCode?: string;
   errorMessage?: string;
   showImportAction?: boolean;
+  noCitationsRequired?: boolean;
 };
 
 export type StartOptimisticExchangeInput = {
