@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import datetime
 import json
 import logging
@@ -21,6 +23,8 @@ from backend.app.models.knowledge_base import KnowledgeBase, KnowledgeBaseStatus
 from backend.app.repositories import knowledge_repository, qa_repository
 from backend.app.services.embedding_service import generate_embeddings
 from backend.app.services.title_generation_service import generate_conversation_title
+from backend.app.services import weather_service
+from backend.app.services.weather_service import WeatherData
 
 logger = logging.getLogger(__name__)
 
@@ -813,6 +817,125 @@ async def _is_kb_listing(
     except Exception as e:
         logger.warning("KB listing check failed: %s", e)
         return False
+
+
+async def _is_weather_query(
+    question: str, recent_messages: list[Message] | None = None
+) -> bool:
+    """判断用户是否在询问天气（当天或预报），含追问城市名的场景。失败时返回 False。"""
+    try:
+        messages: list[dict[str, str]] = [
+            {
+                "role": "system",
+                "content": (
+                    "你是一个意图分类助手。请判断用户是否在询问天气信息（当天天气、明天天气、未来几天预报等），"
+                    "或者是在回答上一轮助手关于城市的追问（如助手问「您想查询哪里的天气」，用户回复「北京」）。\n"
+                    "如果是，回答 YES；否则回答 NO。\n"
+                    "只输出 YES 或 NO，不要输出其他内容。"
+                ),
+            }
+        ]
+        if recent_messages:
+            for msg in recent_messages:
+                messages.append({"role": msg.role, "content": msg.content[:200]})
+        messages.append({"role": "user", "content": question})
+        client = _openai_client()
+        resp = await client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=messages,  # type: ignore[arg-type]
+            temperature=0,
+            max_tokens=5,
+        )
+        return (resp.choices[0].message.content or "NO").strip().upper() == "YES"
+    except Exception as e:
+        logger.warning("Weather query check failed: %s", e)
+        return False
+
+
+async def _extract_city_from_question(question: str) -> str | None:
+    """从问题文本中提取城市名，提取不到返回 None。"""
+    try:
+        client = _openai_client()
+        resp = await client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "从用户的问题中提取城市名。如果有城市名，只输出城市名（如「北京」「上海」「成都市」），"
+                        "不要输出任何其他内容。如果没有城市名，输出 NONE。"
+                    ),
+                },
+                {"role": "user", "content": question},
+            ],  # type: ignore[arg-type]
+            temperature=0,
+            max_tokens=20,
+        )
+        result = (resp.choices[0].message.content or "NONE").strip()
+        return None if result.upper() == "NONE" else result
+    except Exception as e:
+        logger.warning("City extraction failed: %s", e)
+        return None
+
+
+async def _resolve_city_adcode(
+    question: str,
+    location: "LocationInput | None",  # noqa: F821
+    recent_messages: list[Message],
+) -> str | None:
+    """按优先级解析城市 adcode：坐标逆解 → 问题文本提取 → 对话历史城市名。"""
+    # 1. 坐标逆解
+    if location is not None:
+        adcode = await weather_service.reverse_geocode(location.lat, location.lng)
+        if adcode:
+            return adcode
+
+    # 2. 从问题文本提取城市名
+    city = await _extract_city_from_question(question)
+    if city:
+        adcode = await weather_service.geocode_city(city)
+        if adcode:
+            return adcode
+
+    # 3. 从对话历史提取（用户回答了追问）
+    for msg in reversed(recent_messages):
+        if msg.role == "user" and len(msg.content.strip()) <= 20:
+            adcode = await weather_service.geocode_city(msg.content.strip())
+            if adcode:
+                return adcode
+
+    return None
+
+
+def _build_weather_prompt(
+    question: str,
+    weather: WeatherData,
+    recent_messages: list[Message],
+) -> list[dict[str, str]]:
+    """把天气数据拼入 system prompt，让 LLM 用自然语言回答。"""
+    live = weather.live
+    live_text = (
+        f"{weather.city}当前天气：{live.weather}，气温 {live.temperature}°C，"
+        f"{live.wind_direction}风 {live.wind_power} 级，湿度 {live.humidity}%。"
+    )
+    forecast_lines = []
+    for day in weather.forecast:
+        forecast_lines.append(
+            f"{day.date}：白天 {day.day_weather} {day.day_temp}°C / "
+            f"夜间 {day.night_weather} {day.night_temp}°C，{day.day_wind}风 {day.day_power} 级"
+        )
+    forecast_text = "\n".join(forecast_lines)
+
+    system = (
+        "你是一个友好的助手 OfferPilot。请根据以下天气数据，用自然、简洁的中文回答用户的天气问题。\n\n"
+        f"【实况】{live_text}\n"
+        f"【预报】\n{forecast_text}"
+    )
+    messages: list[dict[str, str]] = [{"role": "system", "content": system}]
+    for msg in recent_messages:
+        messages.append({"role": msg.role, "content": msg.content})
+    messages.append({"role": "user", "content": question})
+    return messages
 
 
 async def _classify_retrieval_intent(
