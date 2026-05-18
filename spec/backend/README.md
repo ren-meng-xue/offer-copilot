@@ -20,6 +20,8 @@
 增量 spec 统一归档在 `addenda/`：
 
 - `chunk-structure-aware.md`
+- `conversation-knowledge-scope.md`
+- `delayed-routing.md`
 - `hybrid-retrieval.md`
 - `knowledge-scoped-qa.md`
 - `query-rewrite.md`

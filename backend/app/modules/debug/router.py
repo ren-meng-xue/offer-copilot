@@ -46,17 +46,18 @@ async def debug_health_check(db: AsyncSession = Depends(get_db)):
                     results["celery_queue_pending_tasks"] = "无法读取"
             else:
                 results["redis"] = "ping 返回 False"
-            
+
             # 3. 检查 Celery Worker 状态 (仅在有 broker 时)
             try:
                 from backend.app.tasks import celery_app
+
                 i = celery_app.control.inspect()
                 active = i.active()
                 results["celery_active_workers"] = list(active.keys()) if active else []
                 results["celery_registered_tasks"] = i.registered()
             except Exception as exc:
                 results["celery_worker_check_error"] = str(exc)
-            
+
             r.close()
         else:
             results["redis"] = "CELERY_BROKER_URL 未设置"
@@ -106,12 +107,19 @@ async def debug_health_check(db: AsyncSession = Depends(get_db)):
     # 5. 所有知识库列表
     try:
         row = await db.execute(
-            text("SELECT id, name, status, created_at FROM knowledge_bases ORDER BY id DESC LIMIT 20")
+            text(
+                "SELECT id, name, status, created_at FROM knowledge_bases ORDER BY id DESC LIMIT 20"
+            )
         )
         all_kbs = row.fetchall()
         results["all_knowledge_bases_count"] = len(all_kbs)
         results["all_knowledge_bases"] = [
-            {"id": r[0], "name": r[1], "status": r[2], "created_at": str(r[3]) if r[3] else None}
+            {
+                "id": r[0],
+                "name": r[1],
+                "status": r[2],
+                "created_at": str(r[3]) if r[3] else None,
+            }
             for r in all_kbs
         ]
     except Exception as exc:

@@ -29,13 +29,19 @@ async def _resolve_knowledge_base_for_case(
     db: AsyncSession, case: RagEvalCase
 ) -> KnowledgeBase | None:
     if case.knowledge_base_source_url:
-        return await knowledge_repository.get_knowledge_base_by_source_url(db, case.knowledge_base_source_url)
+        return await knowledge_repository.get_knowledge_base_by_source_url(
+            db, case.knowledge_base_source_url
+        )
 
     if case.knowledge_base_name:
-        return await knowledge_repository.get_latest_knowledge_base_by_name(db, case.knowledge_base_name)
+        return await knowledge_repository.get_latest_knowledge_base_by_name(
+            db, case.knowledge_base_name
+        )
 
     if case.knowledge_base_id is not None:
-        return await knowledge_repository.get_knowledge_base_by_id(db, case.knowledge_base_id)
+        return await knowledge_repository.get_knowledge_base_by_id(
+            db, case.knowledge_base_id
+        )
 
     return None
 
@@ -64,12 +70,18 @@ async def observe_eval_case(db: AsyncSession, case: RagEvalCase) -> RagEvalObser
         )
 
     recent_messages = _history_to_messages(case)
-    retrieval_query = await qa_service._rewrite_query(case.question, recent_messages, None)
+    retrieval_query = await qa_service._rewrite_query(
+        case.question, recent_messages, None
+    )
     [query_vec] = await qa_service.generate_embeddings([retrieval_query])
 
-    vector_candidates = await qa_service._vector_search(db, kb.user_id, kb.id, query_vec)
+    vector_candidates = await qa_service._vector_search(
+        db, kb.user_id, kb.id, query_vec
+    )
     try:
-        fts_candidates = await qa_service._fts_search(db, kb.user_id, kb.id, retrieval_query)
+        fts_candidates = await qa_service._fts_search(
+            db, kb.user_id, kb.id, retrieval_query
+        )
     except Exception:
         fts_candidates = []
     candidates = qa_service._merge_chunks_by_id(vector_candidates, fts_candidates)
@@ -84,7 +96,8 @@ async def observe_eval_case(db: AsyncSession, case: RagEvalCase) -> RagEvalObser
             error_code="no_knowledge_base",
         )
 
-    top_chunks = await qa_service._rerank(retrieval_query, candidates)
+    rerank_result = await qa_service._rerank(retrieval_query, candidates)
+    top_chunks = rerank_result[0] if isinstance(rerank_result, tuple) else rerank_result
     if not top_chunks:
         return RagEvalObserved(
             knowledge_base_id=kb.id,
@@ -96,7 +109,9 @@ async def observe_eval_case(db: AsyncSession, case: RagEvalCase) -> RagEvalObser
             error_code="no_relevant_context",
         )
 
-    prompt_messages = qa_service._build_prompt(case.question, top_chunks, recent_messages, None)
+    prompt_messages = qa_service._build_prompt(
+        case.question, top_chunks, recent_messages, None
+    )
     client = qa_service._openai_client()
     resp = await client.chat.completions.create(
         model="gpt-4o",

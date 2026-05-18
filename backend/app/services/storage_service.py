@@ -31,7 +31,9 @@ class StorageService:
         上传文件到存储桶并返回公开访问 URL。
         """
         if not self.s3_client:
-            raise RuntimeError("Storage service is not configured (missing credentials)")
+            raise RuntimeError(
+                "Storage service is not configured (missing credentials)"
+            )
 
         try:
             # 执行上传
@@ -39,15 +41,17 @@ class StorageService:
                 file_obj,
                 settings.S3_BUCKET_NAME,
                 file_name,
-                ExtraArgs={"ACL": "public-read"}  # 允许公开读取，方便 Celery 下载
+                ExtraArgs={"ACL": "public-read"},  # 允许公开读取，方便 Celery 下载
             )
-            
+
             # 构造返回 URL
             # 腾讯云格式通常是: https://<bucket>.cos.<region>.myqcloud.com/<file_name>
             # 或者直接从 endpoint 推导
-            base_url = settings.S3_ENDPOINT_URL.replace("://", f"://{settings.S3_BUCKET_NAME}.")
+            base_url = settings.S3_ENDPOINT_URL.replace(
+                "://", f"://{settings.S3_BUCKET_NAME}."
+            )
             return f"{base_url}/{file_name}"
-            
+
         except ClientError as e:
             logger.error(f"S3 upload failed: {e}")
             raise RuntimeError(f"文件上传失败: {e}")

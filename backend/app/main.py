@@ -20,6 +20,7 @@ from backend.app.db import engine
 setup_logging()
 logger = logging.getLogger(__name__)
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info(f"应用启动中，监听端口: {settings.APP_PORT}")
@@ -32,14 +33,16 @@ async def lifespan(app: FastAPI):
         if not ini_path.exists():
             # 兜底：如果 backend 目录就是当前工作目录
             ini_path = Path("alembic.ini")
-            
+
         logger.info(f"使用迁移配置文件: {ini_path.absolute()}")
         alembic_cfg = AlembicConfig(str(ini_path))
-        
+
         # 确保 alembic 使用最新的同步驱动 URL
-        alembic_url = settings.ALEMBIC_DATABASE_URL or settings.DATABASE_URL.replace("postgresql+asyncpg", "postgresql+psycopg2")
+        alembic_url = settings.ALEMBIC_DATABASE_URL or settings.DATABASE_URL.replace(
+            "postgresql+asyncpg", "postgresql+psycopg2"
+        )
         alembic_cfg.set_main_option("sqlalchemy.url", alembic_url)
-        
+
         # 执行迁移
         command.upgrade(alembic_cfg, "head")
         logger.info("✅ 数据库迁移成功完成")
@@ -50,6 +53,7 @@ async def lifespan(app: FastAPI):
     logger.info("应用关闭中")
     await engine.dispose()
     logger.info("数据库连接池已关闭")
+
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -63,12 +67,16 @@ app = FastAPI(
     debug=settings.DEBUG,
 )
 
+
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     logger.info(f"收到请求: {request.method} {request.url.path}")
     response = await call_next(request)
-    logger.info(f"请求完成: {request.method} {request.url.path} - {response.status_code}")
+    logger.info(
+        f"请求完成: {request.method} {request.url.path} - {response.status_code}"
+    )
     return response
+
 
 @app.get("/")
 async def root():

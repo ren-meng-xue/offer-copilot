@@ -17,7 +17,10 @@ class DocumentChunk(Base, TimestampMixin):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     # 所属知识库；知识库删除时级联删除 chunks。
     knowledge_base_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("knowledge_bases.id", ondelete="CASCADE"), nullable=False, index=True
+        Integer,
+        ForeignKey("knowledge_bases.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     # 切分后的文档正文。
     content: Mapped[str] = mapped_column(Text, nullable=False)

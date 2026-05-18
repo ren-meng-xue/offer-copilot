@@ -23,7 +23,11 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/knowledge", tags=["知识库"])
 
 
-@router.post("", response_model=Response[CreateKnowledgeResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=Response[CreateKnowledgeResponse],
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_knowledge(
     body: CreateKnowledgeRequest,
     db: AsyncSession = Depends(get_db),
@@ -39,7 +43,12 @@ async def create_knowledge(
         source_type="url",
     )
     try:
-        ingest_knowledge.delay(result.knowledge_base_id, task_id, str(body.source_url), int(current_user_id))
+        ingest_knowledge.delay(
+            result.knowledge_base_id,
+            task_id,
+            str(body.source_url),
+            int(current_user_id),
+        )
     except Exception as exc:
         logger.exception("Celery task enqueue failed: %s", exc)
         await knowledge_service.update_knowledge_status(
@@ -55,7 +64,11 @@ async def create_knowledge(
     return Response.success(data=result)
 
 
-@router.post("/upload", response_model=Response[CreateKnowledgeResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/upload",
+    response_model=Response[CreateKnowledgeResponse],
+    status_code=status.HTTP_201_CREATED,
+)
 async def upload_knowledge(
     file: UploadFile = File(...),
     name: str | None = Form(None),
@@ -84,7 +97,9 @@ async def upload_knowledge(
 
     # 3. 触发异步解析任务
     try:
-        ingest_knowledge.delay(result.knowledge_base_id, task_id, file_url, int(current_user_id))
+        ingest_knowledge.delay(
+            result.knowledge_base_id, task_id, file_url, int(current_user_id)
+        )
     except Exception as exc:
         logger.exception("Celery task enqueue failed: %s", exc)
         raise HTTPException(status_code=503, detail="Task queue failed")
@@ -107,9 +122,13 @@ async def get_knowledge_status(
     db: AsyncSession = Depends(get_db),
     current_user_id: str = Depends(get_current_user),
 ) -> Response[KnowledgeStatusResponse]:
-    result = await knowledge_service.get_knowledge_status(db, kb_id, int(current_user_id))
+    result = await knowledge_service.get_knowledge_status(
+        db, kb_id, int(current_user_id)
+    )
     if result is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Knowledge base not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Knowledge base not found"
+        )
     return Response.success(data=result)
 
 

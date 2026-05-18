@@ -37,14 +37,13 @@ def set_refresh_token_cookie(response: FastAPIResponse, refresh_token: str) -> N
 
 
 @router.post(
-    '/login',
+    "/login",
     response_model=Response[LoginResponse],
     summary="登陆接口",
-    description="用户登录接口，接受邮箱和密码，返回访问令牌")
+    description="用户登录接口，接受邮箱和密码，返回访问令牌",
+)
 async def login(
-        payload: LoginRequest,
-        response: FastAPIResponse,
-        db: AsyncSession = Depends(get_db)
+    payload: LoginRequest, response: FastAPIResponse, db: AsyncSession = Depends(get_db)
 ) -> Response[LoginResponse]:
     """用户登陆接口"""
     result, refresh_token = await login_user(db, payload)
@@ -58,27 +57,36 @@ async def login(
     return Response.success(data=result, msg="登录成功")
 
 
-@router.post('/register', response_model=Response[None], summary="注册接口", description="用户注册接口，接受用户名、邮箱和密码，创建新用户")
-async def register(payload: RegisterRequest, db: AsyncSession = Depends(get_db)) -> Response[None]:
+@router.post(
+    "/register",
+    response_model=Response[None],
+    summary="注册接口",
+    description="用户注册接口，接受用户名、邮箱和密码，创建新用户",
+)
+async def register(
+    payload: RegisterRequest, db: AsyncSession = Depends(get_db)
+) -> Response[None]:
     """用户注册接口"""
     await register_user(db, payload)
     return Response.success(msg="注册成功")
 
 
 @router.post(
-    '/refresh-token',
+    "/refresh-token",
     summary="刷新访问令牌接口",
     response_model=Response[LoginResponse],
     description="用户刷新访问令牌接口，接受 refresh token cookie，返回新的访问令牌",
 )
 async def refresh_token(
-        request: Request,
-        response: FastAPIResponse,
-        db: AsyncSession = Depends(get_db)
+    request: Request, response: FastAPIResponse, db: AsyncSession = Depends(get_db)
 ) -> Response[LoginResponse]:
     """用户刷新访问令牌接口"""
-    incoming_refresh_token = request.cookies.get(settings.REFRESH_TOKEN_COOKIE_NAME)  # 从浏览器自动带过来的cookie里取明文refresh token
-    result, new_refresh_token = await refresh_access_token(db, incoming_refresh_token)  # 传递给了这个函数
+    incoming_refresh_token = request.cookies.get(
+        settings.REFRESH_TOKEN_COOKIE_NAME
+    )  # 从浏览器自动带过来的cookie里取明文refresh token
+    result, new_refresh_token = await refresh_access_token(
+        db, incoming_refresh_token
+    )  # 传递给了这个函数
     # 调用service，校验旧refresh token 合法后，生成新的访问令牌和refresh token
 
     set_refresh_token_cookie(response, new_refresh_token)
@@ -86,14 +94,13 @@ async def refresh_token(
 
 
 @router.post(
-    '/forgot-password',
+    "/forgot-password",
     response_model=Response[None],
     summary="忘记密码接口",
     description="用户提交邮箱后，系统发送重置密码链接",
 )
 async def forgot_password(
-        payload: ForgotPasswordRequest,
-        db: AsyncSession = Depends(get_db)
+    payload: ForgotPasswordRequest, db: AsyncSession = Depends(get_db)
 ) -> Response[None]:
     """用户忘记密码接口"""
     await request_password_reset(db, payload)
@@ -101,14 +108,13 @@ async def forgot_password(
 
 
 @router.post(
-    '/reset-password',
+    "/reset-password",
     response_model=Response[None],
     summary="重置密码接口",
     description="用户提交重置令牌和新密码后，完成密码重置",
 )
 async def reset_password(
-        payload: ResetPasswordRequest,
-        db: AsyncSession = Depends(get_db)
+    payload: ResetPasswordRequest, db: AsyncSession = Depends(get_db)
 ) -> Response[None]:
     """用户重置密码接口"""
     await reset_password_by_token(db, payload)
@@ -129,14 +135,12 @@ def clear_refresh_token_cookie(response: FastAPIResponse) -> None:
 
 
 @router.post(
-    '/logout',
+    "/logout",
     summary="退出登陆",
-    description="用户退出登录接口，清除 refresh token cookie"
+    description="用户退出登录接口，清除 refresh token cookie",
 )
 async def logout(
-        request: Request,
-        response: FastAPIResponse,
-        db: AsyncSession = Depends(get_db)
+    request: Request, response: FastAPIResponse, db: AsyncSession = Depends(get_db)
 ):
     """用户退出登陆接口"""
     incoming_refresh_token = request.cookies.get(settings.REFRESH_TOKEN_COOKIE_NAME)

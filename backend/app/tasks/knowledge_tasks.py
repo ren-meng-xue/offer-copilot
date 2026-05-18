@@ -1,7 +1,9 @@
 import asyncio
 import json
 import logging
+import io
 
+import fitz  # PyMuPDF
 import redis as sync_redis
 from firecrawl import V1FirecrawlApp
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -32,39 +34,49 @@ def _get_sync_redis() -> sync_redis.Redis:
     )
 
 
-def _set_task_status(r: sync_redis.Redis, task_id: str, status: KnowledgeBaseStatus, user_id: int, extra_data: dict | None = None) -> None:
+def _set_task_status(
+    r: sync_redis.Redis,
+    task_id: str,
+    status: KnowledgeBaseStatus,
+    user_id: int,
+    extra_data: dict | None = None,
+) -> None:
     """将任务状态写入 Redis，并发布到用户专属频道供 SSE 实时通知。"""
 
-    data = {
-        "task_id": task_id,
-        "status": status.value
-    }
+    data = {"task_id": task_id, "status": status.value}
     if extra_data:
         data.update(extra_data)
 
-    status_data = {
-        "type": "knowledge_status",
-        "data": data
-    }
+    status_data = {"type": "knowledge_status", "data": data}
     # 1. 写入缓存供轮询/兜底
     r.set(f"task:{task_id}:status", status.value, ex=3600)
     # 2. 发布到频道供 SSE 实时推送
     r.publish(f"user:{user_id}:events", json.dumps(status_data, ensure_ascii=False))
 
 
-async def _run_ingestion(kb_id: int, task_id: str, source_url: str, user_id: int) -> None:
+async def _run_ingestion(
+    kb_id: int, task_id: str, source_url: str, user_id: int
+) -> None:
     """包装完整入库流程并统一处理失败状态回写。"""
 
     r = _get_sync_redis()
     # 每次任务创建独立 engine，避免与 FastAPI 进程 of event loop 冲突。
     engine = create_async_engine(settings.DATABASE_URL, pool_pre_ping=True)
-    session_factory = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False, autoflush=False)
+    session_factory = async_sessionmaker(
+        bind=engine, class_=AsyncSession, expire_on_commit=False, autoflush=False
+    )
     async with session_factory() as db:
         try:
             await _process(db, kb_id, task_id, source_url, r, user_id)
         except Exception as exc:
             error_msg = str(exc)[:500]
-            _set_task_status(r, task_id, KnowledgeBaseStatus.FAILED, user_id, extra_data={"knowledge_base_id": kb_id, "error_message": error_msg})
+            _set_task_status(
+                r,
+                task_id,
+                KnowledgeBaseStatus.FAILED,
+                user_id,
+                extra_data={"knowledge_base_id": kb_id, "error_message": error_msg},
+            )
             await knowledge_repository.update_knowledge_base_status(
                 db, kb_id, KnowledgeBaseStatus.FAILED, error_message=error_msg
             )
@@ -83,8 +95,16 @@ async def _process(
 ) -> None:
     """执行 来源 -> Markdown -> chunks -> embeddings -> pgvector 的主链路。"""
 
-    _set_task_status(r, task_id, KnowledgeBaseStatus.PROCESSING, user_id, extra_data={"knowledge_base_id": kb_id})
-    await knowledge_repository.update_knowledge_base_status(db, kb_id, KnowledgeBaseStatus.PROCESSING)
+    _set_task_status(
+        r,
+        task_id,
+        KnowledgeBaseStatus.PROCESSING,
+        user_id,
+        extra_data={"knowledge_base_id": kb_id},
+    )
+    await knowledge_repository.update_knowledge_base_status(
+        db, kb_id, KnowledgeBaseStatus.PROCESSING
+    )
 
     # 获取知识库详情以判断类型
     kb = await knowledge_repository.get_knowledge_base_by_id(db, kb_id)
@@ -98,12 +118,28 @@ async def _process(
         result = firecrawl.scrape_url(source_url, formats=["markdown"])
         markdown = result.markdown
     else:
-        # 文件下载逻辑 (针对 .txt, .md 等)
+        # 文件下载逻辑 (针对 .txt, .md, .pdf 等)
         import httpx
+
         async with httpx.AsyncClient() as client:
             resp = await client.get(source_url)
             resp.raise_for_status()
-            markdown = resp.text
+
+            # 检查是否为 PDF
+            is_pdf = (
+                source_url.lower().endswith(".pdf")
+                or "application/pdf" in resp.headers.get("content-type", "").lower()
+            )
+
+            if is_pdf:
+                # 使用 PyMuPDF 解析 PDF
+                with fitz.open(stream=io.BytesIO(resp.content), filetype="pdf") as doc:
+                    text_parts = []
+                    for page in doc:
+                        text_parts.append(page.get_text())
+                    markdown = "\n\n".join(text_parts)
+            else:
+                markdown = resp.text
 
     if not markdown:
         raise ValueError("Content is empty")
@@ -112,7 +148,9 @@ async def _process(
     try:
         generated_title = await generate_knowledge_base_title(markdown)
         if generated_title:
-            await knowledge_repository.update_knowledge_base_name(db, kb_id, generated_title)
+            await knowledge_repository.update_knowledge_base_name(
+                db, kb_id, generated_title
+            )
     except Exception:
         pass
 
@@ -131,8 +169,7 @@ async def _process(
 
     # 上下文感知嵌入：在生成向量前拼接标题路径
     texts_for_embedding = [
-        f"章节路径: {c.heading_path}\n内容: {c.content}"
-        for c in chunks
+        f"章节路径: {c.heading_path}\n内容: {c.content}" for c in chunks
     ]
     embeddings = await generate_embeddings(texts_for_embedding)
 
@@ -151,12 +188,22 @@ async def _process(
     ]
     await knowledge_repository.bulk_create_chunks(db, db_chunks)
 
-    _set_task_status(r, task_id, KnowledgeBaseStatus.DONE, user_id, extra_data={"knowledge_base_id": kb_id, "summary": summary})
-    await knowledge_repository.update_knowledge_base_status(db, kb_id, KnowledgeBaseStatus.DONE)
+    _set_task_status(
+        r,
+        task_id,
+        KnowledgeBaseStatus.DONE,
+        user_id,
+        extra_data={"knowledge_base_id": kb_id, "summary": summary},
+    )
+    await knowledge_repository.update_knowledge_base_status(
+        db, kb_id, KnowledgeBaseStatus.DONE
+    )
 
 
 @celery_app.task(name="knowledge.ingest", bind=True, max_retries=0)
-def ingest_knowledge(self, kb_id: int, task_id: str, source_url: str, user_id: int) -> None:
+def ingest_knowledge(
+    self, kb_id: int, task_id: str, source_url: str, user_id: int
+) -> None:
     """Celery 同步任务入口，桥接到内部异步实现。"""
 
     asyncio.run(_run_ingestion(kb_id, task_id, source_url, user_id))

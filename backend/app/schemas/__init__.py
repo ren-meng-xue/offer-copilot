@@ -3,9 +3,8 @@ from .auth import (
     LoginResponse,
     RegisterRequest,
     UserInfoResponse,
-   ForgotPasswordRequest,
-   ResetPasswordRequest
-
+    ForgotPasswordRequest,
+    ResetPasswordRequest,
 )
 
 __all__ = [
@@ -14,5 +13,5 @@ __all__ = [
     "RegisterRequest",
     "UserInfoResponse",
     "ForgotPasswordRequest",
-    "ResetPasswordRequest"
+    "ResetPasswordRequest",
 ]

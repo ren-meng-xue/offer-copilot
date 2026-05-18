@@ -35,21 +35,43 @@ def _build_title_prompt(markdown: str) -> str:
 """
 
 
-async def generate_knowledge_base_title(markdown: str) -> str | None:
-    """基于抓取到的 Markdown 内容生成知识库标题。
+def _build_conversation_title_prompt(question: str) -> str:
+    return f"""你是一个对话标题生成助手。
 
-    这是一个增强体验的 best-effort 步骤；返回 None 时，调用方继续保留默认标题。
-    """
+请根据下面这个用户的问题，生成一个极其简洁的中文标题（6-10个字）。
+
+要求：
+1. 只返回标题，不要任何解释或标点符号。
+2. 标题要能概括用户的问题核心意图。
+3. 严禁使用“关于...的对话”、“问题解答”之类的废话。
+
+用户问题：{question}
+"""
+
+
+async def generate_knowledge_base_title(markdown: str) -> str | None:
+    # ... (rest of the function)
+    pass
+
+
+async def generate_conversation_title(question: str) -> str | None:
+    """基于用户问题生成对话标题。"""
 
     if not settings.OPENAI_API_KEY:
         return None
 
-    client = get_openai_client()
-    response = await client.responses.create(
-        model=TITLE_MODEL,
-        input=_build_title_prompt(markdown),
-    )
-    title = response.output_text.strip()
-    if not title:
+    try:
+        client = get_openai_client()
+        response = await client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "你是一个专业的标题生成助手。"},
+                {"role": "user", "content": _build_conversation_title_prompt(question)},
+            ],
+            temperature=0.7,
+            max_tokens=20,
+        )
+        title = response.choices[0].message.content or ""
+        return title.strip().replace("“", "").replace("”", "").replace('"', "")
+    except Exception:
         return None
-    return title[:40].strip()

@@ -1,7 +1,10 @@
 from dataclasses import dataclass
 import re
 
-from langchain_text_splitters import MarkdownHeaderTextSplitter, RecursiveCharacterTextSplitter
+from langchain_text_splitters import (
+    MarkdownHeaderTextSplitter,
+    RecursiveCharacterTextSplitter,
+)
 
 CHUNK_SIZE = 512
 CHUNK_OVERLAP = 64
@@ -73,7 +76,11 @@ def _split_section_blocks(section_text: str) -> list[_SectionBlock]:
                 current = lines[i]
                 if not current.strip():
                     break
-                if _LIST_ITEM_RE.match(current) or current.startswith("  ") or current.startswith("\t"):
+                if (
+                    _LIST_ITEM_RE.match(current)
+                    or current.startswith("  ")
+                    or current.startswith("\t")
+                ):
                     block_lines.append(current)
                     i += 1
                     continue
@@ -136,7 +143,9 @@ def split_markdown(markdown: str, source_url: str) -> list[ChunkResult]:
     all_chunks: list[ChunkResult] = []
 
     for doc in header_docs:
-        heading_parts = [doc.metadata.get(h, "") for _, h in _HEADERS_TO_SPLIT if doc.metadata.get(h)]
+        heading_parts = [
+            doc.metadata.get(h, "") for _, h in _HEADERS_TO_SPLIT if doc.metadata.get(h)
+        ]
         heading_path = " > ".join(heading_parts) if heading_parts else ""
 
         sub_chunks = _split_structured_section(char_splitter, doc.page_content)

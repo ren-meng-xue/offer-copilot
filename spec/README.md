@@ -39,11 +39,13 @@
 - `frontend/frontend-workspace.md`：前端工作台总览（按当前实现对齐）
 - `frontend/chat-streaming-interaction.md`：聊天流式交互状态机（按当前实现对齐）
 - `frontend/chat-ui-polish.md`：聊天 UI/UX（按当前实现对齐）
+- `frontend/chat-knowledge-scope.md`：Chat 问题驱动知识库路由（Draft）
+- `backend/addenda/conversation-knowledge-scope.md`：问题驱动会话级知识库 scope（Draft）
 
 ## 分层归类（前端 / 后端 / 部署运维）
 
 | 分类 | 文件 |
 | --- | --- |
-| 前端（Frontend） | `frontend/frontend-workspace.md`, `frontend/chat-streaming-interaction.md`, `frontend/chat-ui-polish.md` |
-| 后端（Backend） | `backend/knowledge-ingestion.md`, `backend/qa.md`, `backend/addenda/*.md` |
+| 前端（Frontend） | `frontend/frontend-workspace.md`, `frontend/chat-streaming-interaction.md`, `frontend/chat-ui-polish.md`, `frontend/chat-knowledge-scope.md` |
+| 后端（Backend） | `backend/knowledge-ingestion.md`, `backend/qa.md`, `backend/addenda/*.md`, `backend/addenda/conversation-knowledge-scope.md` |
 | 部署运维（DevOps） | `devops/*.md`（预留） |

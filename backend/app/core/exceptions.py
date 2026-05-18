@@ -22,7 +22,9 @@ class AppException(Exception):
 
 
 class BadRequestException(AppException):
-    def __init__(self, msg: str = "客户端请求错误，请检查后重试", data: Any = None) -> None:
+    def __init__(
+        self, msg: str = "客户端请求错误，请检查后重试", data: Any = None
+    ) -> None:
         super().__init__(
             msg=msg,
             status_code=status.HTTP_400_BAD_REQUEST,

@@ -1,7 +1,7 @@
 # Backend
 
-OfferPilot backend 当前先聚焦登录与注册能力。
-目录结构先按最小 MVP 组织，后续再按真实业务逐步补充其他模块。
+Dev RAG backend 承载认证、知识库摄入、RAG 检索问答、SSE 流式输出、异步任务与评估调试能力。
+当前项目重点是让开发者文档 / 项目资料能够被导入、索引、检索并以可追溯引用的方式回答问题。
 
 ## 项目结构说明
 
@@ -34,9 +34,11 @@ backend/
 - `services`：放业务编排和服务逻辑
 - `tasks`：放异步任务入口
 - `modules/auth`：处理注册、登录和鉴权
+- `modules/knowledge`：处理知识库导入、状态查询、删除等能力
+- `services`：承载 RAG 问答、检索、rerank、citation guard、eval 等业务逻辑
 
 路由统一通过 `app/api/router.py` 暴露 `router`，再按版本拆到 `app/api/v1/`。
-当前先把登录模块跑通，后续再逐步补充 `users`、`jobs`、`resumes`、`analysis` 等业务模块。
+业务模块以 `auth`、`users`、`knowledge`、`conversations`、`qa` 等 Dev RAG 能力为主。
 
 ## 当前结构补充建议
 
@@ -44,7 +46,7 @@ backend/
 - `repositories/` 依赖 `db` 提供的 Session 做数据访问
 - `models/` 放表结构，`alembic/` 放迁移脚本
 - 日志模块建议放在 `app/core/logging.py`
-- 如果后续有“系统配置扫描 / 环境诊断 / 配置分析”能力，建议新增 `app/modules/system/`
+- 如果后续有“系统配置扫描 / 环境诊断 / RAG 链路分析”能力，建议新增 `app/modules/system/`
   - `router.py`：对外暴露扫描或诊断接口
   - `service.py`：编排配置检查、依赖探测、健康检查
   - 具体扫描过程中统一复用 `app.core.logging`
@@ -145,9 +147,10 @@ uv run --directory backend alembic downgrade -1
 - Alembic 自动生成依赖 `app/models/__init__.py` 暴露模型，新增模型后记得在这里导入
 - 生成迁移后要检查 `backend/alembic/versions/` 下的脚本是否符合预期，再执行 `upgrade`
 
-## Docker 开发
+## RAG 相关文档
 
-Docker 相关配置放在仓库根目录的 `deploy/` 下，不属于 `backend/` 子目录本身。
+主要 spec 位于仓库根目录的 `spec/`：
 
-请改看根文档里的 Docker 说明：
-[README.md](/Users/xuebao/python/offer-copilot/README.md)
+- `spec/backend/knowledge-ingestion.md`：知识库导入、切分、embedding、入库主链路
+- `spec/backend/qa.md`：RAG 问答、会话知识库范围、SSE 流式输出主链路
+- `spec/backend/addenda/*.md`：query rewrite、hybrid retrieval、citation guard、telemetry、eval 等增量设计

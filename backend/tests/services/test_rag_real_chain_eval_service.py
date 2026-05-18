@@ -37,7 +37,9 @@ def test_history_to_messages_preserves_turn_order() -> None:
 
 
 @pytest.mark.anyio
-async def test_resolve_knowledge_base_prefers_source_url(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_resolve_knowledge_base_prefers_source_url(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     kb = SimpleNamespace(id=88, user_id=7, status=SimpleNamespace(value="done"))
 
     async def fake_get_by_source_url(db: object, source_url: str):
@@ -69,7 +71,9 @@ async def test_resolve_knowledge_base_prefers_source_url(monkeypatch: pytest.Mon
 
 
 @pytest.mark.anyio
-async def test_observe_eval_case_returns_scope_unresolved_error(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_observe_eval_case_returns_scope_unresolved_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     async def fake_get_by_source_url(db: object, source_url: str):
         return None
 
@@ -96,9 +100,13 @@ async def test_observe_eval_case_returns_scope_unresolved_error(monkeypatch: pyt
 
 
 @pytest.mark.anyio
-async def test_observe_eval_case_returns_not_ready_error(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_observe_eval_case_returns_not_ready_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     async def fake_get_by_source_url(db: object, source_url: str):
-        return SimpleNamespace(id=123, user_id=7, status=SimpleNamespace(value="processing"))
+        return SimpleNamespace(
+            id=123, user_id=7, status=SimpleNamespace(value="processing")
+        )
 
     monkeypatch.setattr(
         "backend.app.services.rag_real_chain_eval_service.knowledge_repository.get_knowledge_base_by_source_url",

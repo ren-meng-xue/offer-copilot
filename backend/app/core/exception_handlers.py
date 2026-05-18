@@ -19,7 +19,9 @@ def _json_safe_errors(errors: list[dict]) -> list[dict]:
 
 def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(AppException)
-    async def app_exception_handler(request: Request, exc: AppException) -> JSONResponse:
+    async def app_exception_handler(
+        request: Request, exc: AppException
+    ) -> JSONResponse:
         # 业务层主动抛出的可预期异常统一在这里收口。
         logger.error("AppException: %s", exc.msg)
         return JSONResponse(
@@ -48,7 +50,9 @@ def register_exception_handlers(app: FastAPI) -> None:
         )
 
     @app.exception_handler(HTTPException)
-    async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
+    async def http_exception_handler(
+        request: Request, exc: HTTPException
+    ) -> JSONResponse:
         # 兼容框架层或手动抛出的 HTTPException，保持返回格式一致。
         logger.error("HTTPException: %s", exc.detail)
         return JSONResponse(
@@ -61,7 +65,9 @@ def register_exception_handlers(app: FastAPI) -> None:
         )
 
     @app.exception_handler(Exception)
-    async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    async def unhandled_exception_handler(
+        request: Request, exc: Exception
+    ) -> JSONResponse:
         # 最终兜底，避免把 Python 原始报错直接暴露给前端。
         logger.exception("Unhandled Exception")
         return JSONResponse(

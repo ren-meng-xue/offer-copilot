@@ -15,14 +15,18 @@ KEEP_RECENT = 4
 async def _run_summarize(conv_id_str: str) -> None:
     conv_id = uuid.UUID(conv_id_str)
     engine = create_async_engine(settings.DATABASE_URL, pool_pre_ping=True)
-    session_factory = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False, autoflush=False)
+    session_factory = async_sessionmaker(
+        bind=engine, class_=AsyncSession, expire_on_commit=False, autoflush=False
+    )
     async with session_factory() as db:
         try:
             conv = await qa_repository.get_conversation_by_id(db, conv_id)
             if conv is None or (conv.message_count or 0) <= SUMMARY_TRIGGER:
                 return
 
-            old_messages = await qa_repository.get_old_messages_for_summary(db, conv_id, keep_recent=KEEP_RECENT)
+            old_messages = await qa_repository.get_old_messages_for_summary(
+                db, conv_id, keep_recent=KEEP_RECENT
+            )
             if not old_messages:
                 return
 
@@ -31,7 +35,10 @@ async def _run_summarize(conv_id_str: str) -> None:
             resp = await client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
-                    {"role": "system", "content": "请将以下对话历史压缩为简洁摘要，保留关键信息。"},
+                    {
+                        "role": "system",
+                        "content": "请将以下对话历史压缩为简洁摘要，保留关键信息。",
+                    },
                     {"role": "user", "content": history},
                 ],
             )

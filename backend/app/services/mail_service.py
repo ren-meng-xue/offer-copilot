@@ -25,7 +25,9 @@ def _validate_smtp_settings() -> None:
         missing_fields.append("MAIL_FROM")
 
     if missing_fields:
-        raise AppException(msg=f"邮件服务未配置完整，请补充: {', '.join(missing_fields)}")
+        raise AppException(
+            msg=f"邮件服务未配置完整，请补充: {', '.join(missing_fields)}"
+        )
 
 
 def _build_from_header() -> str:

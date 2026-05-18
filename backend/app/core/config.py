@@ -33,7 +33,9 @@ class Settings(BaseSettings):
     BACKEND_CORS_ORIGIN_REGEX: str | None = r"https://offer-copilot.*\.vercel\.app"
 
     # 基础设施配置，后续 auth、数据库和任务系统都会依赖这些变量。
-    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5433/offercopilot"
+    DATABASE_URL: str = (
+        "postgresql+asyncpg://postgres:postgres@localhost:5433/offercopilot"
+    )
     ALEMBIC_DATABASE_URL: Optional[str] = None
 
     # Redis 基础配置
@@ -86,6 +88,10 @@ class Settings(BaseSettings):
     RAG_QUERY_REWRITE_MODEL: str = "gpt-4o-mini"
     RAG_TELEMETRY_ENABLED: bool = True
     RAG_DEBUG_ENABLED: bool = False  # 是否开启 RAG debug 输出
+    RAG_SCOPE_MAX_KNOWLEDGE_BASES: int = 3
+    RAG_SCOPE_ROUTE_MIN_SCORE: float = 0.2
+    RAG_VECTOR_TOP_K_PER_KB: int = 10
+    RAG_FTS_TOP_K_PER_KB: int = 10
     S3_ENDPOINT_URL: str | None = None
     S3_ACCESS_KEY_ID: str | None = None
     S3_SECRET_ACCESS_KEY: str | None = None
@@ -115,6 +121,7 @@ class Settings(BaseSettings):
     def validate_infrastructure_urls(self) -> "Settings":
         """在所有字段加载后，处理跨字段的 fallback 逻辑。"""
         import logging
+
         logger = logging.getLogger(__name__)
 
         # 1. 自动推导 ALEMBIC_DATABASE_URL (同步驱动)
@@ -129,7 +136,9 @@ class Settings(BaseSettings):
                 self.CELERY_BROKER_URL = self.REDIS_URL
         else:
             if not self.CELERY_BROKER_URL:
-                self.CELERY_BROKER_URL = f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/1"
+                self.CELERY_BROKER_URL = (
+                    f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/1"
+                )
                 if self.REDIS_PASSWORD:
                     self.CELERY_BROKER_URL = f"redis://:{self.REDIS_PASSWORD}@{self.REDIS_HOST}:{self.REDIS_PORT}/1"
 

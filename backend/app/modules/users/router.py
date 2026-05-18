@@ -11,7 +11,11 @@ from backend.app.schemas.auth import UserInfoResponse
 router = APIRouter(prefix="/users", tags=["用户模块"])
 
 
-@router.get("", response_model=Response[UserInfoResponse], description="获取当前登录用户信息，需要在请求头传递 Bearer Token")
+@router.get(
+    "",
+    response_model=Response[UserInfoResponse],
+    description="获取当前登录用户信息，需要在请求头传递 Bearer Token",
+)
 async def get_current_user_info(
     current_user_id: str = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -25,4 +29,3 @@ async def get_current_user_info(
         data=UserInfoResponse.model_validate(user),
         msg="获取当前用户成功",
     )
-

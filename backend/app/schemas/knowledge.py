@@ -8,7 +8,11 @@ class CreateKnowledgeRequest(BaseModel):
     """创建知识库请求，只接收用户提交的最小必要信息。"""
 
     source_url: HttpUrl = Field(..., description="要抓取的文档 URL")
-    name: str | None = Field(default=None, max_length=255, description="知识库名称，不传则由后端根据 URL 生成")
+    name: str | None = Field(
+        default=None,
+        max_length=255,
+        description="知识库名称，不传则由后端根据 URL 生成",
+    )
 
 
 class CreateKnowledgeResponse(BaseModel):

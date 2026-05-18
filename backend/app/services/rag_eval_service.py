@@ -69,8 +69,14 @@ def load_eval_cases(path: str | Path) -> list[RagEvalCase]:
         knowledge_base_id = item.get("knowledge_base_id")
         knowledge_base_name = item.get("knowledge_base_name")
         knowledge_base_source_url = item.get("knowledge_base_source_url")
-        if knowledge_base_id is None and not knowledge_base_name and not knowledge_base_source_url:
-            raise ValueError(f"RAG eval case {item['id']} is missing knowledge base scope")
+        if (
+            knowledge_base_id is None
+            and not knowledge_base_name
+            and not knowledge_base_source_url
+        ):
+            raise ValueError(
+                f"RAG eval case {item['id']} is missing knowledge base scope"
+            )
 
         cases.append(
             RagEvalCase(
@@ -79,10 +85,15 @@ def load_eval_cases(path: str | Path) -> list[RagEvalCase]:
                 knowledge_base_id=knowledge_base_id,
                 knowledge_base_name=knowledge_base_name,
                 knowledge_base_source_url=knowledge_base_source_url,
-                history=[RagEvalTurn(role=turn["role"], content=turn["content"]) for turn in item["history"]],
+                history=[
+                    RagEvalTurn(role=turn["role"], content=turn["content"])
+                    for turn in item["history"]
+                ],
                 question=item["question"],
                 expected_mode=item["expected_mode"],
-                expected_retrieval_query_contains=item.get("expected_retrieval_query_contains", []),
+                expected_retrieval_query_contains=item.get(
+                    "expected_retrieval_query_contains", []
+                ),
                 expected_answer_contains=item.get("expected_answer_contains", []),
                 expected_citation_urls=item.get("expected_citation_urls", []),
             )
@@ -100,19 +111,28 @@ def score_eval_case(case: RagEvalCase, observed: RagEvalObserved) -> RagEvalScor
         expected_knowledge_base_id = case.knowledge_base_id
 
     checks = {
-        "knowledge_scope_match": observed.knowledge_base_id == expected_knowledge_base_id,
+        "knowledge_scope_match": observed.knowledge_base_id
+        == expected_knowledge_base_id,
         "mode_match": (
-            observed.outcome == "success" if case.expected_mode == "answer" else observed.outcome == "error"
+            observed.outcome == "success"
+            if case.expected_mode == "answer"
+            else observed.outcome == "error"
         ),
         "retrieval_query_match": all(
-            expected.lower() in observed_query for expected in case.expected_retrieval_query_contains
+            expected.lower() in observed_query
+            for expected in case.expected_retrieval_query_contains
         ),
         "answer_match": (
             True
             if case.expected_mode != "answer"
-            else all(expected.lower() in observed_answer for expected in case.expected_answer_contains)
+            else all(
+                expected.lower() in observed_answer
+                for expected in case.expected_answer_contains
+            )
         ),
-        "citation_match": all(url in observed_citation_urls for url in case.expected_citation_urls),
+        "citation_match": all(
+            url in observed_citation_urls for url in case.expected_citation_urls
+        ),
     }
 
     failed_checks = [name for name, ok in checks.items() if not ok]

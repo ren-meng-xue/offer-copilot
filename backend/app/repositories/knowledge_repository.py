@@ -14,7 +14,9 @@ async def create_knowledge_base(db: AsyncSession, kb: KnowledgeBase) -> Knowledg
     return kb
 
 
-async def get_knowledge_base_by_id(db: AsyncSession, kb_id: int) -> KnowledgeBase | None:
+async def get_knowledge_base_by_id(
+    db: AsyncSession, kb_id: int
+) -> KnowledgeBase | None:
     """按主键查询知识库，供创建流程和异步任务复用。"""
 
     stmt = select(KnowledgeBase).where(KnowledgeBase.id == kb_id)
@@ -22,7 +24,24 @@ async def get_knowledge_base_by_id(db: AsyncSession, kb_id: int) -> KnowledgeBas
     return result.scalars().one_or_none()
 
 
-async def get_knowledge_base_by_source_url(db: AsyncSession, source_url: str) -> KnowledgeBase | None:
+async def get_knowledge_bases_by_ids(
+    db: AsyncSession, kb_ids: list[int]
+) -> list[KnowledgeBase]:
+    """按 ID 批量查询知识库，返回顺序与传入 ID 尽量一致。"""
+
+    if not kb_ids:
+        return []
+
+    stmt = select(KnowledgeBase).where(KnowledgeBase.id.in_(kb_ids))
+    result = await db.execute(stmt)
+    items = list(result.scalars().all())
+    order = {kb_id: index for index, kb_id in enumerate(kb_ids)}
+    return sorted(items, key=lambda item: order.get(item.id, len(order)))
+
+
+async def get_knowledge_base_by_source_url(
+    db: AsyncSession, source_url: str
+) -> KnowledgeBase | None:
     """按 source_url 查询知识库，供评测 fixture 解析稳定作用域使用。"""
 
     stmt = (
@@ -34,7 +53,9 @@ async def get_knowledge_base_by_source_url(db: AsyncSession, source_url: str) ->
     return result.scalars().first()
 
 
-async def get_latest_knowledge_base_by_name(db: AsyncSession, name: str) -> KnowledgeBase | None:
+async def get_latest_knowledge_base_by_name(
+    db: AsyncSession, name: str
+) -> KnowledgeBase | None:
     """按名称查询最近更新的一条知识库，避免 fixture 依赖固定主键。"""
 
     stmt = (
@@ -46,12 +67,29 @@ async def get_latest_knowledge_base_by_name(db: AsyncSession, name: str) -> Know
     return result.scalars().first()
 
 
-async def list_knowledge_bases_by_user(db: AsyncSession, user_id: int) -> list[KnowledgeBase]:
+async def list_knowledge_bases_by_user(
+    db: AsyncSession, user_id: int
+) -> list[KnowledgeBase]:
     """按用户查询知识库列表，避免跨用户展示导入记录。"""
 
     stmt = (
         select(KnowledgeBase)
         .where(KnowledgeBase.user_id == user_id)
+        .order_by(KnowledgeBase.updated_at.desc())
+    )
+    result = await db.execute(stmt)
+    return list(result.scalars().all())
+
+
+async def list_done_knowledge_bases_by_user(
+    db: AsyncSession, user_id: int
+) -> list[KnowledgeBase]:
+    """查询当前用户所有可用于问答路由的已完成知识库。"""
+
+    stmt = (
+        select(KnowledgeBase)
+        .where(KnowledgeBase.user_id == user_id)
+        .where(KnowledgeBase.status == KnowledgeBaseStatus.DONE)
         .order_by(KnowledgeBase.updated_at.desc())
     )
     result = await db.execute(stmt)
@@ -88,7 +126,9 @@ async def update_knowledge_base_name(db: AsyncSession, kb_id: int, name: str) ->
     await db.commit()
 
 
-async def update_knowledge_base_summary(db: AsyncSession, kb_id: int, summary: str) -> None:
+async def update_knowledge_base_summary(
+    db: AsyncSession, kb_id: int, summary: str
+) -> None:
     """回写知识库摘要。"""
 
     kb = await get_knowledge_base_by_id(db, kb_id)

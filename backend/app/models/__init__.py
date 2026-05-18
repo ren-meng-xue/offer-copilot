@@ -5,7 +5,7 @@ from .auth_sessions import AuthSession
 from .password_reset_tokens import PasswordResetToken
 from .knowledge_base import KnowledgeBase, KnowledgeBaseStatus
 from .document_chunk import DocumentChunk
-from .conversation import Conversation, Message
+from .conversation import Conversation, ConversationKnowledgeScopeItem, Message
 
 __all__ = [
     "User",
@@ -15,5 +15,6 @@ __all__ = [
     "KnowledgeBaseStatus",
     "DocumentChunk",
     "Conversation",
+    "ConversationKnowledgeScopeItem",
     "Message",
 ]

@@ -39,7 +39,10 @@ def test_settings_normalize_database_url_for_async_runtime() -> None:
         DATABASE_URL="postgresql://user:pass@db.railway.internal:5432/offercopilot",
     )
 
-    assert settings.DATABASE_URL == "postgresql+asyncpg://user:pass@db.railway.internal:5432/offercopilot"
+    assert (
+        settings.DATABASE_URL
+        == "postgresql+asyncpg://user:pass@db.railway.internal:5432/offercopilot"
+    )
 
 
 def test_settings_normalize_postgres_short_scheme_for_async_runtime() -> None:
@@ -48,7 +51,10 @@ def test_settings_normalize_postgres_short_scheme_for_async_runtime() -> None:
         DATABASE_URL="postgres://user:pass@db.railway.internal:5432/offercopilot",
     )
 
-    assert settings.DATABASE_URL == "postgresql+asyncpg://user:pass@db.railway.internal:5432/offercopilot"
+    assert (
+        settings.DATABASE_URL
+        == "postgresql+asyncpg://user:pass@db.railway.internal:5432/offercopilot"
+    )
 
 
 def test_settings_keep_existing_async_driver_prefix() -> None:
@@ -57,7 +63,10 @@ def test_settings_keep_existing_async_driver_prefix() -> None:
         DATABASE_URL="postgresql+asyncpg://user:pass@db.railway.internal:5432/offercopilot",
     )
 
-    assert settings.DATABASE_URL == "postgresql+asyncpg://user:pass@db.railway.internal:5432/offercopilot"
+    assert (
+        settings.DATABASE_URL
+        == "postgresql+asyncpg://user:pass@db.railway.internal:5432/offercopilot"
+    )
 
 
 def test_settings_normalize_alembic_database_url_for_sync_runtime() -> None:
@@ -66,11 +75,16 @@ def test_settings_normalize_alembic_database_url_for_sync_runtime() -> None:
         ALEMBIC_DATABASE_URL="postgresql://user:pass@db.railway.internal:5432/offercopilot",
     )
 
-    assert settings.ALEMBIC_DATABASE_URL == "postgresql+psycopg2://user:pass@db.railway.internal:5432/offercopilot"
+    assert (
+        settings.ALEMBIC_DATABASE_URL
+        == "postgresql+psycopg2://user:pass@db.railway.internal:5432/offercopilot"
+    )
 
 
 def test_build_cors_middleware_options_omit_regex_when_empty() -> None:
-    settings = Settings(BACKEND_CORS_ORIGINS="http://localhost:3000", BACKEND_CORS_ORIGIN_REGEX=None)
+    settings = Settings(
+        BACKEND_CORS_ORIGINS="http://localhost:3000", BACKEND_CORS_ORIGIN_REGEX=None
+    )
 
     options = build_cors_middleware_options(settings)
 

@@ -4,6 +4,7 @@ Time           : 2026/4/22 11:20
 Author         : xuebao
 File           : auth_service.py
 """
+
 from datetime import datetime, timedelta, timezone
 from urllib.parse import urlencode
 
@@ -16,7 +17,8 @@ from backend.app.models.enums import UserStatus
 from backend.app.repositories.user_repository import (
     get_user_by_email,
     get_user_by_username,
-    create_user, get_user_by_id,
+    create_user,
+    get_user_by_id,
 )
 from backend.app.repositories.auth_repository import (
     create_auth_session,
@@ -24,26 +26,27 @@ from backend.app.repositories.auth_repository import (
     update_auth_session_token,
     revoke_auth_session,
 )
-from backend.app.core.exceptions import ConflictException, UnauthorizedException, BadRequestException
+from backend.app.core.exceptions import (
+    ConflictException,
+    UnauthorizedException,
+    BadRequestException,
+)
 
 from backend.app.core.security import (
     get_password_hash,
     verify_password,
     create_access_token,
     hash_token,
-    create_refresh_token
+    create_refresh_token,
 )
 from backend.app.schemas import RegisterRequest, LoginRequest, LoginResponse
 from backend.app.schemas.auth import ResetPasswordRequest, ForgotPasswordRequest
 from backend.app.services.mail_service import send_password_reset_email
 
 
-async def register_user(
-        db: AsyncSession,
-        payload: RegisterRequest
-) -> None:
+async def register_user(db: AsyncSession, payload: RegisterRequest) -> None:
     """注册用户
-     邮箱不能重复
+    邮箱不能重复
     """
     existing_user = await get_user_by_email(db, payload.email)
     if existing_user:
@@ -68,7 +71,9 @@ async def register_user(
     await create_user(db, user)
 
 
-async def login_user(db: AsyncSession, payload: LoginRequest) -> tuple[LoginResponse, str]:
+async def login_user(
+    db: AsyncSession, payload: LoginRequest
+) -> tuple[LoginResponse, str]:
     """用户登陆。
 
     service 层负责生成业务结果和 refresh token 本身；
@@ -111,8 +116,7 @@ async def login_user(db: AsyncSession, payload: LoginRequest) -> tuple[LoginResp
 
 
 async def refresh_access_token(
-        db: AsyncSession,
-        refresh_token: str | None
+    db: AsyncSession, refresh_token: str | None
 ) -> tuple[LoginResponse, str]:
     """刷新access token，并轮换refresh token"""
     # 先判断前端有没有带 refresh token
@@ -151,7 +155,9 @@ async def refresh_access_token(
     new_access_token = create_access_token(data={"sub": str(user.id)})
     new_refresh_token = create_refresh_token()
     new_refresh_token_hash = hash_token(new_refresh_token)
-    new_refresh_expires_at = now + timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES)
+    new_refresh_expires_at = now + timedelta(
+        minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES
+    )
     await update_auth_session_token(
         db=db,
         auth_session=auth_session,
@@ -196,16 +202,17 @@ async def logout_user(db: AsyncSession, refresh_token: str | None) -> None:
 
 def _build_password_reset_link(token: str, email: str) -> str:
     """根据传递过来的token去构建一个密码重置链接，发到用户邮箱里"""
-    query = urlencode({
-        "token": token,
-        "email": email,
-    })
+    query = urlencode(
+        {
+            "token": token,
+            "email": email,
+        }
+    )
     return f"{settings.PASSWORD_RESET_URL_BASE}?{query}"
 
 
 async def request_password_reset(
-        db: AsyncSession,
-        payload: ForgotPasswordRequest
+    db: AsyncSession, payload: ForgotPasswordRequest
 ) -> None:
     user = await get_user_by_email(db, payload.email)
     # 不暴露邮箱是否存在，防止被枚举。
@@ -222,7 +229,7 @@ async def request_password_reset(
             PasswordResetToken.user_id == user.id,
             PasswordResetToken.used_at.is_(None),  # 之前没用过的token
             PasswordResetToken.revoked_at.is_(None),  # 之前没撤销过的
-            PasswordResetToken.expires_at > now
+            PasswordResetToken.expires_at > now,
         )
         .values(revoked_at=now)  # 把符合条件的记录的revoked_at置更新为当前时间
     )
@@ -230,10 +237,10 @@ async def request_password_reset(
     db.add(
         PasswordResetToken(
             user_id=user.id,
-            token_hash=token_hash,#存的是hash过后的
-            expires_at=expires_at,#邮箱连接失效时间
-            used_at=None,#没被用过
-            revoked_at=None,#没被撤销过
+            token_hash=token_hash,  # 存的是hash过后的
+            expires_at=expires_at,  # 邮箱连接失效时间
+            used_at=None,  # 没被用过
+            revoked_at=None,  # 没被撤销过
             created_at=now,
         )
     )
@@ -244,18 +251,16 @@ async def request_password_reset(
 
 
 async def reset_password_by_token(
-        db: AsyncSession,
-        payload: ResetPasswordRequest,
+    db: AsyncSession,
+    payload: ResetPasswordRequest,
 ) -> None:
     """通过 token 来重置密码"""
     now = datetime.now(timezone.utc)
-    token_hash = hash_token(payload.token)#hash过后的token
+    token_hash = hash_token(payload.token)  # hash过后的token
 
     result = await db.execute(
-        #首先通过token 先查询出在这个PasswordResetToken表里有没有这个token的记录，如果没有，说明这个链接无效或者过期了
-        select(PasswordResetToken).where(
-            PasswordResetToken.token_hash == token_hash
-        )
+        # 首先通过token 先查询出在这个PasswordResetToken表里有没有这个token的记录，如果没有，说明这个链接无效或者过期了
+        select(PasswordResetToken).where(PasswordResetToken.token_hash == token_hash)
     )
     reset_record = result.scalar_one_or_none()
 

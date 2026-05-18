@@ -39,7 +39,9 @@ def test_split_markdown_keeps_markdown_table_atomic() -> None:
 
     chunks = split_markdown(markdown, "https://docs.example.com/config")
 
-    table_chunks = [chunk for chunk in chunks if "| OPENAI_API_KEY | API key |" in chunk.content]
+    table_chunks = [
+        chunk for chunk in chunks if "| OPENAI_API_KEY | API key |" in chunk.content
+    ]
     assert len(table_chunks) == 1
     assert "| Name | Description |" in table_chunks[0].content
     assert "| REDIS_URL | Redis connection |" in table_chunks[0].content

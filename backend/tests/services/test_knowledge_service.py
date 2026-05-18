@@ -9,13 +9,21 @@ from backend.app.services import knowledge_service
 
 
 @pytest.mark.asyncio
-async def test_delete_knowledge_base_succeeds_for_done_status(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_delete_knowledge_base_succeeds_for_done_status(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     db = AsyncMock()
     kb = SimpleNamespace(id=1, user_id=7, status=KnowledgeBaseStatus.DONE)
     delete_mock = AsyncMock()
 
-    monkeypatch.setattr(knowledge_service.knowledge_repository, "get_knowledge_base_by_id", AsyncMock(return_value=kb))
-    monkeypatch.setattr(knowledge_service.knowledge_repository, "delete_knowledge_base", delete_mock)
+    monkeypatch.setattr(
+        knowledge_service.knowledge_repository,
+        "get_knowledge_base_by_id",
+        AsyncMock(return_value=kb),
+    )
+    monkeypatch.setattr(
+        knowledge_service.knowledge_repository, "delete_knowledge_base", delete_mock
+    )
 
     await knowledge_service.delete_knowledge_base(db, 1, 7)
 
@@ -23,7 +31,9 @@ async def test_delete_knowledge_base_succeeds_for_done_status(monkeypatch: pytes
 
 
 @pytest.mark.asyncio
-async def test_delete_knowledge_base_rejects_processing_status(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_delete_knowledge_base_rejects_processing_status(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     db = AsyncMock()
     kb = SimpleNamespace(id=1, user_id=7, status=KnowledgeBaseStatus.PROCESSING)
 
@@ -40,7 +50,9 @@ async def test_delete_knowledge_base_rejects_processing_status(monkeypatch: pyte
 
 
 @pytest.mark.asyncio
-async def test_delete_knowledge_base_hides_other_users_records(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_delete_knowledge_base_hides_other_users_records(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     db = AsyncMock()
     kb = SimpleNamespace(id=1, user_id=8, status=KnowledgeBaseStatus.DONE)
 

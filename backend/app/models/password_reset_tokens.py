@@ -4,11 +4,13 @@ Time           : 2026/4/23 16:20
 Author         : xuebao
 File           : password_reset_tokens.py
 """
+
 from datetime import datetime
 from sqlalchemy import ForeignKey, String, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
 
 from backend.app.db.base import Base
+
 
 class PasswordResetToken(Base):
     """密码重置令牌表。
@@ -63,4 +65,3 @@ class PasswordResetToken(Base):
         DateTime(timezone=True),
         nullable=False,
     )
-

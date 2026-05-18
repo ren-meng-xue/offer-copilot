@@ -21,7 +21,10 @@ def test_load_eval_cases_reads_fixture_contract() -> None:
 
     assert len(cases) >= 10
     assert cases[0].id == "langchain_overview_exact_term"
-    assert cases[0].knowledge_base_source_url == "https://chatgpt.com/share/69fc0a66-d814-83a2-b3df-4204f87e7fe3"
+    assert (
+        cases[0].knowledge_base_source_url
+        == "https://chatgpt.com/share/69fc0a66-d814-83a2-b3df-4204f87e7fe3"
+    )
     assert cases[2].history[0].role == "user"
 
 
@@ -32,7 +35,11 @@ def test_score_eval_case_passes_answer_case() -> None:
         expected_knowledge_base_id=3,
         retrieval_query="LangChain 的定义和功能是什么？",
         answer="LangChain 是一个“搭积木”的 AI 应用框架，它的核心目标是将大语言模型（LLM）和外部工具、数据、工作流连接起来。",
-        citations=[{"source_url": "https://chatgpt.com/share/69fc0a66-d814-83a2-b3df-4204f87e7fe3"}],
+        citations=[
+            {
+                "source_url": "https://chatgpt.com/share/69fc0a66-d814-83a2-b3df-4204f87e7fe3"
+            }
+        ],
         outcome="success",
         error_code=None,
     )
@@ -86,7 +93,11 @@ def test_score_eval_case_fails_when_rewrite_terms_missing() -> None:
         expected_knowledge_base_id=3,
         retrieval_query="framework overview",
         answer="LangChain is a framework for connecting LLMs with tools and data.",
-        citations=[{"source_url": "https://chatgpt.com/share/69fc0a66-d814-83a2-b3df-4204f87e7fe3"}],
+        citations=[
+            {
+                "source_url": "https://chatgpt.com/share/69fc0a66-d814-83a2-b3df-4204f87e7fe3"
+            }
+        ],
         outcome="success",
         error_code=None,
     )
@@ -106,7 +117,11 @@ def test_run_eval_cases_builds_summary_for_mixed_results() -> None:
             expected_knowledge_base_id=3,
             retrieval_query="LangChain 的定义和功能是什么？",
             answer="LangChain 是一个“搭积木”的 AI 应用框架，它的核心目标是将大语言模型（LLM）和外部工具、数据、工作流连接起来。",
-            citations=[{"source_url": "https://chatgpt.com/share/69fc0a66-d814-83a2-b3df-4204f87e7fe3"}],
+            citations=[
+                {
+                    "source_url": "https://chatgpt.com/share/69fc0a66-d814-83a2-b3df-4204f87e7fe3"
+                }
+            ],
             outcome="success",
             error_code=None,
         ),
@@ -115,7 +130,11 @@ def test_run_eval_cases_builds_summary_for_mixed_results() -> None:
             expected_knowledge_base_id=3,
             retrieval_query="RAG 的定义及其在技术中的应用。",
             answer="RAG，即 Retrieval-Augmented Generation，是一种通过结合检索与生成的流程来回答用户问题的技术方法。这个过程包括：从用户问题开始，通过向量检索找到相关文档，拼接得到的文档与初始问题，最后通过大型语言模型（LLM）生成答案。这种方法通常应用于AI知识库、企业问答和文档助手等领域。LangChain 是一个支持构建 RAG 应用的“搭积木”框架，能够轻松集成LLM、管理Prompt和接入数据库等功能。",
-            citations=[{"source_url": "https://chatgpt.com/share/69fc0a66-d814-83a2-b3df-4204f87e7fe3"}],
+            citations=[
+                {
+                    "source_url": "https://chatgpt.com/share/69fc0a66-d814-83a2-b3df-4204f87e7fe3"
+                }
+            ],
             outcome="success",
             error_code=None,
         ),
@@ -124,7 +143,11 @@ def test_run_eval_cases_builds_summary_for_mixed_results() -> None:
             expected_knowledge_base_id=3,
             retrieval_query="LangChain 可以用于构建对话系统、自动化文档处理、数据增强和信息检索等应用场景。",
             answer="LangChain 可以进行以下操作：调用 LLM（例如 OpenAI、Claude、Gemini、本地模型），管理 Prompt，接入数据库或文档，执行 RAG（知识库问答），让 AI 使用工具，支持多步骤推理的 Agent，记忆上下文，构建 AI 工作流。",
-            citations=[{"source_url": "https://chatgpt.com/share/69fc0a66-d814-83a2-b3df-4204f87e7fe3"}],
+            citations=[
+                {
+                    "source_url": "https://chatgpt.com/share/69fc0a66-d814-83a2-b3df-4204f87e7fe3"
+                }
+            ],
             outcome="success",
             error_code=None,
         ),
@@ -158,7 +181,11 @@ def test_run_eval_cases_marks_observer_errors_without_stopping() -> None:
             expected_knowledge_base_id=3,
             retrieval_query="LangChain 的定义和功能是什么？",
             answer="LangChain 是一个“搭积木”的 AI 应用框架，它的核心目标是将大语言模型（LLM）和外部工具、数据、工作流连接起来。",
-            citations=[{"source_url": "https://chatgpt.com/share/69fc0a66-d814-83a2-b3df-4204f87e7fe3"}],
+            citations=[
+                {
+                    "source_url": "https://chatgpt.com/share/69fc0a66-d814-83a2-b3df-4204f87e7fe3"
+                }
+            ],
             outcome="success",
             error_code=None,
         )
@@ -167,7 +194,11 @@ def test_run_eval_cases_marks_observer_errors_without_stopping() -> None:
 
     assert summary.total_cases == 2
     assert summary.failed_check_counts["observer_error"] == 1
-    failed_result = next(result for result in summary.results if result.case_id == "langchain_rag_definition")
+    failed_result = next(
+        result
+        for result in summary.results
+        if result.case_id == "langchain_rag_definition"
+    )
     assert failed_result.failed_checks == ["observer_error"]
 
 
@@ -189,7 +220,11 @@ async def test_run_eval_cases_async_supports_async_observer() -> None:
             expected_knowledge_base_id=case.knowledge_base_id,
             retrieval_query="LangChain 的定义和功能是什么？",
             answer="LangChain 是一个“搭积木”的 AI 应用框架，它的核心目标是将大语言模型（LLM）和外部工具、数据、工作流连接起来。",
-            citations=[{"source_url": "https://chatgpt.com/share/69fc0a66-d814-83a2-b3df-4204f87e7fe3"}],
+            citations=[
+                {
+                    "source_url": "https://chatgpt.com/share/69fc0a66-d814-83a2-b3df-4204f87e7fe3"
+                }
+            ],
             outcome="success",
             error_code=None,
         )

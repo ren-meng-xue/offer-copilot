@@ -13,10 +13,7 @@ from backend.app.models.auth_sessions import AuthSession
 
 
 async def create_auth_session(
-        db: AsyncSession,
-        user_id: int,
-        refresh_token_hash: str,
-        expires_at: datetime
+    db: AsyncSession, user_id: int, refresh_token_hash: str, expires_at: datetime
 ) -> AuthSession:
     """创建新的认证会话"""
     auth_session = AuthSession(
@@ -31,8 +28,7 @@ async def create_auth_session(
 
 
 async def get_auth_session_by_refresh_token_hash(
-        db: AsyncSession,
-        refresh_token_hash: str
+    db: AsyncSession, refresh_token_hash: str
 ) -> AuthSession | None:
     """通过 refresh_token_hash 查询认证会话"""
     # 前端传来 明文 refresh_token
@@ -40,16 +36,18 @@ async def get_auth_session_by_refresh_token_hash(
     # - 得到一个 hash 值
     # - 再拿这个 hash 值 去和数据库字段 refresh_token_hash 比较
 
-    stmt = select(AuthSession).where(AuthSession.refresh_token_hash == refresh_token_hash)
+    stmt = select(AuthSession).where(
+        AuthSession.refresh_token_hash == refresh_token_hash
+    )
     result = await db.execute(stmt)
     return result.scalar_one_or_none()
 
 
 async def update_auth_session_token(
-        db: AsyncSession,
-        auth_session: AuthSession,
-        refresh_token_hash: str,
-        expires_at: datetime
+    db: AsyncSession,
+    auth_session: AuthSession,
+    refresh_token_hash: str,
+    expires_at: datetime,
 ) -> AuthSession:
     """更新认证会话的 refresh token 和过期时间"""
     # 这个是前端发现access token 过期了会调用/refresh接口
@@ -64,13 +62,15 @@ async def update_auth_session_token(
 
 
 async def revoke_auth_session(
-        db: AsyncSession,
-        auth_session: AuthSession,
-        revoked_at: datetime,
+    db: AsyncSession,
+    auth_session: AuthSession,
+    revoked_at: datetime,
 ) -> AuthSession:
     """一般是前端退出登陆的时候，会用这个，前端会把它的refresh token 传过来，
     后端根据这个refresh token 找到对应的 auth session 记录，然后把它撤销掉"""
-    auth_session.revoked_at = revoked_at #这条refresh session 从传递的这个datetime时间失效
+    auth_session.revoked_at = (
+        revoked_at  # 这条refresh session 从传递的这个datetime时间失效
+    )
     await db.commit()
     await db.refresh(auth_session)
     return auth_session
