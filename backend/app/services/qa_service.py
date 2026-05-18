@@ -1045,6 +1045,46 @@ def _build_kb_listing_prompt(
     return messages
 
 
+def _build_weather_ask_city_prompt(
+    question: str,
+    recent_messages: list[Message],
+) -> list[dict[str, str]]:
+    """当无法确定城市时，引导用户提供城市名称。"""
+    messages: list[dict[str, str]] = [
+        {
+            "role": "system",
+            "content": (
+                "你是一个友好的助手 OfferPilot。用户询问了天气，但未提供城市信息。"
+                "请简短、自然地询问用户想查询哪个城市的天气，不要超过两句话。"
+            ),
+        }
+    ]
+    for msg in recent_messages:
+        messages.append({"role": msg.role, "content": msg.content})
+    messages.append({"role": "user", "content": question})
+    return messages
+
+
+def _build_weather_fetch_error_prompt(
+    question: str,
+    recent_messages: list[Message],
+) -> list[dict[str, str]]:
+    """当天气 API 获取失败时，告知用户稍后重试。"""
+    messages: list[dict[str, str]] = [
+        {
+            "role": "system",
+            "content": (
+                "你是一个友好的助手 OfferPilot。用户询问了天气，但天气数据暂时无法获取。"
+                "请简短、友好地告知用户天气信息暂时获取失败，建议稍后重试，不要超过两句话。"
+            ),
+        }
+    ]
+    for msg in recent_messages:
+        messages.append({"role": msg.role, "content": msg.content})
+    messages.append({"role": "user", "content": question})
+    return messages
+
+
 def _build_general_prompt(
     question: str,
     recent_messages: list[Message],
@@ -1297,9 +1337,7 @@ async def stream_answer(
                     db,
                     conv_id,
                     question,
-                    _build_general_prompt(
-                        "您想查询哪里的天气呢？请告诉我城市名称。", recent, conv.summary
-                    ),
+                    _build_weather_ask_city_prompt(question, recent),
                     conv.message_count or 0,
                     "weather_ask_city",
                 ):
@@ -1311,9 +1349,7 @@ async def stream_answer(
                     db,
                     conv_id,
                     question,
-                    _build_general_prompt(
-                        "暂时无法获取天气信息，请稍后重试。", recent, conv.summary
-                    ),
+                    _build_weather_fetch_error_prompt(question, recent),
                     conv.message_count or 0,
                     "weather_fetch_error",
                 ):
