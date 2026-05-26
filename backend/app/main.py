@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     logger.info(f"应用启动中，监听端口: {settings.APP_PORT}")
     logger.info(f"CORS 允许域: {settings.cors_allow_origins}")
+    logger.info(f"RAG Telemetry 状态: {'开启' if settings.RAG_TELEMETRY_ENABLED else '关闭'}")
 
     # 启动时自动运行数据库迁移，确保表结构始终与代码一致。
     try:
