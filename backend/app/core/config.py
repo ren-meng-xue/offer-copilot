@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     API_V1_PREFIX: str = "/api/v1"
     LOG_LEVEL: str = "INFO"
+    SENTRY_DSN: str | None = None
+    SENTRY_ENVIRONMENT: str | None = None
+    SENTRY_TRACES_SAMPLE_RATE: float = 0.0
 
     # Web 服务运行配置。
     APP_HOST: str = "0.0.0.0"
@@ -121,9 +124,6 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def validate_infrastructure_urls(self) -> "Settings":
         """在所有字段加载后，处理跨字段的 fallback 逻辑。"""
-        import logging
-
-        logger = logging.getLogger(__name__)
 
         # 1. 自动推导 ALEMBIC_DATABASE_URL (同步驱动)
         if not self.ALEMBIC_DATABASE_URL:

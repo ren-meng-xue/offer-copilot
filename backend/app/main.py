@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI, Request
@@ -14,10 +15,12 @@ from backend.app.core.config import settings, BASE_DIR
 from backend.app.core.cors import build_cors_middleware_options
 from backend.app.core.exception_handlers import register_exception_handlers
 from backend.app.core.logging import setup_logging
+from backend.app.core.sentry import setup_sentry
 from backend.app.db import engine
 
 # 1启动阶段先完成日志等基础设施初始化。
 setup_logging()
+setup_sentry()
 logger = logging.getLogger(__name__)
 
 

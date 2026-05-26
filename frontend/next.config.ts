@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const backendProxyTarget =
   process.env.BACKEND_PROXY_TARGET ?? "http://127.0.0.1:8000";
@@ -15,4 +16,9 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  silent: !process.env.CI,
+  disableLogger: true,
+});
