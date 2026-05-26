@@ -340,9 +340,10 @@ def _emit_rag_telemetry(payload: dict[str, Any]) -> None:
     if not settings.RAG_TELEMETRY_ENABLED:
         return
     try:
-        logger.info(
-            "rag_telemetry %s", json.dumps(payload, ensure_ascii=False, sort_keys=True)
-        )
+        msg = f"rag_telemetry {json.dumps(payload, ensure_ascii=False, sort_keys=True)}"
+        logger.info(msg)
+        # Railway 强制兜底：直接 print 到 stdout，绕过所有日志过滤
+        print(msg, flush=True)
     except Exception:
         return
 
