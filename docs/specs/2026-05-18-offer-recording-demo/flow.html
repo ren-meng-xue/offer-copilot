@@ -1,0 +1,747 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Offer Copilot UI 原型</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root {
+        --bg: #fafafa;
+        --ink: #0f172a;
+        --muted: #64748b;
+        --line: rgba(148, 163, 184, 0.24);
+        --panel: #f2f2f2;
+        --primary: #2f6df6;
+        --primary-dark: #1d5fe5;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      .prototype-tabs {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border-bottom: 1px solid #e2e8f0;
+        background: rgba(250, 250, 250, 0.96);
+        padding: 12px 16px;
+        backdrop-filter: blur(10px);
+      }
+
+      .prototype-tab {
+        border: 1px solid #e2e8f0;
+        border-radius: 999px;
+        background: #fff;
+        color: #64748b;
+        padding: 8px 14px;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .prototype-tab.active {
+        border-color: #0f172a;
+        background: #0f172a;
+        color: #fff;
+      }
+
+      .screen {
+        display: none;
+        min-height: calc(100vh - 57px);
+      }
+
+      .screen.active {
+        display: block;
+      }
+
+      .soft-grid {
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+        background-size: 22px 22px;
+      }
+
+      .auth-input {
+        height: 48px;
+        width: 100%;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        background: #fff;
+        padding-left: 40px;
+        padding-right: 14px;
+        font-size: 14px;
+        color: #0f172a;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        outline: none;
+      }
+
+      .auth-input:focus {
+        border-color: #0f172a;
+        box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.1);
+      }
+
+      .chat-input {
+        flex: 1;
+        border: 0;
+        background: transparent;
+        font-size: 14px;
+        color: #0f172a;
+        outline: none;
+      }
+
+      .chat-input::placeholder {
+        color: #64748b;
+      }
+
+      .knowledge-status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 999px;
+        display: inline-block;
+      }
+
+      .main-shell {
+        min-height: calc(100vh - 57px);
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="prototype-tabs" aria-label="原型页面">
+      <button class="prototype-tab active" data-tab="auth">登录 / 注册</button>
+      <button class="prototype-tab" data-tab="knowledge">上传知识库</button>
+      <button class="prototype-tab" data-tab="chat">聊天问答</button>
+    </nav>
+
+    <main>
+      <section id="tab-auth" class="screen active">
+        <div class="grid min-h-[calc(100vh-57px)] select-none lg:grid-cols-[1fr_1fr] xl:grid-cols-[0.96fr_1.04fr]">
+          <aside class="relative hidden overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.22),_transparent_28%),linear-gradient(145deg,_#64748b_0%,_#475569_45%,_#0f172a_100%)] lg:flex lg:flex-col lg:justify-between lg:px-10 lg:py-8 lg:text-white xl:px-12 xl:py-10">
+            <div class="absolute inset-0 soft-grid opacity-70"></div>
+            <div class="absolute right-20 top-24 size-56 rounded-full bg-indigo-400/10 blur-3xl"></div>
+            <div class="absolute bottom-16 left-12 size-72 rounded-full bg-indigo-600/10 blur-3xl"></div>
+
+            <div class="relative z-10">
+              <a href="/" class="inline-flex items-center gap-3">
+                <div class="flex size-10 items-center justify-center rounded-2xl bg-white/12 text-sm font-semibold text-white shadow-sm">
+                  OP
+                </div>
+                <div class="space-y-0.5">
+                  <p class="text-sm font-medium text-white">文档助手</p>
+                  <p class="text-xs text-slate-200">让技术文档开口回答</p>
+                </div>
+              </a>
+            </div>
+
+            <div class="relative z-10 max-w-lg space-y-4">
+              <span class="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs uppercase tracking-[0.24em] text-white/80">文档助手</span>
+              <div class="space-y-2.5">
+                <h2 class="text-[1.85rem] font-semibold leading-tight tracking-tight xl:text-[2.1rem]">
+                  你的文档助手
+                </h2>
+                <p class="max-w-md text-sm leading-7 text-slate-200">
+                  导入技术文档 URL 或 PDF，文档助手会自动整理、索引并回答问题。每个答案都带来源引用，方便你快速确认、继续深入。
+                </p>
+              </div>
+            </div>
+
+            <div class="relative z-10 flex min-h-[180px] items-end justify-center xl:min-h-[220px]">
+              <div class="relative h-[320px] w-[440px] max-w-full origin-bottom scale-[0.8] xl:h-[360px] xl:w-[500px] xl:scale-[0.92]" id="auth-figures">
+                <div class="absolute bottom-0 left-[70px] h-[400px] w-[180px] rounded-t-[10px] bg-[#6C3FF5]">
+                  <div class="absolute left-[45px] top-[40px] flex gap-8">
+                    <span class="size-[18px] rounded-full bg-white"></span>
+                    <span class="size-[18px] rounded-full bg-white"></span>
+                  </div>
+                </div>
+                <div class="absolute bottom-0 left-[240px] h-[310px] w-[120px] rounded-t-[8px] bg-[#2D2D2D]">
+                  <div class="absolute left-[26px] top-[32px] flex gap-6">
+                    <span class="size-4 rounded-full bg-white"></span>
+                    <span class="size-4 rounded-full bg-white"></span>
+                  </div>
+                </div>
+                <div class="absolute bottom-0 left-0 h-[200px] w-[240px] rounded-t-[120px] bg-[#FF9B6B]">
+                  <div class="absolute left-[82px] top-[90px] flex gap-8">
+                    <span class="size-3 rounded-full bg-[#3d1f0a]"></span>
+                    <span class="size-3 rounded-full bg-[#3d1f0a]"></span>
+                  </div>
+                </div>
+                <div class="absolute bottom-0 left-[310px] h-[230px] w-[140px] rounded-t-[70px] bg-[#E8D754]">
+                  <div class="absolute left-[52px] top-[40px] flex gap-6">
+                    <span class="size-3 rounded-full bg-[#3d3400]"></span>
+                    <span class="size-3 rounded-full bg-[#3d3400]"></span>
+                  </div>
+                  <div class="absolute left-[40px] top-[88px] h-1 w-20 rounded-full bg-[#2D2D2D]"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="relative z-10 flex flex-wrap gap-6 text-sm text-slate-200/90">
+              <span>一键导入</span>
+              <span>精准问答</span>
+              <span>来源可查</span>
+            </div>
+          </aside>
+
+          <section class="relative flex items-center justify-center bg-[#fafafa] px-5 py-8 sm:px-8 lg:px-8 lg:py-6 xl:px-12">
+            <div class="w-full max-w-[640px]">
+              <div class="mb-8 space-y-5 text-center sm:space-y-6">
+                <div class="flex justify-center">
+                  <span id="auth-badge" class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600">
+                    ✦ Welcome Back
+                  </span>
+                </div>
+                <div class="space-y-2">
+                  <h1 id="auth-title" class="text-3xl font-semibold tracking-tight text-slate-950 sm:text-[2.2rem]">
+                    欢迎回来
+                  </h1>
+                  <p id="auth-desc" class="mx-auto max-w-[40ch] text-sm leading-6 text-slate-500">
+                    登录后继续使用文档助手，基于你的知识库获得可追溯回答。
+                  </p>
+                </div>
+              </div>
+
+              <div class="mx-auto mb-6 flex max-w-[640px] rounded-xl bg-slate-200 p-1">
+                <button id="auth-login-tab" class="flex-1 rounded-lg bg-white py-2 text-sm font-semibold text-[#2f6df6] shadow-sm" onclick="switchAuth('login')">登录</button>
+                <button id="auth-register-tab" class="flex-1 rounded-lg py-2 text-sm font-semibold text-slate-500" onclick="switchAuth('register')">注册</button>
+              </div>
+
+              <div class="mx-auto w-full max-w-[640px] rounded-[28px] border border-slate-200/80 bg-white p-8 shadow-[0_30px_80px_-40px_rgba(15,23,42,0.32)] sm:p-9 md:p-10">
+                <form id="login-form" class="space-y-5">
+                  <div class="space-y-2.5">
+                    <label class="block text-sm font-medium text-slate-800">邮箱</label>
+                    <div class="relative">
+                      <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">✉</span>
+                      <input class="auth-input" value="demo@offerpilot.ai" />
+                    </div>
+                  </div>
+                  <div class="space-y-2.5">
+                    <div class="flex items-center justify-between">
+                      <label class="text-sm font-medium text-slate-800">密码</label>
+                      <button type="button" class="text-xs font-medium text-slate-500">忘记密码？</button>
+                    </div>
+                    <div class="relative">
+                      <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">●</span>
+                      <input class="auth-input" type="password" value="12345678" />
+                    </div>
+                  </div>
+                  <button type="button" class="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-slate-950 text-sm font-medium text-white transition-colors hover:bg-slate-800">
+                    登录
+                    <span class="text-base">→</span>
+                  </button>
+                  <p class="text-center text-sm text-slate-500">
+                    没有账号？
+                    <button type="button" class="font-medium text-[#2f6df6]" onclick="switchAuth('register')">免费注册</button>
+                  </p>
+                </form>
+
+                <form id="register-form" class="hidden space-y-5">
+                  <div class="space-y-2.5">
+                    <label class="block text-sm font-medium text-slate-800">用户名</label>
+                    <div class="relative">
+                      <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">◎</span>
+                      <input class="auth-input" placeholder="你的昵称" />
+                    </div>
+                  </div>
+                  <div class="space-y-2.5">
+                    <label class="block text-sm font-medium text-slate-800">当前角色</label>
+                    <div class="relative">
+                      <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">▣</span>
+                      <input class="auth-input" placeholder="如：后端开发者" />
+                    </div>
+                  </div>
+                  <div class="space-y-2.5">
+                    <label class="block text-sm font-medium text-slate-800">邮箱</label>
+                    <div class="relative">
+                      <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">✉</span>
+                      <input class="auth-input" placeholder="you@example.com" />
+                    </div>
+                  </div>
+                  <div class="space-y-2.5">
+                    <label class="block text-sm font-medium text-slate-800">密码</label>
+                    <div class="relative">
+                      <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">●</span>
+                      <input class="auth-input" type="password" placeholder="至少 8 位，包含字母和数字" />
+                    </div>
+                    <div class="mt-2 flex gap-1">
+                      <div class="h-1 flex-1 rounded-full bg-red-400"></div>
+                      <div class="h-1 flex-1 rounded-full bg-yellow-400"></div>
+                      <div class="h-1 flex-1 rounded-full bg-slate-200"></div>
+                      <div class="h-1 flex-1 rounded-full bg-slate-200"></div>
+                    </div>
+                  </div>
+                  <label class="flex items-start gap-2 text-sm text-slate-600">
+                    <input type="checkbox" checked class="mt-0.5 rounded border-slate-300 text-[#2f6df6]" />
+                    <span>同意服务条款与隐私政策</span>
+                  </label>
+                  <button type="button" class="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-slate-950 text-sm font-medium text-white transition-colors hover:bg-slate-800">
+                    创建账号
+                    <span class="text-base">→</span>
+                  </button>
+                  <p class="text-center text-sm text-slate-500">
+                    已有账号？
+                    <button type="button" class="font-medium text-[#2f6df6]" onclick="switchAuth('login')">立即登录</button>
+                  </p>
+                </form>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section id="tab-knowledge" class="screen">
+        <div class="flex min-h-[calc(100vh-57px)] bg-[#fafafa] text-[#0f172a]">
+          <aside class="hidden w-60 shrink-0 flex-col bg-[#f2f2f2] lg:flex">
+            <div class="flex h-14 shrink-0 items-center gap-2 px-4">
+              <img src="/doc-assistant-icon.svg" alt="文档助手图标" width="28" height="28" class="shrink-0 rounded-md" />
+              <span class="truncate text-sm font-semibold text-slate-900">你的文档助手</span>
+            </div>
+
+            <div class="no-scrollbar flex min-h-0 flex-1 flex-col px-3 py-2">
+              <div class="px-2 py-2">
+                <p class="text-xs font-medium text-[#64748b]">知识库</p>
+              </div>
+            </div>
+
+            <div class="shrink-0 border-t border-[rgba(148,163,184,0.24)] p-2">
+              <div class="flex flex-col gap-0.5">
+                <a class="flex h-9 items-center rounded-lg px-3 text-sm text-[#64748b]">Chat</a>
+                <a class="flex h-9 items-center rounded-lg bg-white px-3 text-sm font-medium text-[#0f172a] shadow-sm">Knowledge</a>
+              </div>
+              <div class="mt-1 flex items-center justify-between border-t border-[rgba(148,163,184,0.24)] pt-1">
+                <div class="flex items-center gap-2">
+                  <span class="size-5 rounded-full bg-slate-200"></span>
+                  <div>
+                    <p class="text-sm font-medium text-slate-900">已登录用户</p>
+                    <p class="text-xs text-[#64748b]">demo@offerpilot.ai</p>
+                  </div>
+                </div>
+                <button class="rounded-md p-1.5 text-[#64748b]">⎋</button>
+              </div>
+            </div>
+          </aside>
+
+          <main class="min-w-0 flex-1 overflow-y-auto">
+            <div class="mx-auto w-full max-w-5xl space-y-4 px-4 py-6 sm:px-6 lg:px-8">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <h1 class="text-xl font-semibold text-[#0f172a] dark:text-[#ececec]">Knowledge</h1>
+                  <p class="mt-0.5 text-sm text-[#64748b]">
+                    导入开发者文档 URL 或上传本地文件，索引完成后即可在 Chat 中引用回答。
+                  </p>
+                </div>
+                <button id="open-knowledge-modal" class="shrink-0 rounded-xl bg-[#2f6df6] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1d5fe5]">
+                  + 添加
+                </button>
+              </div>
+
+              <div class="space-y-3">
+                <div class="flex flex-wrap items-center gap-1">
+                  <button class="inline-flex items-center gap-1.5 rounded-lg bg-[#2f6df6] px-3 py-1.5 text-sm font-medium text-white">
+                    全部
+                    <span class="rounded-full bg-white/20 px-1.5 py-0.5 text-xs font-medium tabular-nums">3</span>
+                  </button>
+                  <button class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-[#64748b] hover:bg-[rgba(148,163,184,0.12)] hover:text-[#0f172a]">
+                    处理中
+                    <span class="rounded-full bg-[rgba(148,163,184,0.16)] px-1.5 py-0.5 text-xs font-medium tabular-nums">1</span>
+                  </button>
+                  <button class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-[#64748b] hover:bg-[rgba(148,163,184,0.12)] hover:text-[#0f172a]">
+                    已完成
+                    <span class="rounded-full bg-[rgba(148,163,184,0.16)] px-1.5 py-0.5 text-xs font-medium tabular-nums">2</span>
+                  </button>
+                  <button class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-[#64748b] hover:bg-[rgba(148,163,184,0.12)] hover:text-[#0f172a]">
+                    失败
+                    <span class="rounded-full bg-[rgba(148,163,184,0.16)] px-1.5 py-0.5 text-xs font-medium tabular-nums">0</span>
+                  </button>
+                </div>
+                <div class="relative">
+                  <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-[#64748b]">⌕</span>
+                  <input class="w-full rounded-xl border border-[rgba(148,163,184,0.32)] bg-white py-2 pl-8 pr-3 text-sm text-[#0f172a] outline-none placeholder:text-[#64748b] focus:border-[#2f6df6]/50 focus:ring-2 focus:ring-[#2f6df6]/20" placeholder="按名称或 URL 搜索" />
+                </div>
+              </div>
+
+              <div class="grid gap-4 lg:grid-cols-[0.95fr_1.05fr]">
+                <div class="rounded-xl border border-[rgba(148,163,184,0.24)] bg-white p-5 shadow-sm">
+                  <h2 class="text-sm font-semibold text-[#0f172a]">添加知识库</h2>
+                  <p class="mt-1 text-xs leading-relaxed text-[#64748b]">
+                    导入开发者文档 URL 或上传本地文件，索引完成后即可在 Chat 中引用回答。
+                  </p>
+
+                  <div class="mt-5 inline-flex rounded-full bg-[#f2f2f2] p-1">
+                    <span class="rounded-full bg-white px-4 py-1.5 text-sm font-medium text-[#0f172a] shadow-sm">URL 导入</span>
+                    <span class="px-4 py-1.5 text-sm font-medium text-[#64748b]">文件上传</span>
+                  </div>
+
+                  <form class="mt-4 space-y-3">
+                    <label class="block space-y-1">
+                      <span class="block text-xs font-medium text-[#64748b]">文档 URL</span>
+                      <input class="w-full rounded-xl border border-[rgba(148,163,184,0.32)] bg-white px-3 py-2 text-sm outline-none focus:border-[#2f6df6]/50 focus:ring-2 focus:ring-[#2f6df6]/20" value="https://docs.offerpilot.ai/interview-guide" />
+                    </label>
+
+                    <label class="block space-y-1">
+                      <span class="block text-xs font-medium text-[#64748b]">名称（可选）</span>
+                      <input class="w-full rounded-xl border border-[rgba(148,163,184,0.32)] bg-white px-3 py-2 text-sm outline-none focus:border-[#2f6df6]/50 focus:ring-2 focus:ring-[#2f6df6]/20" value="Offer 面试知识库" />
+                    </label>
+
+                    <div class="rounded-xl border-2 border-dashed border-slate-300 px-6 py-8 text-center">
+                      <div class="mx-auto mb-2 grid size-10 place-items-center rounded-lg bg-[#2f6df6]/10 text-[#2f6df6]">↑</div>
+                      <p class="text-sm font-medium text-[#0f172a]">点击或将文件拖拽到此处</p>
+                      <p class="mt-1 text-xs text-[#64748b]">支持 .md, .txt, .pdf</p>
+                    </div>
+
+                    <button type="button" class="w-full rounded-xl bg-[#2f6df6] py-2.5 text-sm font-medium text-white">导入文档</button>
+                  </form>
+                </div>
+
+                <div class="space-y-3">
+                  <div class="grid grid-cols-3 gap-3">
+                    <div class="rounded-2xl border border-[rgba(148,163,184,0.24)] bg-white p-4 shadow-sm">
+                      <p class="text-2xl font-semibold text-[#0f172a]">3</p>
+                      <p class="mt-1 text-xs text-[#64748b]">知识库</p>
+                    </div>
+                    <div class="rounded-2xl border border-[rgba(148,163,184,0.24)] bg-white p-4 shadow-sm">
+                      <p class="text-2xl font-semibold text-[#0f172a]">128</p>
+                      <p class="mt-1 text-xs text-[#64748b]">文档切片</p>
+                    </div>
+                    <div class="rounded-2xl border border-[rgba(148,163,184,0.24)] bg-white p-4 shadow-sm">
+                      <p class="text-2xl font-semibold text-emerald-600">100%</p>
+                      <p class="mt-1 text-xs text-[#64748b]">索引完成</p>
+                    </div>
+                  </div>
+
+                  <div class="group relative flex flex-col gap-2.5 overflow-hidden rounded-xl border border-[rgba(148,163,184,0.24)] bg-white px-4 py-3 transition-colors hover:bg-[rgba(148,163,184,0.04)]">
+                    <div class="flex items-start justify-between gap-2">
+                      <p class="line-clamp-2 text-sm font-medium text-[#0f172a]">Offer 面试知识库</p>
+                      <span class="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-800">
+                        <span class="knowledge-status-dot bg-emerald-500"></span>
+                        已完成
+                      </span>
+                    </div>
+                    <a class="block truncate text-xs text-[#64748b] underline decoration-[rgba(148,163,184,0.5)] underline-offset-2">
+                      https://docs.offerpilot.ai/interview-guide
+                    </a>
+                    <p class="line-clamp-3 text-xs leading-relaxed text-[#475569]">
+                      面试流程、STAR 法则、项目复盘与岗位匹配建议。
+                    </p>
+                    <div class="flex items-center justify-between gap-2 border-t border-[rgba(148,163,184,0.16)] pt-2.5">
+                      <span class="text-xs text-[#64748b]">2026 年 5 月 18 日</span>
+                      <span class="text-xs text-[#64748b]">索引中暂不可删除</span>
+                    </div>
+                    <div class="absolute bottom-0 left-0 right-0 h-0.5 overflow-hidden rounded-b-xl bg-[rgba(148,163,184,0.12)]">
+                      <div class="h-full w-1/2 animate-pulse bg-[#2f6df6]/40"></div>
+                    </div>
+                  </div>
+
+                  <div class="group relative flex flex-col gap-2.5 overflow-hidden rounded-xl border border-[rgba(148,163,184,0.24)] bg-white px-4 py-3 transition-colors hover:bg-[rgba(148,163,184,0.04)]">
+                    <div class="flex items-start justify-between gap-2">
+                      <p class="line-clamp-2 text-sm font-medium text-[#0f172a]">岗位 JD 资料</p>
+                      <span class="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-800">
+                        <span class="knowledge-status-dot bg-emerald-500"></span>
+                        已完成
+                      </span>
+                    </div>
+                    <a class="block truncate text-xs text-[#64748b] underline decoration-[rgba(148,163,184,0.5)] underline-offset-2">
+                      https://jobs.example.com/jd/backend
+                    </a>
+                    <p class="line-clamp-3 text-xs leading-relaxed text-[#475569]">
+                      目标岗位职责、技术栈、加分项和筛选标准。
+                    </p>
+                    <div class="flex items-center justify-between gap-2 border-t border-[rgba(148,163,184,0.16)] pt-2.5">
+                      <span class="text-xs text-[#64748b]">2026 年 5 月 17 日</span>
+                      <button class="rounded-lg p-1.5 text-[#64748b] opacity-0 transition-all group-hover:opacity-100 hover:bg-rose-50 hover:text-rose-600">
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="group relative flex flex-col gap-2.5 overflow-hidden rounded-xl border border-[rgba(148,163,184,0.24)] bg-white px-4 py-3 transition-colors hover:bg-[rgba(148,163,184,0.04)]">
+                    <div class="flex items-start justify-between gap-2">
+                      <p class="line-clamp-2 text-sm font-medium text-[#0f172a]">个人项目经历</p>
+                      <span class="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-800">
+                        <span class="knowledge-status-dot animate-pulse bg-blue-500"></span>
+                        处理中
+                      </span>
+                    </div>
+                    <a class="block truncate text-xs text-[#64748b] underline decoration-[rgba(148,163,184,0.5)] underline-offset-2">
+                      https://notes.example.com/project-notes
+                    </a>
+                    <p class="line-clamp-3 text-xs leading-relaxed text-[#475569]">
+                      RAG 项目、工程架构、性能优化和业务结果。
+                    </p>
+                    <div class="flex items-center justify-between gap-2 border-t border-[rgba(148,163,184,0.16)] pt-2.5">
+                      <span class="text-xs text-[#64748b]">2026 年 5 月 16 日</span>
+                      <span class="text-xs text-[#64748b]">索引中暂不可删除</span>
+                    </div>
+                    <div class="absolute bottom-0 left-0 right-0 h-0.5 overflow-hidden rounded-b-xl bg-[rgba(148,163,184,0.12)]">
+                      <div class="h-full w-1/2 animate-pulse bg-[#2f6df6]/40"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </main>
+
+          <div id="knowledge-modal" class="fixed inset-0 z-50 hidden bg-black/40">
+            <div class="fixed left-1/2 top-1/2 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-[rgba(148,163,184,0.24)] bg-white p-6 shadow-2xl">
+              <div class="mb-5 flex items-center justify-between">
+                <h2 class="text-base font-semibold text-[#0f172a]">添加知识库</h2>
+                <button id="close-knowledge-modal" class="rounded-lg p-1 text-[#64748b] hover:bg-[rgba(148,163,184,0.12)] hover:text-[#0f172a]">✕</button>
+              </div>
+              <form class="space-y-4">
+                <div class="inline-flex rounded-full bg-[#f2f2f2] p-1">
+                  <span class="rounded-full bg-white px-4 py-1.5 text-sm font-medium text-[#0f172a] shadow-sm">URL 导入</span>
+                  <span class="px-4 py-1.5 text-sm font-medium text-[#64748b]">文件上传</span>
+                </div>
+                <label class="block space-y-1">
+                  <span class="block text-xs font-medium text-[#64748b]">文档 URL</span>
+                  <input class="w-full rounded-xl border border-[rgba(148,163,184,0.32)] bg-white px-3 py-2 text-sm outline-none focus:border-[#2f6df6]/50 focus:ring-2 focus:ring-[#2f6df6]/20" placeholder="https://docs.example.com" />
+                </label>
+                <div class="space-y-1">
+                  <span class="block text-xs font-medium text-[#64748b]">选择文件 (.md, .txt, .pdf)</span>
+                  <div class="rounded-xl border-2 border-dashed border-[rgba(148,163,184,0.32)] py-8 text-center">
+                    <div class="mx-auto mb-2 grid size-10 place-items-center rounded-lg bg-[#2f6df6]/10 text-[#2f6df6]">↑</div>
+                    <p class="text-sm font-medium text-[#0f172a]">点击或将文件拖拽到此处</p>
+                    <p class="mt-1 text-xs text-[#64748b]">支持 .md, .txt, .pdf</p>
+                  </div>
+                </div>
+                <label class="block space-y-1">
+                  <span class="block text-xs font-medium text-[#64748b]">名称（可选）</span>
+                  <input class="w-full rounded-xl border border-[rgba(148,163,184,0.32)] bg-white px-3 py-2 text-sm outline-none focus:border-[#2f6df6]/50 focus:ring-2 focus:ring-[#2f6df6]/20" placeholder="留空则自动识别标题" />
+                </label>
+                <button type="button" class="w-full rounded-xl bg-[#2f6df6] py-2.5 text-sm font-medium text-white">导入文档</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-chat" class="screen">
+        <div class="flex h-[calc(100vh-57px)] bg-[#fafafa] text-[#0f172a]">
+          <aside class="hidden w-60 shrink-0 flex-col bg-[#f2f2f2] lg:flex">
+            <div class="flex h-14 shrink-0 items-center gap-2 px-4">
+              <img src="/doc-assistant-icon.svg" alt="文档助手图标" width="28" height="28" class="shrink-0 rounded-md" />
+              <span class="truncate text-sm font-semibold text-slate-900">你的文档助手</span>
+            </div>
+
+            <div class="no-scrollbar min-h-0 flex-1 px-2 pb-2">
+              <div class="px-2 pb-1 pt-2">
+                <button class="flex w-full items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm font-medium text-[#64748b] hover:bg-white/60 hover:text-[#0f172a]">
+                  <span class="text-base">＋</span>
+                  新建会话
+                </button>
+              </div>
+              <nav class="space-y-0.5 overflow-y-auto">
+                <div class="rounded-lg bg-white shadow-sm">
+                  <a class="block px-3 py-2 text-sm font-medium text-[#0f172a]">Offer Demo 连续问答</a>
+                </div>
+                <a class="block rounded-lg px-3 py-2 text-sm text-[#64748b] hover:bg-white/60 hover:text-[#0f172a]">项目复盘</a>
+                <a class="block rounded-lg px-3 py-2 text-sm text-[#64748b] hover:bg-white/60 hover:text-[#0f172a]">岗位准备</a>
+              </nav>
+            </div>
+
+            <div class="shrink-0 border-t border-[rgba(148,163,184,0.24)] p-2">
+              <div class="flex flex-col gap-0.5">
+                <a class="flex h-9 items-center rounded-lg bg-white px-3 text-sm font-medium text-[#0f172a] shadow-sm">Chat</a>
+                <a class="flex h-9 items-center rounded-lg px-3 text-sm text-[#64748b]">Knowledge</a>
+              </div>
+              <div class="mt-1 flex items-center justify-between border-t border-[rgba(148,163,184,0.24)] pt-1">
+                <div class="flex items-center gap-2">
+                  <span class="size-5 rounded-full bg-slate-200"></span>
+                  <div>
+                    <p class="text-sm font-medium text-slate-900">已登录用户</p>
+                    <p class="text-xs text-[#64748b]">demo@offerpilot.ai</p>
+                  </div>
+                </div>
+                <button class="rounded-md p-1.5 text-[#64748b]">⎋</button>
+              </div>
+            </div>
+          </aside>
+
+          <main class="flex min-w-0 flex-1">
+            <section class="flex min-w-0 flex-1 flex-col overflow-hidden">
+              <div class="min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8">
+                <div class="mx-auto flex max-w-4xl flex-col gap-6">
+                  <article class="flex justify-end">
+                    <div class="max-w-[75%] rounded-2xl rounded-br-sm bg-[#2f6df6] px-4 py-3 text-sm text-white">
+                      今天上海天气怎么样？
+                    </div>
+                  </article>
+                  <article class="flex gap-3">
+                    <div class="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-[#f2f2f2] text-xs font-bold text-[#2f6df6]">AI</div>
+                    <div class="flex-1 text-sm leading-relaxed text-[#0f172a]">
+                      <p class="whitespace-pre-wrap break-words">
+                        今天上海适合通勤和面试准备，建议出门带伞并预留交通时间。这个问题属于实时工具类回答，不需要展示知识库引用。
+                      </p>
+                      <div class="mt-1 flex items-center">
+                        <button class="rounded-md px-1.5 py-1 text-xs text-[#64748b] hover:bg-[#f1f5f9]">复制</button>
+                      </div>
+                    </div>
+                  </article>
+
+                  <article class="flex justify-end">
+                    <div class="max-w-[75%] rounded-2xl rounded-br-sm bg-[#2f6df6] px-4 py-3 text-sm text-white">
+                      现在知识库有多少个？
+                    </div>
+                  </article>
+                  <article class="flex gap-3">
+                    <div class="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-[#f2f2f2] text-xs font-bold text-[#2f6df6]">AI</div>
+                    <div class="flex-1 text-sm leading-relaxed text-[#0f172a]">
+                      <p class="whitespace-pre-wrap break-words">
+                        当前共有 <span class="font-semibold text-amber-600">3 个知识库</span>，其中 3 个已完成索引，共 128 个文档切片，可以直接用于问答。
+                      </p>
+                      <div class="mt-1 flex items-center">
+                        <button class="rounded-md px-1.5 py-1 text-xs text-[#64748b] hover:bg-[#f1f5f9]">复制</button>
+                      </div>
+                    </div>
+                  </article>
+
+                  <article class="flex justify-end">
+                    <div class="max-w-[75%] rounded-2xl rounded-br-sm bg-[#2f6df6] px-4 py-3 text-sm text-white">
+                      根据我的项目经历，怎么回答“你最大的技术难点是什么”？
+                    </div>
+                  </article>
+                  <article class="flex gap-3">
+                    <div class="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-[#f2f2f2] text-xs font-bold text-[#2f6df6]">AI</div>
+                    <div class="flex-1 text-sm leading-relaxed text-[#0f172a]">
+                      <p class="whitespace-pre-wrap break-words">
+                        可以用“问题背景 → 约束 → 方案取舍 → 结果指标”的结构回答。建议突出你在 <span class="font-semibold text-emerald-600">RAG 检索链路</span> 中做的 chunk 结构化、hybrid retrieval 和 citation guard，让面试官看到你对准确性和可追溯性的控制。
+                      </p>
+                      <div class="mt-1 flex items-center">
+                        <button class="rounded-md px-1.5 py-1 text-xs text-[#64748b] hover:bg-[#f1f5f9]">复制</button>
+                      </div>
+                      <div class="mt-3 flex flex-wrap gap-1.5">
+                        <a class="inline-flex items-center gap-1 rounded-full border border-[rgba(148,163,184,0.32)] bg-white px-2 py-0.5 text-xs text-[#64748b]">
+                          <span class="font-medium">[1]</span>
+                          <span class="max-w-[160px] truncate">Offer 面试知识库 / STAR 法则</span>
+                        </a>
+                        <a class="inline-flex items-center gap-1 rounded-full border border-[rgba(148,163,184,0.32)] bg-white px-2 py-0.5 text-xs text-[#64748b]">
+                          <span class="font-medium">[2]</span>
+                          <span class="max-w-[160px] truncate">个人项目经历 / RAG 链路</span>
+                        </a>
+                      </div>
+                    </div>
+                  </article>
+                </div>
+              </div>
+
+              <div class="shrink-0">
+                <div class="mx-auto max-w-4xl px-4 pt-2">
+                  <div class="flex flex-wrap items-center gap-1.5 text-sm text-[#64748b]">
+                    <span class="shrink-0">本次使用：</span>
+                    <span class="cursor-pointer rounded-full border border-[rgba(148,163,184,0.32)] bg-white px-2 py-0.5 text-xs text-[#475569]">Offer 面试知识库</span>
+                    <span class="cursor-pointer rounded-full border border-[rgba(148,163,184,0.32)] bg-white px-2 py-0.5 text-xs text-[#475569]">个人项目经历</span>
+                  </div>
+                </div>
+                <div class="border-t border-[rgba(148,163,184,0.24)] bg-[#fafafa] p-3">
+                  <div class="mx-auto max-w-4xl">
+                    <div class="flex items-center gap-2 rounded-2xl border border-[rgba(148,163,184,0.24)] bg-white px-4 py-3 shadow-md">
+                      <span class="min-w-0 flex-1 text-sm text-[#64748b]">问我任何文档问题</span>
+                      <button class="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#2f6df6] text-white">↑</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <aside class="hidden w-72 shrink-0 flex-col border-l border-[rgba(148,163,184,0.24)] bg-[#fafafa] lg:flex">
+              <div class="flex h-14 shrink-0 items-center border-b border-[rgba(148,163,184,0.24)] px-4">
+                <h3 class="text-sm font-semibold text-[#0f172a]">引用来源</h3>
+              </div>
+              <div class="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
+                <a class="block rounded-xl border border-[rgba(148,163,184,0.24)] bg-white p-3 text-sm shadow-sm transition-transform hover:-translate-y-0.5">
+                  <p class="truncate font-medium text-[#0f172a]">[1] Offer 面试知识库 / STAR 法则</p>
+                  <p class="mt-1 truncate text-xs text-[#64748b]">https://docs.offerpilot.ai/interview-guide</p>
+                  <p class="mt-2 line-clamp-2 text-xs text-[#64748b]">STAR 法则、技术难点回答结构、结果指标表达。</p>
+                </a>
+                <a class="block rounded-xl border border-[rgba(148,163,184,0.24)] bg-white p-3 text-sm shadow-sm transition-transform hover:-translate-y-0.5">
+                  <p class="truncate font-medium text-[#0f172a]">[2] 个人项目经历 / RAG 链路</p>
+                  <p class="mt-1 truncate text-xs text-[#64748b]">https://notes.example.com/project-notes</p>
+                  <p class="mt-2 line-clamp-2 text-xs text-[#64748b]">RAG 链路、检索增强、引用校验和 SSE 流式回答。</p>
+                </a>
+              </div>
+            </aside>
+          </main>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      function showTab(tab) {
+        document.querySelectorAll(".prototype-tab").forEach((button) => {
+          button.classList.toggle("active", button.dataset.tab === tab);
+        });
+        document.querySelectorAll(".screen").forEach((screen) => {
+          screen.classList.toggle("active", screen.id === "tab-" + tab);
+        });
+        window.scrollTo(0, 0);
+      }
+
+      function switchAuth(mode) {
+        const isLogin = mode === "login";
+        document.getElementById("login-form").classList.toggle("hidden", !isLogin);
+        document.getElementById("register-form").classList.toggle("hidden", isLogin);
+        document.getElementById("auth-title").textContent = isLogin ? "欢迎回来" : "创建账号";
+        document.getElementById("auth-desc").textContent = isLogin
+          ? "登录后继续使用文档助手，基于你的知识库获得可追溯回答。"
+          : "创建账号，导入你的技术文档，让文档助手基于真实内容回答问题。";
+        document.getElementById("auth-badge").textContent = isLogin ? "✦ Welcome Back" : "→ Get Started";
+
+        const loginTab = document.getElementById("auth-login-tab");
+        const registerTab = document.getElementById("auth-register-tab");
+
+        loginTab.className = isLogin
+          ? "flex-1 rounded-lg bg-white py-2 text-sm font-semibold text-[#2f6df6] shadow-sm"
+          : "flex-1 rounded-lg py-2 text-sm font-semibold text-slate-500";
+        registerTab.className = isLogin
+          ? "flex-1 rounded-lg py-2 text-sm font-semibold text-slate-500"
+          : "flex-1 rounded-lg bg-white py-2 text-sm font-semibold text-[#2f6df6] shadow-sm";
+      }
+
+      function openKnowledgeModal() {
+        document.getElementById("knowledge-modal").classList.remove("hidden");
+      }
+
+      function closeKnowledgeModal() {
+        document.getElementById("knowledge-modal").classList.add("hidden");
+      }
+
+      document.querySelectorAll(".prototype-tab").forEach((button) => {
+        button.addEventListener("click", () => showTab(button.dataset.tab));
+      });
+
+      const openKnowledgeButton = document.getElementById("open-knowledge-modal");
+      const closeKnowledgeButton = document.getElementById("close-knowledge-modal");
+      const knowledgeModal = document.getElementById("knowledge-modal");
+
+      if (openKnowledgeButton) {
+        openKnowledgeButton.addEventListener("click", openKnowledgeModal);
+      }
+
+      if (closeKnowledgeButton) {
+        closeKnowledgeButton.addEventListener("click", closeKnowledgeModal);
+      }
+
+      if (knowledgeModal) {
+        knowledgeModal.addEventListener("click", (event) => {
+          if (event.target === knowledgeModal) {
+            closeKnowledgeModal();
+          }
+        });
+      }
+    </script>
+  </body>
+</html>

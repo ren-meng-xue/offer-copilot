@@ -63,26 +63,36 @@ export function askConversation(
   conversationId: string,
   question: string,
   location?: LocationInput,
+  debug?: boolean,
   signal?: AbortSignal,
 ): Promise<Response>;
 export async function askConversation(
   conversationId: string,
   question: string,
   location?: LocationInput,
+  debug?: boolean,
   signal?: AbortSignal,
 ): Promise<Response> {
-  return fetchAskConversation({ conversationId, question, location, signal });
+  return fetchAskConversation({
+    conversationId,
+    question,
+    location,
+    debug,
+    signal,
+  });
 }
 
 async function fetchAskConversation({
   conversationId,
   question,
   location,
+  debug,
   signal,
 }: {
   conversationId: string;
   question: string;
   location?: LocationInput;
+  debug?: boolean;
   signal?: AbortSignal;
 }) {
   const accessToken = await getValidAccessToken();
@@ -96,7 +106,11 @@ async function fetchAskConversation({
     method: "POST",
     headers,
     credentials: "include",
-    body: JSON.stringify({ question, location: location ?? null }),
+    body: JSON.stringify({
+      question,
+      location: location ?? null,
+      ...(debug ? { debug: true } : {}),
+    }),
     signal,
   });
 }

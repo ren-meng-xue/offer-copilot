@@ -307,6 +307,7 @@ def _build_rag_telemetry_payload(
     outcome: str,
     knowledge_base_ids: list[int] | None = None,
     error_code: str | None = None,
+    cohere_top_score: float | None = None,
 ) -> dict[str, Any]:
     resolved_knowledge_base_ids = knowledge_base_ids or (
         [knowledge_base_id] if knowledge_base_id else []
@@ -333,6 +334,7 @@ def _build_rag_telemetry_payload(
         "total_duration_ms": total_duration_ms,
         "outcome": outcome,
         "error_code": error_code,
+        "cohere_top_score": cohere_top_score,
     }
 
 
@@ -684,7 +686,7 @@ def _merge_chunks_by_id(*chunk_lists: Sequence[DocumentChunk]) -> list[DocumentC
 async def _rerank(
     query: str,
     chunks: list[DocumentChunk],
-) -> tuple[list[DocumentChunk], list[float]]:
+) -> tuple[list[DocumentChunk], list[float], float | None]:
     """重排序 chunks。
 
     Args:
@@ -692,10 +694,10 @@ async def _rerank(
         chunks: 待重排序的 chunks
 
     Returns:
-        (重排序后的 chunks, relevance_score 列表)
+        (重排序后的 chunks, relevance_score 列表, 过滤前最高 relevance_score)
     """
     if not chunks:
-        return chunks, []
+        return chunks, [], None
 
     try:
         client = _cohere_client()
@@ -708,14 +710,16 @@ async def _rerank(
 
         # 提取分数并排序
         scores = [result.relevance_score for result in resp.results]
+        cohere_top_score = scores[0] if scores else None
+
         ranked_chunks = _filter_rerank_results(
             chunks, resp.results, settings.RAG_MIN_RERANK_SCORE
         )
 
-        return ranked_chunks, scores[: len(ranked_chunks)]
+        return ranked_chunks, scores[: len(ranked_chunks)], cohere_top_score
     except Exception as e:
         logger.warning("Rerank failed, using original order: %s", e, exc_info=True)
-        return chunks[:RERANK_TOP_N], []
+        return chunks[:RERANK_TOP_N], [], None
 
 
 def _filter_rerank_results(
@@ -1453,6 +1457,7 @@ async def stream_answer(
 
         top_chunks = []
         rerank_scores = []
+        cohere_top_score = None
 
         # 如果是 MICRO_RETRIEVAL，执行完整检索
         if intent == "MICRO_RETRIEVAL":
@@ -1521,7 +1526,9 @@ async def stream_answer(
             # Rerank
             if candidates:
                 rerank_start = perf_counter()
-                top_chunks, rerank_scores = await _rerank(retrieval_query, candidates)
+                top_chunks, rerank_scores, cohere_top_score = await _rerank(
+                    retrieval_query, candidates
+                )
                 rerank_duration_ms = _duration_ms(rerank_start, perf_counter())
                 rerank_candidates_count = len(top_chunks)
                 if debug:
@@ -1566,6 +1573,7 @@ async def stream_answer(
                     outcome="error",
                     knowledge_base_ids=knowledge_base_ids,
                     error_code="no_relevant_context",
+                    cohere_top_score=cohere_top_score,
                 )
             )
             yield {"type": "error", "message": "根据已有文档，无法回答该问题"}
@@ -1637,6 +1645,7 @@ async def stream_answer(
                 outcome="error",
                 knowledge_base_ids=knowledge_base_ids,
                 error_code="generation_failed",
+                cohere_top_score=cohere_top_score,
             )
         )
         if debug:
@@ -1689,6 +1698,7 @@ async def stream_answer(
                 outcome="error",
                 knowledge_base_ids=knowledge_base_ids,
                 error_code="missing_citations",
+                cohere_top_score=cohere_top_score,
             )
         )
         if debug:
@@ -1766,6 +1776,7 @@ async def stream_answer(
             outcome="success",
             knowledge_base_ids=knowledge_base_ids,
             error_code=None,
+            cohere_top_score=cohere_top_score,
         )
     )
     yield {"type": "done"}

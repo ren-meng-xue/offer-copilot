@@ -121,6 +121,13 @@ class Settings(BaseSettings):
     def normalize_database_url(cls, value: str) -> str:
         return cls._normalize_postgres_url(str(value), "postgresql+asyncpg")
 
+    @field_validator("SENTRY_TRACES_SAMPLE_RATE")
+    @classmethod
+    def validate_sentry_traces_sample_rate(cls, v: float) -> float:
+        if not (0.0 <= v <= 1.0):
+            raise ValueError("SENTRY_TRACES_SAMPLE_RATE must be between 0.0 and 1.0")
+        return v
+
     @model_validator(mode="after")
     def validate_infrastructure_urls(self) -> "Settings":
         """在所有字段加载后，处理跨字段的 fallback 逻辑。"""

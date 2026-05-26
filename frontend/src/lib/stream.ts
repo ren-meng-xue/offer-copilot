@@ -8,9 +8,12 @@ export type Citation = {
   snippet: string;
 };
 
+export type RagTraceEvent = { stage: string; data: Record<string, unknown> };
+
 export type SseEvent =
   | { type: "token"; content: string }
   | { type: "citations"; data: Citation[] }
+  | { type: "debug"; stage: string; data: Record<string, unknown> }
   | { type: "ping" }
   | { type: "done" }
   | { type: "no_citations_required" }
@@ -174,6 +177,14 @@ function parseEvent(payload: unknown): SseEvent {
 
   if (payload.type === "ping") {
     return { type: "ping" };
+  }
+
+  if (
+    payload.type === "debug" &&
+    typeof payload.stage === "string" &&
+    isRecord(payload.data)
+  ) {
+    return { type: "debug", stage: payload.stage, data: payload.data };
   }
 
   if (payload.type === "done") {

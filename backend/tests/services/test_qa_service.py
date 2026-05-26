@@ -271,11 +271,13 @@ def test_build_rag_telemetry_payload_uses_lengths_not_raw_text() -> None:
         total_duration_ms=145,
         outcome="success",
         error_code=None,
+        cohere_top_score=0.85,
     )
 
     assert payload["question_length"] == len("Redis 怎么配置？")
     assert payload["retrieval_query_length"] == len("Redis production configuration")
     assert payload["retrieval_query_rewritten"] is True
+    assert payload["cohere_top_score"] == 0.85
     assert "question" not in payload
     assert "answer" not in payload
 
@@ -375,8 +377,11 @@ def test_emit_rag_telemetry_logs_single_structured_line(
     events: list[str] = []
 
     class FakeLogger:
-        def info(self, message: str, body: str) -> None:
-            events.append(f"{message} {body}")
+        def info(self, message: str, body: str | None = None) -> None:
+            if body is not None:
+                events.append(f"{message} {body}")
+            else:
+                events.append(message)
 
     monkeypatch.setattr("backend.app.services.qa_service.logger", FakeLogger())
     monkeypatch.setattr(
@@ -386,7 +391,7 @@ def test_emit_rag_telemetry_logs_single_structured_line(
     _emit_rag_telemetry({"event": "rag_telemetry", "outcome": "success"})
 
     assert len(events) == 1
-    assert events[0].startswith("rag_telemetry ")
+    assert "rag_telemetry " in events[0]
 
 
 @pytest.mark.anyio
@@ -566,7 +571,7 @@ async def test_stream_answer_suppresses_debug_when_disabled(
         return []
 
     async def fake_rerank(query: str, chunks: list[DocumentChunk]):
-        return chunks, [0.9] * len(chunks)
+        return chunks, [0.9] * len(chunks), 0.9
 
     async def fake_create_message(*args: object, **kwargs: object):
         return SimpleNamespace(id="msg_1")
@@ -682,7 +687,7 @@ async def test_stream_answer_emits_debug_events_when_enabled(
 
     async def fake_rerank(query: str, chunks: list[DocumentChunk]):
         reordered = [chunks[1], chunks[0]]
-        return reordered, [0.9, 0.8]
+        return reordered, [0.9, 0.8], 0.9
 
     async def fake_create_message(*args: object, **kwargs: object):
         return SimpleNamespace(id="msg_1")
@@ -822,7 +827,7 @@ async def test_stream_answer_emits_terminal_error_debug_before_error(
         return []
 
     async def fake_rerank(query: str, chunks: list[DocumentChunk]):
-        return [], []
+        return [], [], None
 
     class FakeClient:
         class chat:
@@ -909,7 +914,7 @@ async def test_stream_answer_blocks_debug_events_when_app_debug_is_disabled(
         return []
 
     async def fake_rerank(query: str, chunks: list[DocumentChunk]):
-        return chunks, [0.9] * len(chunks)
+        return chunks, [0.9] * len(chunks), 0.9
 
     async def fake_create_message(*args: object, **kwargs: object):
         return SimpleNamespace(id="msg_1")

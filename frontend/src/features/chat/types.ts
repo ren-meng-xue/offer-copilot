@@ -1,3 +1,5 @@
+import type { RagTraceEvent } from "@/lib/stream";
+
 export type ConversationListItem = {
   conv_id: string;
   knowledge_base_id: number | null;
@@ -80,6 +82,7 @@ export type LocalChatMessage = {
   errorMessage?: string;
   showImportAction?: boolean;
   noCitationsRequired?: boolean;
+  traceEvents?: RagTraceEvent[];
 };
 
 export type StartOptimisticExchangeInput = {

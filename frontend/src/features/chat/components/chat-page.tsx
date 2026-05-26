@@ -63,6 +63,11 @@ export function ChatPage({ conversationId }: ChatPageProps) {
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(
     null,
   );
+  const [isDebug] = useState(() =>
+    typeof window !== "undefined" &&
+    (new URLSearchParams(window.location.search).get("debug") === "1" ||
+      localStorage.getItem("rag_debug") === "true"),
+  );
   const inputRef = useRef<HTMLInputElement | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const activeClientIdRef = useRef<string | null>(null);
@@ -261,6 +266,7 @@ export function ChatPage({ conversationId }: ChatPageProps) {
         activeConversationId,
         question,
         location,
+        isDebug,
         abortController.signal,
       );
 
@@ -294,6 +300,23 @@ export function ChatPage({ conversationId }: ChatPageProps) {
 
         if (event.type === "no_citations_required") {
           setMessages((current) => markNoCitationsRequired(current, clientId));
+        }
+
+        if (event.type === "debug") {
+          setMessages((current) =>
+            current.map((msg) =>
+              msg.clientId === clientId && msg.role === "assistant"
+                ? {
+                    ...msg,
+                    traceEvents: [
+                      ...(msg.traceEvents ?? []),
+                      { stage: event.stage, data: event.data },
+                    ],
+                  }
+                : msg,
+            ),
+          );
+          // 注意：此处故意不调用 writeMessageCache，traceEvents 不持久化
         }
 
         if (event.type === "done") {
@@ -532,7 +555,13 @@ function writeMessageCache(
     const cache = raw
       ? (JSON.parse(raw) as Record<string, LocalChatMessage[]>)
       : {};
-    cache[conversationId] = messages;
+    // 调试信息不进入持久化缓存
+    const sanitizedMessages = messages.map((msg) => {
+      const copy = { ...msg };
+      delete copy.traceEvents;
+      return copy;
+    });
+    cache[conversationId] = sanitizedMessages;
     sessionStorage.setItem(messageCacheKey, JSON.stringify(cache));
   } catch (error) {
     console.error("Failed to write message cache", error);

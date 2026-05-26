@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import type { LocalChatMessage } from "../types";
 import { CitationList } from "./citation-list";
 import { NoKnowledgePrompt } from "./no-knowledge-prompt";
+import { RagTracePanel } from "./rag-trace-panel";
 
 type MessageBubbleProps = {
   message: LocalChatMessage;
@@ -117,6 +118,10 @@ export function MessageBubble({ message }: MessageBubbleProps) {
         ) : null}
 
         <CitationList citations={message.citations} />
+
+        {message.traceEvents && message.traceEvents.length > 0 && (
+          <RagTracePanel events={message.traceEvents} />
+        )}
       </div>
     </article>
   );
