@@ -17,11 +17,17 @@ from backend.app.core.config import settings, BASE_DIR
 from backend.app.core.cors import build_cors_middleware_options
 from backend.app.core.exception_handlers import register_exception_handlers
 from backend.app.core.logging import setup_logging
+from backend.app.core.metrics import APP_INFO
+from backend.app.core.metrics_middleware import PrometheusMiddleware
 from backend.app.core.sentry import setup_sentry
 from backend.app.db import engine
 
 # 1启动阶段先完成日志等基础设施初始化。
 setup_logging()
+APP_INFO.labels(
+    version=settings.APP_VERSION,
+    env=settings.SENTRY_ENVIRONMENT or settings.APP_ENV,
+).set(1)
 setup_sentry()
 logger = logging.getLogger(__name__)
 
@@ -103,6 +109,8 @@ async def health_check():
 
 # 配置 CORS 中间件，允许显式声明的前端来源访问。
 app.add_middleware(CORSMiddleware, **build_cors_middleware_options(settings))
+if settings.PROMETHEUS_ENABLED:
+    app.add_middleware(PrometheusMiddleware)
 # 应用级基础能力先挂载，再注册具体业务路由。
 register_exception_handlers(app)
 app.include_router(api_router)
