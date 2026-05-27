@@ -317,9 +317,8 @@ async def evict_caches_by_kb_id(db: AsyncSession, kb_id: int) -> None:
 
     start = perf_counter()
     try:
-        # 原有逻辑保留（Task 16/17 会进一步重写以修复 LIKE 带来的 bug）
         stmt = delete(SemanticCache).where(
-            func.cast(SemanticCache.knowledge_base_ids, Text).like(f"%{kb_id}%")
+            SemanticCache.knowledge_base_ids.contains([kb_id])
         )
         await db.execute(stmt)
         await db.commit()
