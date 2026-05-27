@@ -21,7 +21,12 @@ type StoredCurrentUser = {
   email?: string | null;
 };
 
-let refreshPromise: Promise<string | null> | null = null;
+export type RefreshResult =
+  | { status: "ok"; token: string }
+  | { status: "refresh_failed_retry_later" }
+  | { status: "unauthorized" };
+
+let refreshPromise: Promise<RefreshResult> | null = null;
 let restorePromise: Promise<boolean> | null = null;
 let isRedirectingToLogin = false;
 let _authChannel: BroadcastChannel | null = null;
@@ -167,17 +172,19 @@ export async function getValidAccessToken() {
   const accessToken = getAccessToken();
 
   if (!accessToken) {
-    return refreshAccessToken();
+    const result = await refreshAccessToken();
+    return result?.status === "ok" ? result.token : null;
   }
 
   if (!isAccessTokenExpiringSoon()) {
     return accessToken;
   }
 
-  return refreshAccessToken();
+  const result = await refreshAccessToken();
+  return result?.status === "ok" ? result.token : null;
 }
 
-export async function refreshAccessToken() {
+export async function refreshAccessToken(): Promise<RefreshResult | null> {
   if (!isBrowser()) {
     return null;
   }
@@ -188,7 +195,7 @@ export async function refreshAccessToken() {
     return refreshPromise;
   }
 
-  refreshPromise = (async () => {
+  refreshPromise = (async (): Promise<RefreshResult> => {
     try {
       const response = await fetch(buildUrl("/auth/refresh-token"), {
         method: "POST",
@@ -196,24 +203,31 @@ export async function refreshAccessToken() {
       });
 
       if (!response.ok) {
-        // 其他标签页可能已经刷新过了，先检查 localStorage 中是否已有有效 token
+        // 5xx: 服务端暂时不可用，告诉调用方"稍后重试"，不要把当前 session 当作"已失效"
+        if (response.status >= 500) {
+          console.warn("Refresh token failed with server error, retry later");
+          return { status: "refresh_failed_retry_later" };
+        }
+
+        // 4xx: 其他标签页可能已经刷新过了
         const currentToken = getAccessToken();
         if (currentToken && !isAccessTokenExpiringSoon()) {
-          return currentToken;
+          return { status: "ok", token: currentToken };
         }
         handleUnauthorizedSession();
-        return null;
+        return { status: "unauthorized" };
       }
 
       const payload = (await parseJson<LoginEnvelope>(response)) ?? null;
 
       if (!payload?.data) {
         handleUnauthorizedSession();
-        return null;
+        return { status: "unauthorized" };
       }
 
+      const newToken = payload.data.access_token;
       setSessionTokens({
-        accessToken: payload.data.access_token,
+        accessToken: newToken,
         tokenType: payload.data.token_type,
         expiresIn: payload.data.expires_in,
       });
@@ -222,21 +236,13 @@ export async function refreshAccessToken() {
       try {
         _authChannel?.postMessage({
           type: "token_refreshed",
-          accessToken: payload.data.access_token,
+          accessToken: newToken,
           tokenType: payload.data.token_type,
           expiresIn: payload.data.expires_in,
         });
       } catch {}
 
-      return payload.data.access_token;
-    } catch {
-      // 网络抖动时，先检查是否已有有效 token
-      const currentToken = getAccessToken();
-      if (currentToken && !isAccessTokenExpiringSoon()) {
-        return currentToken;
-      }
-      handleUnauthorizedSession();
-      return null;
+      return { status: "ok", token: newToken };
     } finally {
       refreshPromise = null;
     }

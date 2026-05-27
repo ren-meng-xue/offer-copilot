@@ -83,10 +83,10 @@ export async function request<TResponse>(
   });
 
   if (auth && response.status === 401) {
-    const refreshedAccessToken = await refreshAccessToken();
+    const refreshResult = await refreshAccessToken();
 
-    if (refreshedAccessToken) {
-      requestHeaders.set("Authorization", `Bearer ${refreshedAccessToken}`);
+    if (refreshResult?.status === "ok") {
+      requestHeaders.set("Authorization", `Bearer ${refreshResult.token}`);
       response = await fetch(buildUrl(path), {
         method,
         headers: requestHeaders,
@@ -99,8 +99,10 @@ export async function request<TResponse>(
       if (response.status === 401) {
         handleUnauthorizedSession();
       }
+    } else if (refreshResult?.status === "refresh_failed_retry_later") {
+      // 服务端临时失败：不重试，让原请求失败上抛
     }
-    // refreshedAccessToken 为 null 时，refreshAccessToken() 内部已调用 handleUnauthorizedSession
+    // unauthorized 或 null：handleUnauthorizedSession 已在 refreshAccessToken 内调用
   }
 
   const payload = (await parseJson<ApiEnvelope<TResponse>>(response)) ?? null;
