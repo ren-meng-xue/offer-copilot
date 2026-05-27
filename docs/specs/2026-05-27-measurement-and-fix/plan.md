@@ -1654,7 +1654,7 @@ Refs: spec.md §3.6, §4 Task 14"
 
 > ⚠️ **重要**：此 Task 在 F2/F3/F4/F5 修复**之前**执行，目的就是采集"带 bug 数据"。
 
-- [ ] **Step 1: 确认前置状态**
+- [x] **Step 1: 确认前置状态**
 
 ```bash
 # F1 必须已修（Task 8 已 commit）
@@ -1665,7 +1665,7 @@ git log --oneline | grep -E "F2|F3|F4|F5|JSONB|ivfflat|refreshAccess" | head
 # 上面应该为空
 ```
 
-- [ ] **Step 2: 重启服务确保 metrics 干净**
+- [x] **Step 2: 重启服务确保 metrics 干净**
 
 ```bash
 # 重启 Prometheus 清空数据（可选；如果想保留全程数据则跳过）
@@ -1674,7 +1674,7 @@ docker restart offercopilot-prometheus
 sleep 5
 ```
 
-- [ ] **Step 3: 跑评估集**
+- [x] **Step 3: 跑评估集**
 
 ```bash
 export EVAL_TOKEN="<paste-fresh-token>"
@@ -1688,7 +1688,7 @@ cd ..
 
 期望：~20 条全部跑完，生成 `report-baseline.md`。
 
-- [ ] **Step 4: 跑 Locust 阶梯压测（50 并发）**
+- [x] **Step 4: 跑 Locust 阶梯压测（50 并发）**
 
 ```bash
 export LOCUST_TOKEN="$EVAL_TOKEN"
@@ -1702,7 +1702,7 @@ cd backend && uv run locust -f scripts/load_test/locustfile.py \
 cd ..
 ```
 
-- [ ] **Step 5: 跑 100 并发**
+- [x] **Step 5: 跑 100 并发**
 
 ```bash
 cd backend && uv run locust -f scripts/load_test/locustfile.py \
@@ -1715,7 +1715,7 @@ cd ..
 
 > 200 并发**可选**——根据机器情况决定。如果本机 CPU 已饱和（top 中 backend 100%），200 并发只会让数据失真。
 
-- [ ] **Step 6: 截图三张 Grafana 看板**
+- [x] **Step 6: 截图三张 Grafana 看板**
 
 打开 `http://localhost:3001`，时间范围设置为"压测刚结束的过去 15 分钟"。
 
@@ -1725,7 +1725,7 @@ cd ..
 
 > 也可以用浏览器截图工具直接截全屏。
 
-- [ ] **Step 7: 不 commit baseline 数据**
+- [x] **Step 7: 不 commit baseline 数据**
 
 ```bash
 # 暂时本地保留，等 after 跑完一起 commit（对比一目了然）
@@ -1811,7 +1811,7 @@ def downgrade() -> None:
 from sqlalchemy.dialects import postgresql
 ```
 
-- [ ] **Step 3: 跑迁移**
+- [x] **Step 3: 跑迁移**
 
 ```bash
 cd backend && uv run alembic upgrade head
@@ -1829,7 +1829,7 @@ docker exec -it $(docker ps -q -f name=postgres) psql -U postgres -d offercopilo
 
 期望：`knowledge_base_ids | jsonb` 而非 `json`。GIN 索引 `ix_semantic_caches_kb_ids_gin` 出现。
 
-- [ ] **Step 5: 验证 downgrade**
+- [x] **Step 5: 验证 downgrade**
 
 ```bash
 cd backend && uv run alembic downgrade -1
@@ -1849,7 +1849,7 @@ uv run alembic upgrade head
 - Modify: `backend/app/repositories/qa_repository.py`
 - Create: `backend/tests/repositories/test_qa_repository_evict.py`
 
-- [ ] **Step 1: 写失败测试（含反向断言）**
+- [x] **Step 1: 写失败测试（含反向断言）**
 
 创建 `backend/tests/repositories/__init__.py` 为空（如不存在）。
 
@@ -1905,7 +1905,7 @@ async def test_evict_by_kb_id_with_multi_kb_entry(db_session: AsyncSession):
 
 > 假设项目已有 `db_session` fixture；如没有，参考 `backend/tests/conftest.py` 或现有测试创建。
 
-- [ ] **Step 2: 跑测试，预期当前 LIKE 实现下"反向断言"测试会失败**
+- [x] **Step 2: 跑测试，预期当前 LIKE 实现下"反向断言"测试会失败**
 
 ```bash
 cd backend && uv run pytest tests/repositories/test_qa_repository_evict.py -v
@@ -1915,7 +1915,7 @@ cd backend && uv run pytest tests/repositories/test_qa_repository_evict.py -v
 
 > 实际上由于 Task 7 中"暂时保留 LIKE bug"的代码还会先抛 `NameError: Text not defined`——所以测试可能因 NameError 失败而非误删失败。**都算"预期失败"。**
 
-- [ ] **Step 3: 重写 evict_caches_by_kb_id**
+- [x] **Step 3: 重写 evict_caches_by_kb_id**
 
 修改 `backend/app/repositories/qa_repository.py`：
 
@@ -1950,7 +1950,7 @@ from sqlalchemy import func, select  # 已有
 
 > 因为 model 的列已经是 JSONB（Task 16），`SemanticCache.knowledge_base_ids.contains([kb_id])` 会自动生成 `@>` 操作符。无需 `cast`。
 
-- [ ] **Step 4: 跑测试，预期通过**
+- [x] **Step 4: 跑测试，预期通过**
 
 ```bash
 cd backend && uv run pytest tests/repositories/test_qa_repository_evict.py -v
@@ -1958,7 +1958,7 @@ cd backend && uv run pytest tests/repositories/test_qa_repository_evict.py -v
 
 期望：2 passed
 
-- [ ] **Step 5: 格式化 + commit Task 16 + 17**
+- [x] **Step 5: 格式化 + commit Task 16 + 17**
 
 ```bash
 cd backend && uv run ruff format \
@@ -1992,7 +1992,7 @@ Refs: spec.md §4.2 (F2)"
 - Modify: `backend/app/services/qa_service.py:1063 / 1641 / 1988`（三处）
 - Create: `backend/tests/services/test_qa_service_cache_key.py`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 创建 `backend/tests/services/test_qa_service_cache_key.py`：
 
@@ -2019,7 +2019,7 @@ def test_l1_cache_key_different_scope_produces_different_key():
     assert _build_l1_cache_key(scope_hash="s1", q_hash="q1") != _build_l1_cache_key(scope_hash="s1", q_hash="q2")
 ```
 
-- [ ] **Step 2: 跑测试，期望失败**
+- [x] **Step 2: 跑测试，期望失败**
 
 ```bash
 cd backend && uv run pytest tests/services/test_qa_service_cache_key.py -v
@@ -2027,7 +2027,7 @@ cd backend && uv run pytest tests/services/test_qa_service_cache_key.py -v
 
 期望：`ImportError: cannot import _build_l1_cache_key`
 
-- [ ] **Step 3: 实现 helper + 改三处 key**
+- [x] **Step 3: 实现 helper + 改三处 key**
 
 修改 `backend/app/services/qa_service.py`，在 `_emit_rag_telemetry` 附近加 helper：
 
@@ -2049,7 +2049,7 @@ def _build_l1_cache_key(*, scope_hash: str, q_hash: str) -> str:
 
 可用 sed 批量替换，但更安全是手动改三处确认上下文。
 
-- [ ] **Step 4: 跑测试，期望通过**
+- [x] **Step 4: 跑测试，期望通过**
 
 ```bash
 cd backend && uv run pytest tests/services/test_qa_service_cache_key.py -v
@@ -2057,7 +2057,7 @@ cd backend && uv run pytest tests/services/test_qa_service_cache_key.py -v
 
 期望：2 passed
 
-- [ ] **Step 5: 集成验证**
+- [x] **Step 5: 集成验证**
 
 启动后端，新开一个会话问 "什么是 FastAPI"，等响应完。
 **新开另一个会话**（不同 conv_id），问同样的问题。
@@ -2071,7 +2071,7 @@ curl -s http://localhost:8000/metrics | grep 'cache_lookup_total{layer="l1",resu
 
 期望：数值 > 0 且**比修复前显著增加**。
 
-- [ ] **Step 6: 格式化 + commit**
+- [x] **Step 6: 格式化 + commit**
 
 ```bash
 cd backend && uv run ruff format app/services/qa_service.py tests/services/test_qa_service_cache_key.py
@@ -2097,7 +2097,7 @@ Refs: spec.md §4.3 (F3)"
 **Files:**
 - Create: `backend/alembic/versions/<new>_add_ivfflat_to_semantic_cache.py`
 
-- [ ] **Step 1: 确认与现有 document_chunks 索引方案一致**
+- [x] **Step 1: 确认与现有 document_chunks 索引方案一致**
 
 ```bash
 grep -rn "ivfflat\|hnsw" backend/alembic/versions/
@@ -2107,7 +2107,7 @@ grep -rn "ivfflat\|hnsw" backend/alembic/versions/
 
 > 假设结果：用 ivfflat。
 
-- [ ] **Step 2: 创建迁移**
+- [x] **Step 2: 创建迁移**
 
 ```bash
 cd backend && uv run alembic revision -m "add_ivfflat_to_semantic_cache"
@@ -2150,13 +2150,13 @@ def downgrade() -> None:
 
 > 保留 alembic autogen 填充的 revision/down_revision 值，不要手改。
 
-- [ ] **Step 3: 跑迁移**
+- [x] **Step 3: 跑迁移**
 
 ```bash
 cd backend && uv run alembic upgrade head
 ```
 
-- [ ] **Step 4: 验证索引存在**
+- [x] **Step 4: 验证索引存在**
 
 ```bash
 docker exec -it $(docker ps -q -f name=postgres) psql -U postgres -d offercopilot -c "
@@ -2166,7 +2166,7 @@ SELECT indexname FROM pg_indexes WHERE tablename = 'semantic_query_caches';
 
 期望看到 `ix_semantic_caches_query_vector`。
 
-- [ ] **Step 5: 验证 downgrade**
+- [x] **Step 5: 验证 downgrade**
 
 ```bash
 cd backend && uv run alembic downgrade -1
@@ -2175,7 +2175,7 @@ docker exec -it $(docker ps -q -f name=postgres) psql -U postgres -d offercopilo
 uv run alembic upgrade head
 ```
 
-- [ ] **Step 6: commit**
+- [x] **Step 6: commit**
 
 ```bash
 git add backend/alembic/versions/*add_ivfflat_to_semantic_cache*.py
@@ -2200,7 +2200,7 @@ Refs: spec.md §4.4 (F4)"
 - Modify: `frontend/src/lib/http.ts`
 - Test: `frontend/src/lib/__tests__/session.test.ts`
 
-- [ ] **Step 1: 全量找调用方**
+- [x] **Step 1: 全量找调用方**
 
 ```bash
 grep -rn "refreshAccessToken" frontend/src/
@@ -2208,7 +2208,7 @@ grep -rn "refreshAccessToken" frontend/src/
 
 记录所有调用位置，确保下面修改时都覆盖到。
 
-- [ ] **Step 2: 写失败测试**
+- [x] **Step 2: 写失败测试**
 
 创建或修改 `frontend/src/lib/__tests__/session.test.ts`：
 
@@ -2261,7 +2261,7 @@ describe("refreshAccessToken (F5)", () => {
 });
 ```
 
-- [ ] **Step 3: 跑测试，期望失败**
+- [x] **Step 3: 跑测试，期望失败**
 
 ```bash
 cd frontend && pnpm vitest run src/lib/__tests__/session.test.ts
@@ -2269,7 +2269,7 @@ cd frontend && pnpm vitest run src/lib/__tests__/session.test.ts
 
 期望：fail（旧实现返回 string|null，不是 result.status 形式）。
 
-- [ ] **Step 4: 重构 refreshAccessToken**
+- [x] **Step 4: 重构 refreshAccessToken**
 
 修改 `frontend/src/lib/session.ts`，重写 `refreshAccessToken`：
 
@@ -2333,7 +2333,7 @@ export async function refreshAccessToken(): Promise<RefreshResult | null> {
 
 > 注意保留原文件其他部分（type 定义、helper 等）。`refreshPromise` 类型也要从 `Promise<string | null> | null` 改为 `Promise<RefreshResult> | null`。
 
-- [ ] **Step 5: 修改调用方 http.ts**
+- [x] **Step 5: 修改调用方 http.ts**
 
 修改 `frontend/src/lib/http.ts` 中调用 `refreshAccessToken` 的位置（约 86 行）：
 
@@ -2360,7 +2360,7 @@ if (refreshResult?.status === "ok") {
 
 > 具体类名 `HttpError` 是否存在以项目实际为准，调用方法 `retryWithToken` 也以项目实际为准。本步实施时根据 `http.ts` 现状调整。
 
-- [ ] **Step 6: grep 检查所有其他调用方**
+- [x] **Step 6: grep 检查所有其他调用方**
 
 ```bash
 grep -rn "refreshAccessToken" frontend/src/
@@ -2368,7 +2368,7 @@ grep -rn "refreshAccessToken" frontend/src/
 
 如果有除 http.ts 外的其他调用方（比如某些 hook），同样更新返回值处理逻辑。
 
-- [ ] **Step 7: 跑测试**
+- [x] **Step 7: 跑测试**
 
 ```bash
 cd frontend && pnpm vitest run src/lib/__tests__/session.test.ts
@@ -2376,7 +2376,7 @@ cd frontend && pnpm vitest run src/lib/__tests__/session.test.ts
 
 期望：3 passed
 
-- [ ] **Step 8: 跑全部前端测试，确保没踩坏其他**
+- [x] **Step 8: 跑全部前端测试，确保没踩坏其他**
 
 ```bash
 cd frontend && pnpm test
@@ -2384,7 +2384,7 @@ cd frontend && pnpm test
 
 期望：全部通过；如有 askConversation 相关测试已知失败（B5），不在本次 spec 范围。
 
-- [ ] **Step 9: 格式化 + commit**
+- [x] **Step 9: 格式化 + commit**
 
 ```bash
 cd frontend && pnpm prettier --write src/lib/session.ts src/lib/http.ts src/lib/__tests__/session.test.ts
@@ -2424,7 +2424,7 @@ Refs: spec.md §4.5 (F5)"
 - Create: `docs/specs/2026-05-27-measurement-and-fix/report-after.md`
 - Create: `docs/specs/2026-05-27-measurement-and-fix/screenshots/after/`
 
-- [ ] **Step 1: 确认所有 F2-F5 已 commit**
+- [x] **Step 1: 确认所有 F2-F5 已 commit**
 
 ```bash
 git log --oneline | head -10
@@ -2432,7 +2432,7 @@ git log --oneline | head -10
 
 应看到 F2 / F3 / F4 / F5 的 commits。
 
-- [ ] **Step 2: 跑评估集**
+- [x] **Step 2: 跑评估集**
 
 ```bash
 export EVAL_TOKEN="<fresh-token>"
@@ -2444,7 +2444,7 @@ cd backend && uv run python -m scripts.eval.run_eval \
 cd ..
 ```
 
-- [ ] **Step 3: 跑 Locust 50/100 阶梯**
+- [x] **Step 3: 跑 Locust 50/100 阶梯**
 
 ```bash
 export LOCUST_TOKEN="$EVAL_TOKEN"
@@ -2464,11 +2464,11 @@ uv run locust -f scripts/load_test/locustfile.py \
 cd ..
 ```
 
-- [ ] **Step 4: 截图三张 Grafana 看板**
+- [x] **Step 4: 截图三张 Grafana 看板**
 
 时间范围设置为"压测刚结束的过去 15 分钟"，导出 PNG 到 `screenshots/after/rag.png`、`http.png`、`cache.png`。
 
-- [ ] **Step 5: 对比核心数字（人工 check）**
+- [x] **Step 5: 对比核心数字（人工 check）**
 
 打开 `report-baseline.md` 和 `report-after.md`，对比：
 
@@ -2484,7 +2484,7 @@ cd ..
 > - baseline 数据样本太少；可以追加跑一次更长的压测
 > - 某项 fix 没真正生效；回去排查
 
-- [ ] **Step 6: commit baseline + after 全部数据**
+- [x] **Step 6: commit baseline + after 全部数据**
 
 ```bash
 git add docs/specs/2026-05-27-measurement-and-fix/report-baseline.md \

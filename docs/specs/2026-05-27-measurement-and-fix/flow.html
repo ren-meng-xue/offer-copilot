@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>测量驱动的修复与可观测性建设 — 流程图</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f7f7f9;
+    color: #1a1a1a;
+    margin: 0;
+    padding: 40px 20px;
+  }
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  h1 {
+    font-size: 24px;
+    margin: 0 0 8px;
+  }
+  .subtitle {
+    color: #666;
+    margin-bottom: 32px;
+  }
+  .legend {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+    font-size: 13px;
+    color: #444;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .legend-swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+  }
+  .stages {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-bottom: 40px;
+  }
+  .stage {
+    background: white;
+    border: 1px solid #e0e0e6;
+    border-radius: 10px;
+    padding: 18px 16px;
+    position: relative;
+  }
+  .stage::after {
+    content: "→";
+    position: absolute;
+    right: -14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #aaa;
+    font-size: 22px;
+    z-index: 1;
+  }
+  .stage:last-child::after { content: ""; }
+  .stage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 12px;
+  }
+  .stage-num {
+    font-size: 12px;
+    color: #888;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+  .stage-cost {
+    font-size: 11px;
+    color: #888;
+    background: #f0f0f3;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .stage-name {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .stage-tasks {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 12px;
+    color: #444;
+    line-height: 1.7;
+  }
+  .stage-tasks li {
+    padding-left: 14px;
+    position: relative;
+  }
+  .stage-tasks li::before {
+    content: "•";
+    position: absolute;
+    left: 4px;
+    color: #888;
+  }
+  .stage-gate {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed #ddd;
+    font-size: 11px;
+    color: #16a34a;
+    font-weight: 600;
+  }
+
+  .key-loop {
+    background: #fff7e6;
+    border: 1px solid #f5d491;
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 32px;
+  }
+  .key-loop h2 {
+    font-size: 15px;
+    margin: 0 0 10px;
+    color: #92400e;
+  }
+  .loop-diagram {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    color: #444;
+    white-space: pre;
+  }
+
+  .fixes {
+    background: white;
+    border: 1px solid #e0e0e6;
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 32px;
+  }
+  .fixes h2 {
+    font-size: 16px;
+    margin: 0 0 14px;
+  }
+  .fix-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .fix-table th {
+    background: #f5f5f7;
+    text-align: left;
+    padding: 8px 10px;
+    font-weight: 600;
+    font-size: 12px;
+    color: #555;
+  }
+  .fix-table td {
+    border-top: 1px solid #ececef;
+    padding: 8px 10px;
+    vertical-align: top;
+  }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .badge-p0 { background: #fee2e2; color: #b91c1c; }
+  .badge-p1 { background: #fef3c7; color: #92400e; }
+  .badge-info { background: #e0e7ff; color: #3730a3; }
+  .fix-order {
+    font-family: "SF Mono", Consolas, monospace;
+    color: #888;
+    font-size: 11px;
+  }
+
+  .metrics-overview {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .metric-card {
+    background: white;
+    border: 1px solid #e0e0e6;
+    border-radius: 10px;
+    padding: 18px;
+  }
+  .metric-card h3 {
+    font-size: 14px;
+    margin: 0 0 10px;
+    color: #1a1a1a;
+  }
+  .metric-card ul {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 12px;
+    color: #555;
+    line-height: 1.7;
+  }
+  .metric-card code {
+    background: #f0f0f3;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-size: 11px;
+  }
+
+  .footer {
+    color: #888;
+    font-size: 12px;
+    text-align: center;
+    margin-top: 40px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>测量驱动的修复与可观测性建设</h1>
+  <div class="subtitle">Spec ID: <code>2026-05-27-measurement-and-fix</code> · 预计 5 个工作日 · 面试故事导向</div>
+
+  <div class="legend">
+    <div class="legend-item"><span class="legend-swatch" style="background:#16a34a;"></span>Gate 验收点</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:#fee2e2;"></span>P0 必修</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:#fef3c7;"></span>P1 重要</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:#e0e7ff;"></span>INFO 改进</div>
+  </div>
+
+  <h2>五阶段流转</h2>
+  <div class="stages">
+    <div class="stage">
+      <div class="stage-header">
+        <span class="stage-num">STAGE 1</span>
+        <span class="stage-cost">0.5d</span>
+      </div>
+      <div class="stage-name">基础设施铺设</div>
+      <ul class="stage-tasks">
+        <li>加 prometheus + grafana 到 docker-compose</li>
+        <li>更新 dev.sh</li>
+        <li>monitoring/ 目录</li>
+        <li>backend 暴露 /metrics</li>
+      </ul>
+      <div class="stage-gate">G1：能登 Grafana、targets up</div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-header">
+        <span class="stage-num">STAGE 2</span>
+        <span class="stage-cost">2d</span>
+      </div>
+      <div class="stage-name">埋点 + 修复（核心）</div>
+      <ul class="stage-tasks">
+        <li>A1/A2/A3 三层埋点</li>
+        <li>F1：SSE 断流修复（必须先做）</li>
+        <li>F2/F3/F4/F5 等 baseline 后</li>
+      </ul>
+      <div class="stage-gate">G2：看板有数据 + 修复测试通过</div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-header">
+        <span class="stage-num">STAGE 3</span>
+        <span class="stage-cost">1d</span>
+      </div>
+      <div class="stage-name">数据准备</div>
+      <ul class="stage-tasks">
+        <li>3-5 份真实中文技术文档</li>
+        <li>20 道人工标注 → golden.jsonl</li>
+        <li>50-100 道 LLM 生成 → synthetic.jsonl</li>
+      </ul>
+      <div class="stage-gate">G3：评估集齐备、引用可验</div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-header">
+        <span class="stage-num">STAGE 4</span>
+        <span class="stage-cost">1d</span>
+      </div>
+      <div class="stage-name">评估 + 压测（两轮）</div>
+      <ul class="stage-tasks">
+        <li>4.1 Baseline → report + 截图</li>
+        <li>→ 回阶段 2 做 F2-F5</li>
+        <li>4.2 After → report + 截图</li>
+      </ul>
+      <div class="stage-gate">G4：≥3 组前后对比硬数字</div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-header">
+        <span class="stage-num">STAGE 5</span>
+        <span class="stage-cost">0.5d</span>
+      </div>
+      <div class="stage-name">故事沉淀</div>
+      <ul class="stage-tasks">
+        <li>final-report.md 三段式</li>
+        <li>README 加章节</li>
+        <li>follow-up.md（B 堆）</li>
+        <li>面试 dry-run 5 分钟</li>
+      </ul>
+      <div class="stage-gate">G5：dry-run 计时通过</div>
+    </div>
+  </div>
+
+  <div class="key-loop">
+    <h2>关键执行环：先 baseline，再修复，再 after</h2>
+    <div class="loop-diagram">阶段 2 ─► A1/A2/A3 埋点 ─► F1 修 SSE 断流
+                                     │
+                                     ▼
+                         阶段 3：数据准备
+                                     │
+                                     ▼
+                       阶段 4.1：Baseline 跑（带 bug 数据）
+                       └─► report-baseline.md + screenshots/baseline/
+                                     │
+                                     ▼
+                  ┌── 回阶段 2 ──┐
+                  │  F2 → F3 → F4 → F5
+                  └────────────────┘
+                                     │
+                                     ▼
+                       阶段 4.2：After 跑（修复后数据）
+                       └─► report-after.md + screenshots/after/
+                                     │
+                                     ▼
+                       阶段 5：final-report 对比三段式</div>
+  </div>
+
+  <div class="fixes">
+    <h2>修复清单（A 堆 5 项）</h2>
+    <table class="fix-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>位置</th>
+          <th>问题摘要</th>
+          <th>严重度</th>
+          <th>顺序</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>F1</strong></td>
+          <td><code>qa_service.py:1952 / 2233</code></td>
+          <td>fts_task.done() 协程对象抛 AttributeError，SSE 断流</td>
+          <td><span class="badge badge-p0">P0</span></td>
+          <td class="fix-order">阶段 2 前期</td>
+        </tr>
+        <tr>
+          <td><strong>F2</strong></td>
+          <td><code>qa_repository.py:309</code></td>
+          <td>Text 未导入 + LIKE 模糊匹配误删邻居缓存；列迁 JSONB</td>
+          <td><span class="badge badge-p0">P0+P1</span></td>
+          <td class="fix-order">阶段 2 后期</td>
+        </tr>
+        <tr>
+          <td><strong>F3</strong></td>
+          <td><code>qa_service.py:1063 / 1641 / 1988</code></td>
+          <td>L1 缓存 key 含 conv_id，命中率 ≈ 0</td>
+          <td><span class="badge badge-info">INFO</span></td>
+          <td class="fix-order">阶段 2 后期</td>
+        </tr>
+        <tr>
+          <td><strong>F4</strong></td>
+          <td>新 Alembic 迁移</td>
+          <td>semantic_cache 缺 ivfflat 向量索引</td>
+          <td><span class="badge badge-info">INFO</span></td>
+          <td class="fix-order">阶段 2 后期</td>
+        </tr>
+        <tr>
+          <td><strong>F5</strong></td>
+          <td><code>session.ts:198</code> + <code>http.ts:86</code></td>
+          <td>refreshAccessToken 5xx 返回旧 token，用户被误登出</td>
+          <td><span class="badge badge-p1">P1</span></td>
+          <td class="fix-order">阶段 2 后期</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>指标 + 看板拼图</h2>
+  <div class="metrics-overview">
+    <div class="metric-card">
+      <h3>看板 1：RAG 链路（5 panel）</h3>
+      <ul>
+        <li><code>rag_outcome_total</code> 成功率</li>
+        <li><code>rag_ttft_seconds</code> 首 token 延迟（★ 新增）</li>
+        <li><code>rag_total_duration_seconds</code> p95</li>
+        <li><code>rag_stage_duration_seconds</code> 5 阶段分布</li>
+        <li>outcome 分布饼图</li>
+      </ul>
+    </div>
+    <div class="metric-card">
+      <h3>看板 2：HTTP & SLI（5 panel）</h3>
+      <ul>
+        <li><code>http_requests_total</code> QPS</li>
+        <li>5xx 错误率</li>
+        <li><code>http_request_duration_seconds</code> p95</li>
+        <li>QPS 按 status_class 主图</li>
+        <li>p50/p95/p99 三线</li>
+      </ul>
+    </div>
+    <div class="metric-card">
+      <h3>看板 3：缓存命中率（4 panel）★ 故事最强</h3>
+      <ul>
+        <li><code>cache_lookup_total</code> L1 命中率</li>
+        <li><code>cache_lookup_total</code> L2 命中率</li>
+        <li>命中率时间序列（带修复 annotation）</li>
+        <li><code>cache_operation_duration_seconds</code> lookup p95</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer">
+    本文档与 spec.md 同步；最终验收以 spec.md §7.4 退出条件为准。
+  </div>
+
+</div>
+</body>
+</html>
