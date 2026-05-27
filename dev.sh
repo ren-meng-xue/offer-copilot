@@ -1,10 +1,12 @@
 #!/bin/bash
 
 # 设置代理 (根据用户 v2rayN 配置)
-export http_proxy=http://127.0.0.1:10808
-export https_proxy=http://127.0.0.1:10808
-export ALL_PROXY=http://127.0.0.1:10808
+export http_proxy=http://127.0.0.1:7897
+export https_proxy=http://127.0.0.1:7897
+export ALL_PROXY=http://127.0.0.1:7897
 
+BACKEND_PORT=8000
+FRONTEND_PORT=3000
 # OfferPilot 一键启动开发环境脚本
 
 echo "🧹 清理残留进程..."

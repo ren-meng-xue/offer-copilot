@@ -92,6 +92,40 @@ async def delete_knowledge_base(db: AsyncSession, kb_id: int, user_id: int) -> N
         )
     await knowledge_repository.delete_knowledge_base(db, kb)
 
+    # 物理驱逐全平台该知识库对应的多级 RAG 缓存，防过期脏数据
+    try:
+        import logging
+
+        from backend.app.repositories import qa_repository
+        from backend.app.services.qa_service import _get_redis_client
+
+        logger = logging.getLogger(__name__)
+
+        # 1. 物理驱逐 L2 数据库语义缓存
+        await qa_repository.evict_caches_by_kb_id(db, kb_id)
+
+        # 2. 物理扫描并批量删除 L1 Redis 精确缓存
+        redis_client = _get_redis_client()
+        cursor = 0
+        while True:
+            cursor, keys = await redis_client.scan(
+                cursor=cursor, match="cache:rag:*", count=100
+            )
+            if keys:
+                await redis_client.delete(*keys)
+            if cursor == 0:
+                break
+        logger.info(
+            "Successfully evicted L1 & L2 RAG caches for deleted knowledge base %s",
+            kb_id,
+        )
+    except Exception as e:
+        import logging
+
+        logging.getLogger(__name__).warning(
+            "Failed to evict caches for deleted knowledge base %s: %s", kb_id, e
+        )
+
 
 async def update_knowledge_status(
     db: AsyncSession,

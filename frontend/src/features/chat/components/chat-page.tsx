@@ -65,8 +65,7 @@ export function ChatPage({ conversationId }: ChatPageProps) {
   );
   const [isDebug] = useState(() =>
     typeof window !== "undefined" &&
-    (new URLSearchParams(window.location.search).get("debug") === "1" ||
-      localStorage.getItem("rag_debug") === "true"),
+    new URLSearchParams(window.location.search).get("debug") === "1",
   );
   const inputRef = useRef<HTMLInputElement | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -119,18 +118,27 @@ export function ChatPage({ conversationId }: ChatPageProps) {
         );
 
         if (isMounted) {
-          // 竞态条件保护：如果后端返回为空（可能因为事务尚未提交），但本地缓存已有消息（说明刚刚流式生成过），则保留本地缓存
           const currentCached = readMessageCache(conversationId);
-          if (mappedMessages.length === 0 && currentCached.length > 0) {
+          // 竞态条件保护：如果后端返回的消息数量少于本地缓存，则保留本地缓存。
+          if (mappedMessages.length < currentCached.length && currentCached.length > 0) {
             console.warn(
-              "Backend returned 0 messages, but cache has data. Preserving cache to avoid flashing welcome page.",
+              `Backend returned ${mappedMessages.length} messages, but cache has ${currentCached.length}. Preserving cache.`,
             );
             setMessageError(null);
             return;
           }
 
-          setMessages(mappedMessages);
-          writeMessageCache(conversationId, mappedMessages);
+          // 核心修复：合并本地已有的调试信息，防止被后端返回的"干净"数据覆盖
+          const mergedMessages = mappedMessages.map((msg) => {
+            const localMsg = currentCached.find((c) => c.id === msg.id);
+            if (localMsg?.traceEvents) {
+              return { ...msg, traceEvents: localMsg.traceEvents };
+            }
+            return msg;
+          });
+
+          setMessages(mergedMessages);
+          writeMessageCache(conversationId, mergedMessages);
           setMessageError(null);
 
           const lastAiMessage = [...mappedMessages]
@@ -303,8 +311,8 @@ export function ChatPage({ conversationId }: ChatPageProps) {
         }
 
         if (event.type === "debug") {
-          setMessages((current) =>
-            current.map((msg) =>
+          setMessages((current) => {
+            const next = current.map((msg) =>
               msg.clientId === clientId && msg.role === "assistant"
                 ? {
                     ...msg,
@@ -314,9 +322,11 @@ export function ChatPage({ conversationId }: ChatPageProps) {
                     ],
                   }
                 : msg,
-            ),
-          );
-          // 注意：此处故意不调用 writeMessageCache，traceEvents 不持久化
+            );
+            // 开启 Debug 模式时，允许将 traceEvents 持久化到本地缓存，方便刷新排障
+            writeMessageCache(activeConversationId, next);
+            return next;
+          });
         }
 
         if (event.type === "done") {
@@ -342,7 +352,8 @@ export function ChatPage({ conversationId }: ChatPageProps) {
       });
 
       if (shouldNavigateAfterStream) {
-        router.push(`/chat/${activeConversationId}`);
+        const url = `/chat/${activeConversationId}${isDebug ? "?debug=1" : ""}`;
+        router.push(url);
         // 触发侧边栏刷新，以便显示生成的标题
         window.dispatchEvent(new CustomEvent("conversation-created"));
       }
@@ -412,7 +423,7 @@ export function ChatPage({ conversationId }: ChatPageProps) {
 
   return (
     <div className="relative flex h-full min-h-0 flex-1 flex-col bg-[#fafafa] dark:bg-[#212121]">
-      {userEmail === "917596600@qq.com" && (
+      {(userEmail === "917596600@qq.com" || isDebug) && (
         <div className="absolute left-4 top-4 z-[100] flex items-center gap-2">
           <button
             onClick={handleCopyConversation}
@@ -425,6 +436,15 @@ export function ChatPage({ conversationId }: ChatPageProps) {
               <Copy className="size-4" />
             )}
           </button>
+          {isDebug && (
+            <div className="flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-700 shadow-sm dark:border-amber-900/50 dark:bg-amber-900/20 dark:text-amber-400">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75"></span>
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+              </span>
+              Debug Mode
+            </div>
+          )}
           {showCopySuccess && (
             <span className="animate-in fade-in slide-in-from-left-1 text-xs font-medium text-green-600 dark:text-green-400">
               已复制
@@ -555,13 +575,8 @@ function writeMessageCache(
     const cache = raw
       ? (JSON.parse(raw) as Record<string, LocalChatMessage[]>)
       : {};
-    // 调试信息不进入持久化缓存
-    const sanitizedMessages = messages.map((msg) => {
-      const copy = { ...msg };
-      delete copy.traceEvents;
-      return copy;
-    });
-    cache[conversationId] = sanitizedMessages;
+    // 允许调试信息进入持久化缓存（仅 sessionStorage），方便刷新或跳转排障
+    cache[conversationId] = messages;
     sessionStorage.setItem(messageCacheKey, JSON.stringify(cache));
   } catch (error) {
     console.error("Failed to write message cache", error);

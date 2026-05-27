@@ -31,6 +31,9 @@ export const ChatInput = forwardRef<HTMLInputElement, ChatInputProps>(function C
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
+      if (event.nativeEvent.isComposing) {
+        return;
+      }
       event.preventDefault();
       void submitQuestion();
     }

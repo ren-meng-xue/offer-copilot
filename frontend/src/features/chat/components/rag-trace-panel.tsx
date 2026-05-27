@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, ChevronRight, Terminal, AlertCircle } from "lucide-react";
+import { ChevronDown, ChevronRight, Terminal, AlertCircle, Copy, Check } from "lucide-react";
 import type { RagTraceEvent } from "@/lib/stream";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +16,7 @@ const STAGE_LABELS: Record<string, string> = {
 
 export function RagTracePanel({ events }: { events: RagTraceEvent[] }) {
   const [isExpanded, setIsExpanded] = useState(true);
+  const [copied, setCopied] = useState(false);
 
   if (!events || events.length === 0) return null;
 
@@ -29,11 +30,34 @@ export function RagTracePanel({ events }: { events: RagTraceEvent[] }) {
           <Terminal className="size-3.5" />
           <span>RAG 执行链路追踪 (Debug)</span>
         </div>
-        {isExpanded ? (
-          <ChevronDown className="size-3.5" />
-        ) : (
-          <ChevronRight className="size-3.5" />
-        )}
+        <div className="flex items-center gap-2">
+          <span
+            onClick={(e) => {
+              e.stopPropagation();
+              navigator.clipboard.writeText(JSON.stringify(events, null, 2));
+              setCopied(true);
+              setTimeout(() => setCopied(false), 2000);
+            }}
+            className="flex items-center gap-1 rounded bg-[#ffffff] dark:bg-[#1e293b] px-2 py-0.5 text-[10px] text-[#64748b] hover:bg-[#e2e8f0] dark:text-[#94a3b8] dark:hover:bg-[#475569] border border-[#e2e8f0] dark:border-[#475569] transition-all font-normal shadow-sm hover:shadow active:scale-95"
+          >
+            {copied ? (
+              <>
+                <Check className="size-3 text-emerald-600 dark:text-emerald-400" />
+                <span className="text-emerald-600 dark:text-emerald-400">已复制</span>
+              </>
+            ) : (
+              <>
+                <Copy className="size-3" />
+                <span>复制 JSON</span>
+              </>
+            )}
+          </span>
+          {isExpanded ? (
+            <ChevronDown className="size-3.5" />
+          ) : (
+            <ChevronRight className="size-3.5" />
+          )}
+        </div>
       </button>
 
       {isExpanded && (

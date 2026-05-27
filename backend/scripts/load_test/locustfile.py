@@ -48,12 +48,15 @@ class AskUser(HttpUser):
             resp = self.client.post(
                 "/api/v1/qa/conversations",
                 headers={"Authorization": f"Bearer {TOKEN}"},
-                json={"knowledge_base_ids": [kb_id]},
+                json={"knowledge_base_id": kb_id},
                 name="POST /conversations (setup)",
             )
-            if resp.status_code == 200:
+            if 200 <= resp.status_code < 300:
                 try:
-                    self.conversations[kb_id] = resp.json()["data"]["id"]
+                    data = resp.json()["data"]
+                    conv_id = data.get("conv_id") or data.get("id")
+                    if conv_id:
+                        self.conversations[kb_id] = conv_id
                 except (KeyError, ValueError):
                     pass
 

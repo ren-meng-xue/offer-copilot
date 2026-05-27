@@ -171,12 +171,12 @@ function isNonCitableReply(content: string): boolean {
     );
   if (isIntro) return true;
 
-  // 3. 拒答或引导 (由于检索不到内容时的礼貌回复)
-  const isGuidance =
-    /(具体告诉我|想了解的内容或主题|无法回答该问题|没有找到相关内容|请提供更多细节)/.test(
+  // 3. 拒答、引导或通用知识声明 (由于检索不到内容时的礼貌回复或常识补充)
+  const isGuidanceOrCommonSense =
+    /(具体告诉我|想了解的内容或主题|无法回答该问题|没有找到相关内容|请提供更多细节|基于通用知识|通用知识补充)/.test(
       text,
     );
-  if (isGuidance) return true;
+  if (isGuidanceOrCommonSense) return true;
 
   return false;
 }

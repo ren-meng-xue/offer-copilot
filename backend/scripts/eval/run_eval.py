@@ -29,10 +29,10 @@ async def create_conversation(kb_id: int) -> str:
         resp = await client.post(
             f"{BASE_URL}/api/v1/qa/conversations",
             headers={"Authorization": f"Bearer {TOKEN}"},
-            json={"knowledge_base_ids": [kb_id]},
+            json={"knowledge_base_id": kb_id},
         )
         resp.raise_for_status()
-        return resp.json()["data"]["id"]
+        return resp.json()["data"]["conv_id"]
 
 
 def citation_match(expected: list[str], actual: list[dict]) -> bool:

@@ -135,7 +135,7 @@ async def ask(
     current_user_id: str = Depends(get_current_user),
 ) -> StreamingResponse:
     user_id = int(current_user_id)
-    debug_enabled = debug and settings.DEBUG
+    debug_enabled = (debug or body.debug) and settings.DEBUG
 
     async def event_stream():
         async for event in qa_service.stream_answer(

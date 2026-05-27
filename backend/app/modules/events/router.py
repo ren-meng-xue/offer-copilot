@@ -60,3 +60,4 @@ async def sse_events(current_user_id: str = Depends(get_current_user)):
             "X-Accel-Buffering": "no",  # 禁用 Nginx 缓冲
         },
     )
+

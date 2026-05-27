@@ -68,8 +68,8 @@ class Settings(BaseSettings):
     MAIL_FROM: str | None = None
     MAIL_FROM_NAME: str = "OfferPilot"
     REFRESH_TOKEN_COOKIE_NAME: str = "refresh_token"
-    # 只让 refresh 接口自动携带该 cookie，减少不必要的请求暴露面。
-    REFRESH_TOKEN_COOKIE_PATH: str = "/api/v1/auth/"
+    # 让所有接口都能携带该 cookie，确保自动续期稳定性。
+    REFRESH_TOKEN_COOKIE_PATH: str = "/"
     # 本地开发通常没有 HTTPS，默认关闭；生产环境应改为 true。
     REFRESH_TOKEN_COOKIE_SECURE: bool = False
     # 前后端同站开发时先用 lax，后续跨站部署再按实际情况调整。
@@ -94,7 +94,11 @@ class Settings(BaseSettings):
     # ===== Observability =====
     PROMETHEUS_ENABLED: bool = True
     METRICS_PATH: str = "/metrics"
-    RAG_DEBUG_ENABLED: bool = False  # 是否开启 RAG debug 输出
+    RAG_DEBUG_ENABLED: bool = True  # 是否开启 RAG debug 输出
+    RAG_CACHE_L1_ENABLED: bool = True  # 是否启用 L1 Redis 精确缓存
+    RAG_CACHE_L2_ENABLED: bool = True  # 是否启用 L2 pgvector 语义缓存
+    RAG_CACHE_L2_THRESHOLD: float = 0.96  # L2 语义匹配的相似度阈值
+    RAG_CACHE_EXPIRE_SECONDS: int = 86400  # 缓存的默认失效秒数（24小时）
     RAG_SCOPE_MAX_KNOWLEDGE_BASES: int = 3
     RAG_SCOPE_ROUTE_MIN_SCORE: float = 0.2
     RAG_VECTOR_TOP_K_PER_KB: int = 10

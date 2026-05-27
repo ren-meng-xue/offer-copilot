@@ -247,9 +247,14 @@ def test_build_query_rewrite_messages_includes_summary_history_and_question() ->
         "用户正在配置 Redis",
     )
 
+    assert len(messages) == 2
     assert messages[0]["role"] == "system"
-    assert messages[1] == {"role": "system", "content": "历史摘要：用户正在配置 Redis"}
-    assert messages[-1] == {"role": "user", "content": "那生产环境怎么写？"}
+    assert "你是一个专门的检索查询改写助手" in messages[0]["content"]
+    assert messages[1]["role"] == "user"
+    assert "用户正在配置 Redis" in messages[1]["content"]
+    assert "Redis 怎么配置？" in messages[1]["content"]
+    assert "先看安装章节。[1]" in messages[1]["content"]
+    assert "那生产环境怎么写？" in messages[1]["content"]
 
 
 def test_build_rag_telemetry_payload_uses_lengths_not_raw_text() -> None:

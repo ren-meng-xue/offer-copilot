@@ -57,6 +57,7 @@ class LocationInput(BaseModel):
 class AskRequest(BaseModel):
     question: str = Field(..., min_length=1, max_length=1000)
     location: LocationInput | None = None
+    debug: bool = False
 
 
 class MessageItem(BaseModel):

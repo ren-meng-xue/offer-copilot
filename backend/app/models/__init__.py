@@ -6,6 +6,7 @@ from .password_reset_tokens import PasswordResetToken
 from .knowledge_base import KnowledgeBase, KnowledgeBaseStatus
 from .document_chunk import DocumentChunk
 from .conversation import Conversation, ConversationKnowledgeScopeItem, Message
+from .semantic_cache import SemanticCache
 
 __all__ = [
     "User",
@@ -17,4 +18,5 @@ __all__ = [
     "Conversation",
     "ConversationKnowledgeScopeItem",
     "Message",
+    "SemanticCache",
 ]
