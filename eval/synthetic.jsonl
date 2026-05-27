@@ -1,0 +1,140 @@
+{"question": "任孟雪的意向岗位是什么", "kb_id": 3}
+{"question": "她的年龄是多少", "kb_id": 3}
+{"question": "她的学历是什么", "kb_id": 3}
+{"question": "任孟雪在前端开发方面有哪些技术栈", "kb_id": 3}
+{"question": "她熟练掌握哪些CSS相关技术", "kb_id": 3}
+{"question": "她是否熟悉Node.js的后端开发", "kb_id": 3}
+{"question": "任孟雪在联想的工作职责是什么", "kb_id": 3}
+{"question": "她在易显科技有限公司的工作重点是什么", "kb_id": 3}
+{"question": "她参与了哪一个项目的国际化翻译工作", "kb_id": 3}
+{"question": "她在布达佩斯大屏项目中负责哪些功能", "kb_id": 3}
+{"question": "她使用了哪些前端UI框架", "kb_id": 3}
+{"question": "在得手驾园管理系统中，她负责了哪些场景的开发", "kb_id": 3}
+{"question": "她在理论在线练题系统中使用了哪些技术栈", "kb_id": 3}
+{"question": "任孟雪如何实现移动端页面的等比例缩放", "kb_id": 3}
+{"question": "她在项目中如何优化用户体验", "kb_id": 3}
+{"question": "她在计时后台管理系统中使用了哪个地图API", "kb_id": 3}
+{"question": "她的工作经历中有多少年的前端开发经验", "kb_id": 3}
+{"question": "她在React项目中使用了哪些状态管理工具", "kb_id": 3}
+{"question": "任孟雪在工作中是否参与过技术文档的撰写", "kb_id": 3}
+{"question": "她如何处理时间相关的问题", "kb_id": 3}
+{"question": "如何启动 codex", "kb_id": 1}
+{"question": "codex exec 的作用是什么", "kb_id": 1}
+{"question": "如何登录到 codex", "kb_id": 1}
+{"question": "如何恢复之前的会话", "kb_id": 1}
+{"question": "什么是 codex fork", "kb_id": 1}
+{"question": "如何应用补丁到 codex", "kb_id": 1}
+{"question": "如何切换模型", "kb_id": 1}
+{"question": "codex 中的规划模式是什么", "kb_id": 1}
+{"question": "如何审查代码", "kb_id": 1}
+{"question": "如何清空 codex 界面", "kb_id": 1}
+{"question": "如何退出 codex 程序", "kb_id": 1}
+{"question": "codex exec 可以执行多少次", "kb_id": 1}
+{"question": "使用 codex fork 有什么好处", "kb_id": 1}
+{"question": "如何查看当前模型", "kb_id": 1}
+{"question": "codex 中的审核功能如何使用", "kb_id": 1}
+{"question": "有什么命令可以恢复会话", "kb_id": 1}
+{"question": "codex 中的模型切换有什么限制", "kb_id": 1}
+{"question": "如何快速退出 codex", "kb_id": 1}
+{"question": "使用 /plan 的场景是什么", "kb_id": 1}
+{"question": "如何在 codex 中应用修复", "kb_id": 1}
+{"question": "如何使用 FastAPI 的特性", "kb_id": 4}
+{"question": "本教程的内容是如何组织的", "kb_id": 4}
+{"question": "我可以从哪里查阅特定 API 需求的解决方案", "kb_id": 4}
+{"question": "代码片段可以在哪里使用", "kb_id": 4}
+{"question": "如何运行示例代码", "kb_id": 4}
+{"question": "安装 FastAPI 的第一步是什么", "kb_id": 4}
+{"question": "我需要创建什么来安装 FastAPI", "kb_id": 4}
+{"question": "如何激活虚拟环境", "kb_id": 4}
+{"question": "如何安装 FastAPI 的标准版本", "kb_id": 4}
+{"question": "我可以使用哪个命令启动 FastAPI 应用", "kb_id": 4}
+{"question": "本教程是否可以作为参考手册", "kb_id": 4}
+{"question": "完成用户指南后应该阅读什么", "kb_id": 4}
+{"question": "代码片段是否经过测试", "kb_id": 4}
+{"question": "如何将代码片段放入文件中", "kb_id": 4}
+{"question": "fastapi dev 命令的作用是什么", "kb_id": 4}
+{"question": "是否可以直接跳转到某个章节", "kb_id": 4}
+{"question": "用户指南的目标是什么", "kb_id": 4}
+{"question": "安装 FastAPI 时需要注意什么", "kb_id": 4}
+{"question": "用户指南的内容是循序渐进吗", "kb_id": 4}
+{"question": "如何确保代码片段正常工作", "kb_id": 4}
+{"question": "你同意使用ChatGPT时需要遵循哪些条款", "kb_id": 2}
+{"question": "ChatGPT是什么类型的工具", "kb_id": 2}
+{"question": "使用ChatGPT时需要注意哪些隐私政策", "kb_id": 2}
+{"question": "ChatGPT的主要功能是什么", "kb_id": 2}
+{"question": "如何查看你的隐私选择", "kb_id": 2}
+{"question": "ChatGPT的使用是否需要注册账户", "kb_id": 2}
+{"question": "ChatGPT是否支持语音输入功能", "kb_id": 2}
+{"question": "在使用ChatGPT时可以进行哪些类型的对话", "kb_id": 2}
+{"question": "ChatGPT的聊天记录是如何管理的", "kb_id": 2}
+{"question": "使用ChatGPT时是否有任何数据保存的风险", "kb_id": 2}
+{"question": "ChatGPT的对话内容是否可以被分享", "kb_id": 2}
+{"question": "ChatGPT如何处理用户的个人信息", "kb_id": 2}
+{"question": "在ChatGPT中发送消息是否有字数限制", "kb_id": 2}
+{"question": "使用ChatGPT时是否可以编辑已发送的消息", "kb_id": 2}
+{"question": "ChatGPT是否支持多语言交流", "kb_id": 2}
+{"question": "ChatGPT的用户界面有哪些主要组成部分", "kb_id": 2}
+{"question": "使用ChatGPT的过程中是否可以切换话题", "kb_id": 2}
+{"question": "ChatGPT的响应速度通常是怎样的", "kb_id": 2}
+{"question": "如何确保与ChatGPT的对话是安全的", "kb_id": 2}
+{"question": "ChatGPT的技术背景是什么", "kb_id": 2}
+{"question": "如何启用 pgvector 扩展", "kb_id": 5}
+{"question": "创建一个包含向量列的表需要什么 SQL 语句", "kb_id": 5}
+{"question": "pgvector 支持哪些类型的距离计算", "kb_id": 5}
+{"question": "如何使用 L2 距离查询最近邻", "kb_id": 5}
+{"question": "在 pgvector 中，如何提升查询性能", "kb_id": 5}
+{"question": "什么是 HNSW 索引，它的优势是什么", "kb_id": 5}
+{"question": "IVFFlat 索引的特点是什么", "kb_id": 5}
+{"question": "可以在 pgvector 中存储哪些类型的数据", "kb_id": 5}
+{"question": "如何创建一个名为 items 的表", "kb_id": 5}
+{"question": "向量列的类型在表定义中是什么", "kb_id": 5}
+{"question": "pgvector 支持的相似度搜索方法有哪些", "kb_id": 5}
+{"question": "如何对向量列创建索引", "kb_id": 5}
+{"question": "使用 HNSW 索引会有什么好处", "kb_id": 5}
+{"question": "如何限制查询结果的数量", "kb_id": 5}
+{"question": "在 pgvector 中，如何进行内积计算", "kb_id": 5}
+{"question": "如何使用 SQL 语句创建 pgvector 扩展", "kb_id": 5}
+{"question": "L2 距离与其他距离计算方法有什么不同", "kb_id": 5}
+{"question": "如何在查询中指定向量值", "kb_id": 5}
+{"question": "如果需要更低的内存使用，应该选择哪个索引类型", "kb_id": 5}
+{"question": "pgvector 是开源的吗", "kb_id": 5}
+{"question": "Pydantic 中如何定义模型", "kb_id": 6}
+{"question": "什么是 Pydantic 的 `BaseModel`", "kb_id": 6}
+{"question": "Pydantic 模型的主要功能是什么", "kb_id": 6}
+{"question": "如何在 Pydantic 中进行数据类型验证", "kb_id": 6}
+{"question": "Pydantic 如何处理输入数据的类型转换", "kb_id": 6}
+{"question": "如何定义一个带默认值的字段", "kb_id": 6}
+{"question": "什么是 Pydantic 的 `ConfigDict`", "kb_id": 6}
+{"question": "如何在 Pydantic 模型中定义字符串的最大长度", "kb_id": 6}
+{"question": "Pydantic 支持嵌套模型吗", "kb_id": 6}
+{"question": "如何在 Pydantic 中创建动态模型", "kb_id": 6}
+{"question": "如何将模型设置为不可变", "kb_id": 6}
+{"question": "如何在 Pydantic 中声明一个整数字段", "kb_id": 6}
+{"question": "Pydantic 模型的字段在验证后有什么保证", "kb_id": 6}
+{"question": "如何使用 Pydantic 创建一个用户模型", "kb_id": 6}
+{"question": "如果将字符串类型的 ID 转换为整数，Pydantic 的表现如何", "kb_id": 6}
+{"question": "如何在 Pydantic 中自定义模型配置", "kb_id": 6}
+{"question": "Pydantic 如何处理字段的默认值", "kb_id": 6}
+{"question": "什么情况下需要使用动态模型创建", "kb_id": 6}
+{"question": "Pydantic 的不可变性如何影响模型", "kb_id": 6}
+{"question": "如何定义一个包含多个字段的模型", "kb_id": 6}
+{"question": "Next.js 是什么类型的路由系统", "kb_id": 7}
+{"question": "如何创建一个页面", "kb_id": 7}
+{"question": "页面的定义是什么", "kb_id": 7}
+{"question": "如何在 Next.js 中创建一个布局", "kb_id": 7}
+{"question": "布局和页面有什么区别", "kb_id": 7}
+{"question": "如何在布局中渲染子组件", "kb_id": 7}
+{"question": "在 Next.js 中如何定义动态段", "kb_id": 7}
+{"question": "动态段的命名规则是什么", "kb_id": 7}
+{"question": "如何在动态段中获取参数", "kb_id": 7}
+{"question": "示例中如何使用 `children` 属性", "kb_id": 7}
+{"question": "如何在页面中返回一个标题", "kb_id": 7}
+{"question": "Next.js 中的布局文件通常命名为什么", "kb_id": 7}
+{"question": "如何在文件系统中定位到页面", "kb_id": 7}
+{"question": "如何在 Next.js 中共享 UI 组件", "kb_id": 7}
+{"question": "如何使用 TypeScript 创建页面", "kb_id": 7}
+{"question": "动态路由的文件结构是什么样的", "kb_id": 7}
+{"question": "在布局中使用 HTML 标签的示例是什么", "kb_id": 7}
+{"question": "如何在页面中使用 async 函数", "kb_id": 7}
+{"question": "在 Next.js 中如何处理路由参数", "kb_id": 7}
+{"question": "如何将文件夹名称标记为动态", "kb_id": 7}
