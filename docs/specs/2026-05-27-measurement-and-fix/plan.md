@@ -1186,7 +1186,7 @@ Refs: spec.md §4.1 (F1)"
 
 > 这一 Task 用 Grafana UI 手画看板 → Export JSON → 进 git 的方式。手写 JSON 太脆。
 
-- [ ] **Step 1: 跑些问答 + curl 流量，让 Prometheus 有数据**
+- [x] **Step 1: 跑些问答 + curl 流量，让 Prometheus 有数据**
 
 ```bash
 # 用 ab 或循环 curl 制造 HTTP 流量
@@ -1196,7 +1196,7 @@ for i in {1..20}; do curl -s http://localhost:8000/api/v1/health > /dev/null; do
 # 这一步是为了 UI 调看板时能看到曲线
 ```
 
-- [ ] **Step 2: 登录 Grafana 创建 "RAG" 看板**
+- [x] **Step 2: 登录 Grafana 创建 "RAG" 看板**
 
 打开 `http://localhost:3001`，admin/admin 登录。
 
@@ -1216,7 +1216,7 @@ for i in {1..20}; do curl -s http://localhost:8000/api/v1/health > /dev/null; do
 - Time range: Last 1 hour
 - Tags: `rag`, `observability`
 
-- [ ] **Step 3: Export RAG 看板 JSON**
+- [x] **Step 3: Export RAG 看板 JSON**
 
 Dashboard → Settings (齿轮) → JSON Model → Copy。
 
@@ -1233,7 +1233,7 @@ Dashboard → Settings (齿轮) → JSON Model → Copy。
 
 并删除自动生成的 `id` 字段（让 provisioning 接管）。
 
-- [ ] **Step 4: 重复创建 HTTP 看板**
+- [x] **Step 4: 重复创建 HTTP 看板**
 
 按 spec §6.3 清单。同样 5 个 panel：
 
@@ -1247,7 +1247,7 @@ Dashboard → Settings (齿轮) → JSON Model → Copy。
 
 Title: `HTTP & SLI`，UID: `offer-copilot-http`，导出到 `http.json`。
 
-- [ ] **Step 5: 重复创建 Cache 看板**
+- [x] **Step 5: 重复创建 Cache 看板**
 
 按 spec §6.4，4 个 panel：
 
@@ -1260,7 +1260,7 @@ Title: `HTTP & SLI`，UID: `offer-copilot-http`，导出到 `http.json`。
 
 Title: `Cache 命中率`，UID: `offer-copilot-cache`，导出到 `cache.json`。
 
-- [ ] **Step 6: 重启 Grafana 验证 provisioning 生效**
+- [x] **Step 6: 重启 Grafana 验证 provisioning 生效**
 
 ```bash
 docker restart offercopilot-grafana
@@ -1270,7 +1270,7 @@ sleep 3
 打开 `http://localhost:3001/dashboards`，看到三张看板都在。
 **关键**：点开每张确认 panel 都有数据（不要"No data"）。
 
-- [ ] **Step 7: commit**
+- [x] **Step 7: commit**
 
 ```bash
 git add monitoring/grafana/provisioning/dashboards/rag.json \
