@@ -436,6 +436,14 @@ def _emit_rag_telemetry(payload: dict[str, Any]) -> None:
         logger.exception("Push rag metrics failed")
 
 
+def _build_l1_cache_key(*, scope_hash: str, q_hash: str) -> str:
+    """L1 缓存 key 构造：只按 (scope, question) 隔离，与 L2 对齐。
+
+    历史 bug：曾经把 conv_id 也放进 key，导致跨会话相同问题永远 miss。
+    """
+    return f"cache:rag:ask:{scope_hash}:{q_hash}"
+
+
 def _openai_client() -> AsyncOpenAI:
     return AsyncOpenAI(
         api_key=settings.OPENAI_API_KEY,
@@ -1135,7 +1143,7 @@ async def _save_to_l1_cache(
             scope_str = ",".join(str(i) for i in kb_ids_sorted)
             scope_hash = hashlib.md5(scope_str.encode("utf-8")).hexdigest()
 
-        l1_cache_key = f"cache:rag:ask:{conv_id}:{scope_hash}:{q_hash}"
+        l1_cache_key = _build_l1_cache_key(scope_hash=scope_hash, q_hash=q_hash)
         _l1_set_start = perf_counter()
         await redis_client.setex(
             l1_cache_key,
@@ -1734,7 +1742,7 @@ async def stream_answer(
 
         # 计算问题 MD5 哈希作为缓存 key
         q_hash = hashlib.md5(question.strip().encode("utf-8")).hexdigest()
-        l1_cache_key = f"cache:rag:ask:{conv_id}:{scope_hash}:{q_hash}"
+        l1_cache_key = _build_l1_cache_key(scope_hash=scope_hash, q_hash=q_hash)
 
         # 1. 尝试 L1 缓存精确哈希匹配拦截
         if settings.RAG_CACHE_L1_ENABLED:
