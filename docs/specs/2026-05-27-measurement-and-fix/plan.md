@@ -1519,17 +1519,10 @@ Refs: spec.md §3.5, §4 Task 13"
 - Create: `backend/scripts/load_test/__init__.py`
 - Create: `backend/scripts/load_test/locustfile.py`
 
-- [ ] **Step 1: 加 dev 依赖**
-
-```bash
-cd backend
-uv add --dev locust httpx-sse prometheus-client
-cd ..
-```
-
-> `prometheus-client` 已在 main deps；这里 dev 段加也没冲突，方便 locustfile 自我度量。
-
-- [ ] **Step 2: 写 locustfile.py**
+- [x] **Step 1: 加 dev 依赖**
+- [x] **Step 2: 写 locustfile.py**
+- [x] **Step 3: 拉取 token，跑 30 秒 PoC**
+- [x] **Step 4: 格式化 + commit**
 
 创建 `backend/scripts/load_test/__init__.py` 为空。
 
