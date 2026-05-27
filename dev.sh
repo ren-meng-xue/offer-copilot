@@ -12,8 +12,8 @@ pkill -f "celery.*backend.app.tasks" 2>/dev/null || true
 pkill -f "backend/app/main.py" 2>/dev/null || true
 sleep 1
 
-echo "🚀 正在启动 Docker 依赖 (Postgres & Redis)..."
-docker-compose up -d postgres redis
+echo "🚀 正在启动 Docker 依赖 (Postgres & Redis & Prometheus & Grafana)..."
+docker-compose up -d postgres redis prometheus grafana
 
 if [ $? -ne 0 ]; then
     echo "❌ Docker 启动失败，请检查 Docker Desktop 是否已运行。"
@@ -60,6 +60,8 @@ echo "-------------------------------------------------------"
 echo "✅ 所有服务已在后台运行！"
 echo "🌐 前端地址: http://localhost:3000"
 echo "接口文档: http://localhost:8000/docs"
+echo "📊 Grafana: http://localhost:3001 (admin/admin)"
+echo "📈 Prometheus: http://localhost:9090"
 echo "-------------------------------------------------------"
 echo "📝 日志文件说明:"
 echo "   - 后端日志: tail -f backend.log"

@@ -5,7 +5,9 @@ import uvicorn
 from fastapi import FastAPI, Request
 import logging
 
+from prometheus_client import make_asgi_app
 from starlette.middleware.cors import CORSMiddleware
+from starlette.routing import Mount
 
 from alembic import command
 from alembic.config import Config as AlembicConfig
@@ -28,7 +30,9 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     logger.info(f"应用启动中，监听端口: {settings.APP_PORT}")
     logger.info(f"CORS 允许域: {settings.cors_allow_origins}")
-    logger.info(f"RAG Telemetry 状态: {'开启' if settings.RAG_TELEMETRY_ENABLED else '关闭'}")
+    logger.info(
+        f"RAG Telemetry 状态: {'开启' if settings.RAG_TELEMETRY_ENABLED else '关闭'}"
+    )
 
     # 启动时自动运行数据库迁移，确保表结构始终与代码一致。
     try:
@@ -70,6 +74,11 @@ app = FastAPI(
     version=settings.APP_VERSION,
     debug=settings.DEBUG,
 )
+
+if settings.PROMETHEUS_ENABLED:
+    # 挂载 Prometheus ASGI 子应用，避免后续 HTTP 指标中间件统计 /metrics 自身。
+    metrics_app = make_asgi_app()
+    app.router.routes.append(Mount(settings.METRICS_PATH, app=metrics_app))
 
 
 @app.middleware("http")

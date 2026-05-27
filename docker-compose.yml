@@ -144,7 +144,44 @@ services:
     # 手动停止前自动重启，适合开发环境。
     restart: unless-stopped
 
+  # Prometheus 指标采集。
+  prometheus:
+    image: prom/prometheus:v2.55.0
+    container_name: offercopilot-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=7d'
+      - '--web.enable-lifecycle'
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  # Grafana 可视化。
+  grafana:
+    image: grafana/grafana:11.3.0
+    container_name: offercopilot-grafana
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
 # 命名卷定义。
 volumes:
   # PostgreSQL 数据卷。
   postgres_data:
+  prometheus_data:
+  grafana_data:

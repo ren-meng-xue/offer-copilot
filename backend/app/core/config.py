@@ -91,6 +91,9 @@ class Settings(BaseSettings):
     RAG_QUERY_REWRITE_ENABLED: bool = True
     RAG_QUERY_REWRITE_MODEL: str = "gpt-4o-mini"
     RAG_TELEMETRY_ENABLED: bool = True
+    # ===== Observability =====
+    PROMETHEUS_ENABLED: bool = True
+    METRICS_PATH: str = "/metrics"
     RAG_DEBUG_ENABLED: bool = False  # 是否开启 RAG debug 输出
     RAG_SCOPE_MAX_KNOWLEDGE_BASES: int = 3
     RAG_SCOPE_ROUTE_MIN_SCORE: float = 0.2
