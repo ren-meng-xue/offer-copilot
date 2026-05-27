@@ -1,0 +1,3 @@
+Method,Name,Error,Occurrences,First Seen,Last Seen
+POST,POST /conversations/:id/ask,CatchResponseError('no done event in stream'),215,2026-05-27T10:17:13Z,2026-05-27T10:19:35Z
+POST,POST /conversations (setup),HTTPError('500 Server Error: Internal Server Error for url: POST /conversations (setup)'),13,2026-05-27T10:17:19Z,2026-05-27T10:17:50Z
