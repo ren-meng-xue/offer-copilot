@@ -1,0 +1,20 @@
+{"question":"FastAPI 教程适合怎么学习？","kb_id":4,"expected_citations":["chunk:18"],"expected_answer_keywords":["循序渐进","主题","参考手册"],"category":"summary"}
+{"question":"FastAPI 示例代码应该放到哪个文件里运行？","kb_id":4,"expected_citations":["chunk:19"],"expected_answer_keywords":["main.py","复制","fastapi dev"],"category":"howto"}
+{"question":"启动 FastAPI 示例应用的命令是什么？","kb_id":4,"expected_citations":["chunk:20"],"expected_answer_keywords":["fastapi dev","main.py"],"category":"fact"}
+{"question":"安装 FastAPI 前需要先做什么？","kb_id":4,"expected_citations":["chunk:21"],"expected_answer_keywords":["虚拟环境","创建","激活"],"category":"howto"}
+{"question":"安装标准版 FastAPI 的 pip 命令是什么？","kb_id":4,"expected_citations":["chunk:22"],"expected_answer_keywords":["pip install","fastapi[standard]"],"category":"fact"}
+{"question":"pgvector 的主要用途是什么？","kb_id":5,"expected_citations":["chunk:24"],"expected_answer_keywords":["Postgres","vector","similarity search"],"category":"summary"}
+{"question":"pgvector 支持哪些向量距离计算？","kb_id":5,"expected_citations":["chunk:25"],"expected_answer_keywords":["L2","inner product","cosine","L1","Hamming","Jaccard"],"category":"fact"}
+{"question":"如何在 Postgres 中启用 pgvector 扩展？","kb_id":5,"expected_citations":["chunk:27","chunk:28"],"expected_answer_keywords":["CREATE EXTENSION","vector"],"category":"howto"}
+{"question":"如何创建一个包含向量列的 pgvector 表？","kb_id":5,"expected_citations":["chunk:29","chunk:30"],"expected_answer_keywords":["CREATE TABLE","embedding","vector(3)"],"category":"howto"}
+{"question":"HNSW 和 IVFFlat 索引有什么区别？","kb_id":5,"expected_citations":["chunk:33","chunk:35"],"expected_answer_keywords":["HNSW","IVFFlat","query performance","build times","memory"],"category":"comparison"}
+{"question":"Pydantic 中定义 Schema 的主要方式是什么？","kb_id":6,"expected_citations":["chunk:37"],"expected_answer_keywords":["Models","BaseModel","类型注解","字段"],"category":"fact"}
+{"question":"Pydantic 模型的核心验证保证是什么？","kb_id":6,"expected_citations":["chunk:39"],"expected_answer_keywords":["验证","字段","类型"],"category":"fact"}
+{"question":"Pydantic 会如何处理输入数据类型不匹配的情况？","kb_id":6,"expected_citations":["chunk:39","chunk:41"],"expected_answer_keywords":["数据转换","强制转换","id","123"],"category":"howto"}
+{"question":"Pydantic 基本用法里如何定义一个 User 模型？","kb_id":6,"expected_citations":["chunk:40","chunk:41"],"expected_answer_keywords":["BaseModel","id","name","ConfigDict"],"category":"howto"}
+{"question":"Pydantic 支持哪些高级模型特性？","kb_id":6,"expected_citations":["chunk:42","chunk:43"],"expected_answer_keywords":["嵌套模型","create_model","frozen","不可变"],"category":"summary"}
+{"question":"Next.js App Router 使用什么方式定义路由？","kb_id":7,"expected_citations":["chunk:44"],"expected_answer_keywords":["file-system","routing"],"category":"fact"}
+{"question":"Next.js 中 page 的作用是什么？","kb_id":7,"expected_citations":["chunk:45","chunk:46"],"expected_answer_keywords":["UI","specific route","app/page.tsx"],"category":"fact"}
+{"question":"Next.js 中 layout 和 page 有什么区别？","kb_id":7,"expected_citations":["chunk:45","chunk:47","chunk:48"],"expected_answer_keywords":["page","specific route","layout","shared","children"],"category":"comparison"}
+{"question":"如何在 Next.js 中创建共享布局？","kb_id":7,"expected_citations":["chunk:47","chunk:48"],"expected_answer_keywords":["layout","shared","app/layout.tsx","children"],"category":"howto"}
+{"question":"Next.js 动态路由段怎么定义？","kb_id":7,"expected_citations":["chunk:49","chunk:50"],"expected_answer_keywords":["square brackets","[segmentName]","[slug]","params"],"category":"howto"}
