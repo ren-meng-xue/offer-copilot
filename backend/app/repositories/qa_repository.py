@@ -1,6 +1,7 @@
 import uuid
 
-from sqlalchemy import select, func
+from sqlalchemy import func, select, cast
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.models.conversation import (
@@ -9,6 +10,7 @@ from backend.app.models.conversation import (
     Message,
 )
 from backend.app.models.knowledge_base import KnowledgeBase
+from backend.app.models.semantic_cache import SemanticCache
 
 
 async def create_conversation(db: AsyncSession, user_id: int) -> Conversation:
@@ -260,3 +262,68 @@ async def get_old_messages_for_summary(
     )
     result = await db.execute(stmt)
     return list(result.scalars().all())
+
+
+async def find_similar_semantic_cache(
+    db: AsyncSession,
+    query_embedding: list[float],
+    knowledge_base_ids: list[int] | None = None,
+    threshold: float = 0.96,
+) -> SemanticCache | None:
+    """寻找与当前提问最相似且相似度大于阈值、所属知识库范围相同的语义缓存记录。"""
+    # 1 - cosine_distance 得到余弦相似度
+    distance_expr = SemanticCache.query_vector.cosine_distance(query_embedding)
+    stmt = select(SemanticCache).where((1.0 - distance_expr) >= threshold)
+    if knowledge_base_ids is not None:
+        stmt = stmt.where(
+            cast(SemanticCache.knowledge_base_ids, JSONB)
+            == cast(sorted(knowledge_base_ids), JSONB)
+        )
+
+    stmt = stmt.order_by(distance_expr.asc()).limit(1)
+    result = await db.execute(stmt)
+    return result.scalars().one_or_none()
+
+
+async def create_semantic_cache(
+    db: AsyncSession,
+    question: str,
+    query_embedding: list[float],
+    response_events: list[dict],
+    knowledge_base_ids: list[int] | None = None,
+) -> SemanticCache:
+    """将提问向量和 SSE 事件流列表存入语义缓存，并绑定其检索的知识库范围。"""
+    cache = SemanticCache(
+        question=question,
+        query_vector=query_embedding,
+        response_events=response_events,
+        knowledge_base_ids=sorted(knowledge_base_ids)
+        if knowledge_base_ids is not None
+        else None,
+    )
+    db.add(cache)
+    await db.commit()
+    await db.refresh(cache)
+    return cache
+
+
+async def evict_caches_by_kb_id(db: AsyncSession, kb_id: int) -> None:
+    """当知识库被物理删除或更新时，物理驱逐全平台所有涉及该知识库 ID 的语义缓存记录。"""
+    from time import perf_counter
+
+    from sqlalchemy import delete
+
+    from backend.app.core.metrics import CACHE_OPERATION_DURATION_SECONDS
+
+    start = perf_counter()
+    try:
+        # 原有逻辑保留（Task 16/17 会进一步重写以修复 LIKE 带来的 bug）
+        stmt = delete(SemanticCache).where(
+            func.cast(SemanticCache.knowledge_base_ids, Text).like(f"%{kb_id}%")
+        )
+        await db.execute(stmt)
+        await db.commit()
+    finally:
+        CACHE_OPERATION_DURATION_SECONDS.labels(layer="l2", operation="evict").observe(
+            perf_counter() - start
+        )
