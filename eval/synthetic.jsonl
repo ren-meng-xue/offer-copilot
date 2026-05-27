@@ -1,43 +1,3 @@
-{"question": "任孟雪的意向岗位是什么", "kb_id": 3}
-{"question": "她的年龄是多少", "kb_id": 3}
-{"question": "她的学历是什么", "kb_id": 3}
-{"question": "任孟雪在前端开发方面有哪些技术栈", "kb_id": 3}
-{"question": "她熟练掌握哪些CSS相关技术", "kb_id": 3}
-{"question": "她是否熟悉Node.js的后端开发", "kb_id": 3}
-{"question": "任孟雪在联想的工作职责是什么", "kb_id": 3}
-{"question": "她在易显科技有限公司的工作重点是什么", "kb_id": 3}
-{"question": "她参与了哪一个项目的国际化翻译工作", "kb_id": 3}
-{"question": "她在布达佩斯大屏项目中负责哪些功能", "kb_id": 3}
-{"question": "她使用了哪些前端UI框架", "kb_id": 3}
-{"question": "在得手驾园管理系统中，她负责了哪些场景的开发", "kb_id": 3}
-{"question": "她在理论在线练题系统中使用了哪些技术栈", "kb_id": 3}
-{"question": "任孟雪如何实现移动端页面的等比例缩放", "kb_id": 3}
-{"question": "她在项目中如何优化用户体验", "kb_id": 3}
-{"question": "她在计时后台管理系统中使用了哪个地图API", "kb_id": 3}
-{"question": "她的工作经历中有多少年的前端开发经验", "kb_id": 3}
-{"question": "她在React项目中使用了哪些状态管理工具", "kb_id": 3}
-{"question": "任孟雪在工作中是否参与过技术文档的撰写", "kb_id": 3}
-{"question": "她如何处理时间相关的问题", "kb_id": 3}
-{"question": "如何启动 codex", "kb_id": 1}
-{"question": "codex exec 的作用是什么", "kb_id": 1}
-{"question": "如何登录到 codex", "kb_id": 1}
-{"question": "如何恢复之前的会话", "kb_id": 1}
-{"question": "什么是 codex fork", "kb_id": 1}
-{"question": "如何应用补丁到 codex", "kb_id": 1}
-{"question": "如何切换模型", "kb_id": 1}
-{"question": "codex 中的规划模式是什么", "kb_id": 1}
-{"question": "如何审查代码", "kb_id": 1}
-{"question": "如何清空 codex 界面", "kb_id": 1}
-{"question": "如何退出 codex 程序", "kb_id": 1}
-{"question": "codex exec 可以执行多少次", "kb_id": 1}
-{"question": "使用 codex fork 有什么好处", "kb_id": 1}
-{"question": "如何查看当前模型", "kb_id": 1}
-{"question": "codex 中的审核功能如何使用", "kb_id": 1}
-{"question": "有什么命令可以恢复会话", "kb_id": 1}
-{"question": "codex 中的模型切换有什么限制", "kb_id": 1}
-{"question": "如何快速退出 codex", "kb_id": 1}
-{"question": "使用 /plan 的场景是什么", "kb_id": 1}
-{"question": "如何在 codex 中应用修复", "kb_id": 1}
 {"question": "如何使用 FastAPI 的特性", "kb_id": 4}
 {"question": "本教程的内容是如何组织的", "kb_id": 4}
 {"question": "我可以从哪里查阅特定 API 需求的解决方案", "kb_id": 4}
@@ -58,26 +18,6 @@
 {"question": "安装 FastAPI 时需要注意什么", "kb_id": 4}
 {"question": "用户指南的内容是循序渐进吗", "kb_id": 4}
 {"question": "如何确保代码片段正常工作", "kb_id": 4}
-{"question": "你同意使用ChatGPT时需要遵循哪些条款", "kb_id": 2}
-{"question": "ChatGPT是什么类型的工具", "kb_id": 2}
-{"question": "使用ChatGPT时需要注意哪些隐私政策", "kb_id": 2}
-{"question": "ChatGPT的主要功能是什么", "kb_id": 2}
-{"question": "如何查看你的隐私选择", "kb_id": 2}
-{"question": "ChatGPT的使用是否需要注册账户", "kb_id": 2}
-{"question": "ChatGPT是否支持语音输入功能", "kb_id": 2}
-{"question": "在使用ChatGPT时可以进行哪些类型的对话", "kb_id": 2}
-{"question": "ChatGPT的聊天记录是如何管理的", "kb_id": 2}
-{"question": "使用ChatGPT时是否有任何数据保存的风险", "kb_id": 2}
-{"question": "ChatGPT的对话内容是否可以被分享", "kb_id": 2}
-{"question": "ChatGPT如何处理用户的个人信息", "kb_id": 2}
-{"question": "在ChatGPT中发送消息是否有字数限制", "kb_id": 2}
-{"question": "使用ChatGPT时是否可以编辑已发送的消息", "kb_id": 2}
-{"question": "ChatGPT是否支持多语言交流", "kb_id": 2}
-{"question": "ChatGPT的用户界面有哪些主要组成部分", "kb_id": 2}
-{"question": "使用ChatGPT的过程中是否可以切换话题", "kb_id": 2}
-{"question": "ChatGPT的响应速度通常是怎样的", "kb_id": 2}
-{"question": "如何确保与ChatGPT的对话是安全的", "kb_id": 2}
-{"question": "ChatGPT的技术背景是什么", "kb_id": 2}
 {"question": "如何启用 pgvector 扩展", "kb_id": 5}
 {"question": "创建一个包含向量列的表需要什么 SQL 语句", "kb_id": 5}
 {"question": "pgvector 支持哪些类型的距离计算", "kb_id": 5}
