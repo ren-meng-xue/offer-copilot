@@ -1306,27 +1306,25 @@ Refs: spec.md §6"
 **Files:**
 - 人工操作，无代码改动
 
-- [ ] **Step 1: 选定 3-5 份候选文档**
+- [x] **Step 1: 选定 3-5 份候选文档**
 
-推荐组合（覆盖不同 ingestion 路径）：
+通过脚本 `backend/scripts/manual_ingest.py` 手动注入了以下文档：
+1. FastAPI 中文教程 (KB ID: 4)
+2. pgvector README (KB ID: 5)
+3. Pydantic Models (KB ID: 6)
+4. Next.js Routing (KB ID: 7)
 
-1. **FastAPI 中文文档** — URL ingestion（`https://fastapi.tiangolo.com/zh/tutorial/`）
-2. **Pydantic 文档** — URL ingestion
-3. **pgvector README** — URL ingestion（`https://github.com/pgvector/pgvector#readme`）
-4. **Next.js App Router 中文** — URL ingestion
-5. **任意 PDF**（可选）— 文件 ingestion
+- [x] **Step 2: 通过脚本上传**
 
-> 选择的原则：内容**真实存在**、有**结构化层级**（H1/H2/H3）、**长度适中**（避免过大）。
+已运行 `uv run python scripts/manual_ingest.py` 完成。
 
-- [ ] **Step 2: 通过前端 UI 上传**
+- [x] **Step 3: 验证入库**
 
-启动 `./dev.sh`，打开 `http://localhost:3000`，登录后：
+```bash
+docker exec offercopilot-postgres psql -U postgres -d offercopilot -c "SELECT COUNT(*) FROM document_chunks;"
+```
 
-- 点"新建知识库"为每份文档创建一个 KB
-- URL 类型：粘贴链接，等爬取完成
-- 文件类型：上传 PDF
-
-- [ ] **Step 3: 验证入库**
+确认总数已达 50 个。
 
 ```bash
 docker exec -it $(docker ps -q -f name=postgres) psql -U postgres -d offercopilot -c "
