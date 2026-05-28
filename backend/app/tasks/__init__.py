@@ -1,6 +1,12 @@
-from celery import Celery
+from celery import Celery, signals
 
 from backend.app.core.config import settings
+from backend.app.core.metrics import (
+    CELERY_ACTIVE_TASKS,
+    CELERY_QUEUE_LENGTH,
+    CELERY_TASK_DURATION_SECONDS,
+    CELERY_TASK_TOTAL,
+)
 
 # Celery 应用实例，供 worker 和业务代码共同引用。
 celery_app = Celery(
@@ -36,3 +42,22 @@ celery_app.conf.update(
         "max_retries": 10,
     },
 )
+
+
+# ===== Prometheus metrics — Celery signals =====
+@signals.task_prerun.connect
+def _on_task_prerun(sender=None, **_kwargs):
+    task_name = sender.name if sender else "unknown"
+    CELERY_ACTIVE_TASKS.inc()
+    CELERY_QUEUE_LENGTH.labels(queue=task_name).dec()
+
+
+@signals.task_postrun.connect
+def _on_task_postrun(sender=None, state=None, runtime=None, **_kwargs):
+    task_name = sender.name if sender else "unknown"
+    CELERY_ACTIVE_TASKS.dec()
+    if runtime is not None:
+        CELERY_TASK_DURATION_SECONDS.labels(task_name=task_name).observe(runtime)
+    CELERY_TASK_TOTAL.labels(
+        task_name=task_name, status="success" if state == "SUCCESS" else "failure"
+    ).inc()

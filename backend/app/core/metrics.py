@@ -116,3 +116,36 @@ APP_INFO = Gauge(
     "应用元信息，值固定为 1",
     ["version", "env"],
 )
+
+# ===== Celery 任务 =====
+CELERY_TASK_DURATION_SECONDS = Histogram(
+    "celery_task_duration_seconds",
+    "Celery 任务执行耗时",
+    ["task_name"],
+    buckets=(0.1, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0, 120.0, 300.0, 600.0),
+)
+
+CELERY_TASK_TOTAL = Counter(
+    "celery_task_total",
+    "Celery 任务成功/失败数",
+    ["task_name", "status"],
+)
+
+CELERY_QUEUE_LENGTH = Gauge(
+    "celery_queue_length",
+    "Celery 队列待处理任务数",
+    ["queue"],
+)
+
+CELERY_ACTIVE_TASKS = Gauge(
+    "celery_active_tasks",
+    "Celery 当前正在执行的任务数",
+)
+
+# ===== Embedding =====
+EMBEDDING_DURATION_SECONDS = Histogram(
+    "embedding_duration_seconds",
+    "Embedding 调用耗时",
+    ["model"],
+    buckets=(0.01, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0),
+)

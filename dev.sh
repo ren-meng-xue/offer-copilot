@@ -4,14 +4,18 @@
 export http_proxy=http://127.0.0.1:7897
 export https_proxy=http://127.0.0.1:7897
 export ALL_PROXY=http://127.0.0.1:7897
+export NO_PROXY=localhost,127.0.0.1,0.0.0.0,::1,.local
 
 BACKEND_PORT=8000
 FRONTEND_PORT=3000
 # OfferPilot 一键启动开发环境脚本
 
 echo "🧹 清理残留进程..."
-pkill -f "celery.*backend.app.tasks" 2>/dev/null || true
-pkill -f "backend/app/main.py" 2>/dev/null || true
+pkill -f "celery.*worker" 2>/dev/null || true
+pkill -f "app/main.py" 2>/dev/null || true
+# 强制释放可能被占用的端口
+lsof -i :8000 -t | xargs kill -9 2>/dev/null || true
+lsof -i :3000 -t | xargs kill -9 2>/dev/null || true
 sleep 1
 
 echo "🚀 正在启动 Docker 依赖 (Postgres & Redis & Prometheus & Grafana)..."
@@ -22,11 +26,23 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-echo "等待数据库和 Redis 就绪..."
-sleep 2
+echo "⏳ 等待数据库 (5433) 和 Redis (6379) 就绪..."
+MAX_RETRIES=30
+RETRY_COUNT=0
+while ! nc -z 127.0.0.1 6379 >/dev/null 2>&1 || ! nc -z 127.0.0.1 5433 >/dev/null 2>&1; do
+    RETRY_COUNT=$((RETRY_COUNT+1))
+    if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
+        echo "❌ 等待超时，数据库或 Redis 未能启动。"
+        exit 1
+    fi
+    printf "."
+    sleep 1
+done
+echo " ✅ 已就绪"
 
 echo "🧹 清理 Celery 残留任务..."
-backend/.venv/bin/python -m celery -A backend.app.tasks:celery_app purge -f
+# 确保在执行 purge 前 Redis 已经可以接受连接
+CELERY_BROKER_URL=redis://127.0.0.1:6379/1 backend/.venv/bin/python -m celery -A backend.app.tasks:celery_app purge -f
 
 if [ $? -ne 0 ]; then
     echo "⚠️ Celery 残留任务清理失败，继续启动服务..."
