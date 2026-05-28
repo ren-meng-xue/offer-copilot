@@ -104,20 +104,26 @@ async def delete_knowledge_base(db: AsyncSession, kb_id: int, user_id: int) -> N
         # 1. 物理驱逐 L2 数据库语义缓存
         await qa_repository.evict_caches_by_kb_id(db, kb_id)
 
-        # 2. 物理扫描并批量删除 L1 Redis 精确缓存
+        # 2. 通过反向索引精准驱逐 L1 Redis 精确缓存
         redis_client = _get_redis_client()
-        cursor = 0
+        index_key = f"cache:rag:kb:{kb_id}:keys"
+        index_cursor = 0
+        evicted_count = 0
         while True:
-            cursor, keys = await redis_client.scan(
-                cursor=cursor, match="cache:rag:*", count=100
+            index_cursor, members = await redis_client.sscan(
+                index_cursor, key=index_key, count=100
             )
-            if keys:
-                await redis_client.delete(*keys)
-            if cursor == 0:
+            if members:
+                await redis_client.delete(*members)
+                evicted_count += len(members)
+            if index_cursor == 0:
                 break
+        await redis_client.delete(index_key)
         logger.info(
-            "Successfully evicted L1 & L2 RAG caches for deleted knowledge base %s",
+            "Successfully evicted L1 & L2 RAG caches for deleted knowledge base %s "
+            "(L1=%d keys, L2=via DB)",
             kb_id,
+            evicted_count,
         )
     except Exception as e:
         import logging

@@ -71,10 +71,29 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "Prometheus" },
-          "expr": "sum(rate(http_requests_total{status_class=\"5xx\"}[5m])) / sum(rate(http_requests_total[5m]))",
+          "expr": "sum(rate(http_requests_total{status_class=\"5xx\"}[5m])) / sum(rate(http_requests_total[5m])) or vector(0)",
           "refId": "A"
         }
       ],
+      "alert": {
+        "alertRuleTags": {},
+        "conditions": [
+          {
+            "evaluator": { "params": [0.01], "type": "gt" },
+            "operator": { "type": "and" },
+            "query": { "params": ["A", "5m", "now"] },
+            "reducer": { "params": [], "type": "last" },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "alerting",
+        "for": "5m",
+        "frequency": "1m",
+        "handler": 1,
+        "name": "HTTP 5xx 错误率超过 1%",
+        "noDataState": "ok",
+        "notifications": []
+      },
       "title": "错误率 5xx",
       "type": "stat"
     },

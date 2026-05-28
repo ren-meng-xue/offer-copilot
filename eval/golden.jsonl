@@ -1,20 +1,33 @@
-{"question": "如何使用 FastAPI 的特性", "kb_id": 4, "expected_citations": [], "expected_answer_keywords": []}
-{"question": "本教程的内容是如何组织的", "kb_id": 4, "expected_citations": [], "expected_answer_keywords": []}
-{"question": "我可以从哪里查阅特定 API 需求的解决方案", "kb_id": 4, "expected_citations": [], "expected_answer_keywords": []}
-{"question": "代码片段可以在哪里使用", "kb_id": 4, "expected_citations": [], "expected_answer_keywords": []}
-{"question": "如何运行示例代码", "kb_id": 4, "expected_citations": [], "expected_answer_keywords": []}
-{"question": "安装 FastAPI 的第一步是什么", "kb_id": 4, "expected_citations": [], "expected_answer_keywords": []}
-{"question": "我需要创建什么来安装 FastAPI", "kb_id": 4, "expected_citations": [], "expected_answer_keywords": []}
-{"question": "如何激活虚拟环境", "kb_id": 4, "expected_citations": [], "expected_answer_keywords": []}
-{"question": "如何安装 FastAPI 的标准版本", "kb_id": 4, "expected_citations": [], "expected_answer_keywords": []}
-{"question": "我可以使用哪个命令启动 FastAPI 应用", "kb_id": 4, "expected_citations": [], "expected_answer_keywords": []}
-{"question": "本教程是否可以作为参考手册", "kb_id": 4, "expected_citations": [], "expected_answer_keywords": []}
-{"question": "完成用户指南后应该阅读什么", "kb_id": 4, "expected_citations": [], "expected_answer_keywords": []}
-{"question": "代码片段是否经过测试", "kb_id": 4, "expected_citations": [], "expected_answer_keywords": []}
-{"question": "如何将代码片段放入文件中", "kb_id": 4, "expected_citations": [], "expected_answer_keywords": []}
-{"question": "fastapi dev 命令的作用是什么", "kb_id": 4, "expected_citations": [], "expected_answer_keywords": []}
-{"question": "是否可以直接跳转到某个章节", "kb_id": 4, "expected_citations": [], "expected_answer_keywords": []}
-{"question": "用户指南的目标是什么", "kb_id": 4, "expected_citations": [], "expected_answer_keywords": []}
-{"question": "安装 FastAPI 时需要注意什么", "kb_id": 4, "expected_citations": [], "expected_answer_keywords": []}
-{"question": "用户指南的内容是循序渐进吗", "kb_id": 4, "expected_citations": [], "expected_answer_keywords": []}
-{"question": "如何确保代码片段正常工作", "kb_id": 4, "expected_citations": [], "expected_answer_keywords": []}
+{"question": "如何使用 FastAPI 的特性", "kb_id": 4, "expected_citations": ["chunk:18"], "expected_answer_keywords": ["特性", "教程", "FastAPI", "用户指南"]}
+{"question": "本教程的内容是如何组织的", "kb_id": 4, "expected_citations": ["chunk:18"], "expected_answer_keywords": ["循序渐进", "章节", "主题", "组织"]}
+{"question": "我可以从哪里查阅特定 API 需求的解决方案", "kb_id": 4, "expected_citations": ["chunk:18"], "expected_answer_keywords": ["API", "解决方案", "查阅", "参考手册"]}
+{"question": "代码片段可以在哪里使用", "kb_id": 4, "expected_citations": ["chunk:19"], "expected_answer_keywords": ["代码片段", "复制", "使用", "Python"]}
+{"question": "如何运行示例代码", "kb_id": 4, "expected_citations": ["chunk:19", "chunk:20"], "expected_answer_keywords": ["运行", "示例", "main.py", "fastapi dev"]}
+{"question": "安装 FastAPI 的第一步是什么", "kb_id": 4, "expected_citations": ["chunk:21"], "expected_answer_keywords": ["安装", "第一步", "虚拟环境", "创建"]}
+{"question": "我需要创建什么来安装 FastAPI", "kb_id": 4, "expected_citations": ["chunk:21"], "expected_answer_keywords": ["创建", "虚拟环境", "激活", "安装"]}
+{"question": "如何激活虚拟环境", "kb_id": 4, "expected_citations": ["chunk:21"], "expected_answer_keywords": ["虚拟环境", "激活", "安装"]}
+{"question": "如何安装 FastAPI 的标准版本", "kb_id": 4, "expected_citations": ["chunk:22"], "expected_answer_keywords": ["pip", "install", "fastapi", "standard"]}
+{"question": "我可以使用哪个命令启动 FastAPI 应用", "kb_id": 4, "expected_citations": ["chunk:20"], "expected_answer_keywords": ["fastapi", "dev", "启动", "命令"]}
+{"question": "本教程是否可以作为参考手册", "kb_id": 4, "expected_citations": ["chunk:18"], "expected_answer_keywords": ["教程", "参考手册", "查阅", "未来"]}
+{"question": "完成用户指南后应该阅读什么", "kb_id": 4, "expected_citations": ["chunk:23"], "expected_answer_keywords": ["进阶", "用户指南", "完成", "阅读"]}
+{"question": "代码片段是否经过测试", "kb_id": 4, "expected_citations": ["chunk:19"], "expected_answer_keywords": ["代码片段", "测试", "Python", "文件"]}
+{"question": "如何将代码片段放入文件中", "kb_id": 4, "expected_citations": ["chunk:19"], "expected_answer_keywords": ["复制", "main.py", "文件", "代码片段"]}
+{"question": "fastapi dev 命令的作用是什么", "kb_id": 4, "expected_citations": ["chunk:20"], "expected_answer_keywords": ["fastapi", "dev", "启动", "开发"]}
+{"question": "是否可以直接跳转到某个章节", "kb_id": 4, "expected_citations": ["chunk:18"], "expected_answer_keywords": ["跳转", "章节", "主题", "直接"]}
+{"question": "用户指南的目标是什么", "kb_id": 4, "expected_citations": ["chunk:18"], "expected_answer_keywords": ["FastAPI", "特性", "教程", "用户指南", "学习"]}
+{"question": "安装 FastAPI 时需要注意什么", "kb_id": 4, "expected_citations": ["chunk:21"], "expected_answer_keywords": ["虚拟环境", "安装", "注意", "创建"]}
+{"question": "用户指南的内容是循序渐进吗", "kb_id": 4, "expected_citations": ["chunk:18"], "expected_answer_keywords": ["循序渐进", "章节", "逐步", "内容"]}
+{"question": "如何确保代码片段正常工作", "kb_id": 4, "expected_citations": ["chunk:19"], "expected_answer_keywords": ["测试", "代码片段", "确保", "工作"]}
+{"question": "FastAPI 如何与 Kubernetes 集成部署", "kb_id": 4, "expected_citations": [], "expected_answer_keywords": []}
+{"question": "Django 和 FastAPI 的性能对比数据是什么", "kb_id": 4, "expected_citations": [], "expected_answer_keywords": []}
+{"question": "FastAPI 中 WebSocket 的实现原理是什么", "kb_id": 4, "expected_citations": [], "expected_answer_keywords": []}
+{"question": "FastAPI 的依赖注入系统如何处理 SQLAlchemy 会话", "kb_id": 4, "expected_citations": ["chunk:18"], "expected_answer_keywords": ["依赖", "注入", "特性"]}
+{"question": "pgvector 和 FastAPI 如何配合使用", "kb_id": 4, "expected_citations": [], "expected_answer_keywords": ["FastAPI", "pgvector"]}
+{"question": "FastAPI 和 Codex 有哪些共同的设计理念", "kb_id": 4, "expected_citations": [], "expected_answer_keywords": ["FastAPI", "设计"]}
+{"question": "FastAPI 的安装标准是什么意思", "kb_id": 4, "expected_citations": ["chunk:22"], "expected_answer_keywords": ["fastapi", "standard", "pip"]}
+{"question": "model 是什么意思", "kb_id": 4, "expected_citations": [], "expected_answer_keywords": ["模型", "Pydantic", "数据"]}
+{"question": "详细解释 FastAPI 教程中从安装到运行所有步骤的完整流程", "kb_id": 4, "expected_citations": ["chunk:18", "chunk:19", "chunk:20", "chunk:21", "chunk:22"], "expected_answer_keywords": ["安装", "虚拟环境", "pip", "fastapi", "dev", "main.py", "运行"]}
+{"question": "完整说明 FastAPI 用户指南中提到的所有学习路径和后续资源", "kb_id": 4, "expected_citations": ["chunk:18", "chunk:23"], "expected_answer_keywords": ["用户指南", "进阶", "参考手册", "章节", "循序渐进"]}
+{"question": "如何激活虚拟环境", "kb_id": 4, "expected_citations": ["chunk:21"], "expected_answer_keywords": ["虚拟环境", "激活", "安装"]}
+{"question": "如何激活虚拟环境", "kb_id": 4, "expected_citations": ["chunk:21"], "expected_answer_keywords": ["虚拟环境", "激活", "安装"]}
+

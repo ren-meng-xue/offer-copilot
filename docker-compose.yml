@@ -16,8 +16,8 @@ services:
     container_name: offercopilot-api
     # 对外暴露 API 端口。
     ports:
-      # 宿主机 8000 -> 容器 8000。
-      - "8000:8000"
+      # 宿主机 8080 -> 容器 8080。
+      - "8080:8080"
     # 从 backend/.env 读取通用环境变量。
     env_file:
       # 本地后端环境变量文件。
@@ -102,8 +102,8 @@ services:
       POSTGRES_PASSWORD: postgres
     # 将数据库端口暴露到宿主机。
     ports:
-      # 映射到宿主机 5433，避免与本机已安装的 PostgreSQL 默认 5432 冲突。
-      - "5433:5432"
+      # 映射到宿主机 5439，避免与本机已安装的 PostgreSQL 默认 5432 冲突。
+      - "5439:5432"
     # 挂载持久化数据卷，避免容器删除后丢库。
     volumes:
       # 命名卷挂载到 PostgreSQL 数据目录。
@@ -130,7 +130,7 @@ services:
     # 将 Redis 端口暴露到宿主机。
     ports:
       # 本地暴露 Redis 端口，便于调试任务状态和消息队列。
-      - "6379:6379"
+      - "6389:6379"
     # Redis 健康检查。
     healthcheck:
       # 使用 redis-cli ping 检查服务是否可用。
@@ -149,7 +149,7 @@ services:
     image: prom/prometheus:v2.55.0
     container_name: offercopilot-prometheus
     ports:
-      - "9090:9090"
+      - "9099:9090"
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
@@ -167,7 +167,7 @@ services:
     image: grafana/grafana:11.3.0
     container_name: offercopilot-grafana
     ports:
-      - "3001:3000"
+      - "3009:3000"
     volumes:
       - grafana_data:/var/lib/grafana
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro

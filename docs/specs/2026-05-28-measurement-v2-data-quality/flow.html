@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>测量数据质量修复 v2 — 流程图</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --border: #334155;
+    --text: #f1f5f9;
+    --muted: #94a3b8;
+    --action: #3b82f6;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --decision: #8b5cf6;
+    --start: #06b6d4;
+    --p0: #3b82f6;
+    --p1: #6366f1;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+  .container { max-width: 900px; width: 100%; }
+  h1 { font-size: 22px; margin-bottom: 4px; }
+  .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 36px; }
+
+  .legend {
+    display: flex; gap: 18px; margin-bottom: 32px; flex-wrap: wrap;
+    font-size: 12px; color: var(--muted);
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-swatch { width: 12px; height: 12px; border-radius: 3px; }
+
+  .flow { display: flex; flex-direction: column; align-items: center; gap: 0; }
+
+  .node {
+    padding: 14px 28px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+    opacity: 0;
+    animation: fadeInUp 0.4s ease forwards;
+    position: relative;
+    max-width: 480px;
+    width: 100%;
+  }
+  .node-start {
+    background: linear-gradient(135deg, #06b6d4, #0891b2);
+    border-radius: 50px;
+    font-weight: 600;
+  }
+  .node-action { background: var(--surface); border: 1px solid var(--border); }
+  .node-decision {
+    background: var(--surface);
+    border: 2px solid var(--decision);
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+    padding: 32px 28px;
+  }
+  .node-success { background: linear-gradient(135deg, #10b981, #059669); }
+  .node-warning { background: linear-gradient(135deg, #f59e0b, #d97706); }
+  .node-danger { background: linear-gradient(135deg, #ef4444, #dc2626); }
+  .node-p1 {
+    background: var(--surface);
+    border: 1px dashed var(--p1);
+    color: var(--muted);
+  }
+  .node-section {
+    background: transparent;
+    border: 1px dashed var(--border);
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 8px 20px;
+    border-radius: 6px;
+    margin: 20px 0 8px;
+  }
+
+  .connector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    opacity: 0;
+    animation: fadeInUp 0.4s ease forwards;
+  }
+  .connector-line {
+    width: 2px;
+    height: 28px;
+    background: var(--border);
+    position: relative;
+  }
+  .connector-line::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid var(--border);
+  }
+  .connector-label {
+    font-size: 11px;
+    color: var(--muted);
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    margin: 4px 0;
+  }
+
+  .branch-row {
+    display: flex;
+    gap: 60px;
+    align-items: flex-start;
+    justify-content: center;
+    width: 100%;
+  }
+  .branch-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+  .branch-label {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 4px;
+    margin-bottom: 4px;
+  }
+  .branch-yes { background: var(--success); color: #fff; }
+  .branch-no { background: var(--danger); color: #fff; }
+
+  .merge-row {
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+  .merge-line-h { height: 2px; background: var(--border); width: 220px; }
+  .merge-line-v { width: 2px; height: 24px; background: var(--border); margin: 0 auto; }
+
+  .delay-1 { animation-delay: 0.08s; }
+  .delay-2 { animation-delay: 0.16s; }
+  .delay-3 { animation-delay: 0.24s; }
+  .delay-4 { animation-delay: 0.32s; }
+  .delay-5 { animation-delay: 0.40s; }
+  .delay-6 { animation-delay: 0.48s; }
+  .delay-7 { animation-delay: 0.56s; }
+  .delay-8 { animation-delay: 0.64s; }
+  .delay-9 { animation-delay: 0.72s; }
+  .delay-10 { animation-delay: 0.80s; }
+  .delay-11 { animation-delay: 0.88s; }
+  .delay-12 { animation-delay: 0.96s; }
+  .delay-13 { animation-delay: 1.04s; }
+  .delay-14 { animation-delay: 1.12s; }
+  .delay-15 { animation-delay: 1.20s; }
+  .delay-16 { animation-delay: 1.28s; }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .node:hover {
+    transform: scale(1.04);
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.25);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .impact-list { font-size: 13px; color: var(--muted); text-align: left; line-height: 1.8; }
+  .impact-list strong { color: var(--text); }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .badge-p0 { background: #3b82f620; color: #3b82f6; border: 1px solid #3b82f640; }
+  .badge-p1 { background: #6366f120; color: #6366f1; border: 1px solid #6366f140; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>测量数据质量修复 v2</h1>
+  <p class="subtitle">spec: 2026-05-28-measurement-v2-data-quality &nbsp;|&nbsp; 依赖: measurement-and-fix v1</p>
+
+  <div class="legend">
+    <div class="legend-item"><span class="legend-swatch" style="background:var(--start)"></span> 开始/结束</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:var(--surface);border:1px solid var(--border)"></span> 操作步骤</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:var(--surface);border:2px solid var(--decision)"></span> 决策节点</div>
+    <div class="legend-item"><span class="badge badge-p0">P0</span> 必须修</div>
+    <div class="legend-item"><span class="badge badge-p1">P1</span> Stretch</div>
+  </div>
+
+  <div class="flow">
+
+    <!-- START -->
+    <div class="node node-start delay-1">v1 报告完成：4 个数据质量问题</div>
+    <div class="connector delay-2"><div class="connector-line"></div></div>
+
+    <!-- 4 issues -->
+    <div class="node node-action delay-2">
+      <div class="impact-list">
+        <strong>问题清单：</strong><br>
+        1. Grafana Cache 看板 "No data" — L1/L2 命中率不可见<br>
+        2. 评估集 baseline=after=100% — 无区分度<br>
+        3. p95 TTFT/Total 上升 14-15%<br>
+        4. Locust 并发失败率 43% → 55%
+      </div>
+    </div>
+    <div class="connector delay-3"><div class="connector-line"></div></div>
+
+    <!-- P0-1 Section -->
+    <div class="node node-section delay-3">P0-1 · Grafana Cache 数据修复 · 0.5d</div>
+    <div class="connector delay-4"><div class="connector-line"></div></div>
+
+    <div class="node node-action delay-4">Step 1: curl localhost:8000/metrics | grep cache_</div>
+    <div class="connector delay-5"><div class="connector-line"></div></div>
+
+    <!-- Decision: metrics output? -->
+    <div class="node node-decision delay-5">有输出？</div>
+    <div class="connector delay-6" style="position:relative;">
+      <div style="position:absolute; left:-120px; top:0;">
+        <span class="branch-label branch-yes">YES</span>
+      </div>
+      <div style="position:absolute; right:-120px; top:0;">
+        <span class="branch-label branch-no">NO</span>
+      </div>
+    </div>
+
+    <div class="branch-row">
+      <div class="branch-col">
+        <div class="node node-action delay-6" style="width:260px;">问题在 PromQL / Grafana → 修 dashboard JSON</div>
+        <div class="connector delay-7"><div class="connector-line"></div></div>
+      </div>
+      <div class="branch-col">
+        <div class="node node-action delay-6" style="width:260px;">问题在 Python prometheus_client → 检查 REGISTRY 注册</div>
+        <div class="connector delay-7"><div class="connector-line"></div></div>
+      </div>
+    </div>
+
+    <!-- Merge -->
+    <div class="merge-row delay-8">
+      <div class="merge-line-h" style="width:80px;"></div>
+      <div style="display:flex;flex-direction:column;align-items:center;">
+        <div class="merge-line-v"></div>
+      </div>
+      <div class="merge-line-h" style="width:80px;"></div>
+    </div>
+
+    <div class="node node-action delay-8">修复并验证：Grafana Cache 看板 4 panel 出数</div>
+    <div class="connector delay-9"><div class="connector-line"></div></div>
+
+    <!-- P0-2 Section -->
+    <div class="node node-section delay-9">P0-2 · 评估集重做 · 0.5d</div>
+    <div class="connector delay-10"><div class="connector-line"></div></div>
+
+    <div class="node node-action delay-10">Step 1: 手工补标现有 20 道 expected_citations + keywords</div>
+    <div class="connector delay-11"><div class="connector-line"></div></div>
+    <div class="node node-action delay-11">Step 2: 新增 10 道对抗题（无答案 / 跨KB / 歧义 / 长上下文截断）</div>
+    <div class="connector delay-12"><div class="connector-line"></div></div>
+    <div class="node node-action delay-12">Step 3: run_eval.py baseline → run_eval.py after → 对比</div>
+    <div class="connector delay-13"><div class="connector-line"></div></div>
+
+    <!-- Decision: baseline < 100%? -->
+    <div class="node node-decision delay-13">baseline &lt; 100%？</div>
+    <div class="connector delay-14" style="position:relative;">
+      <div style="position:absolute; left:-120px; top:0;">
+        <span class="branch-label branch-yes">YES</span>
+      </div>
+      <div style="position:absolute; right:-120px; top:0;">
+        <span class="branch-label branch-no">NO</span>
+      </div>
+    </div>
+
+    <div class="branch-row">
+      <div class="branch-col">
+        <div class="node node-success delay-14" style="width:260px;">评估集区分度 OK → 进入 P1</div>
+        <div class="connector delay-15"><div class="connector-line"></div></div>
+      </div>
+      <div class="branch-col">
+        <div class="node node-warning delay-14" style="width:260px;">对抗题不够 → 加更多对抗题</div>
+        <div class="connector delay-15"><div class="connector-line"></div></div>
+      </div>
+    </div>
+
+    <!-- Merge -->
+    <div class="merge-row delay-16">
+      <div class="merge-line-h" style="width:80px;"></div>
+      <div style="display:flex;flex-direction:column;align-items:center;">
+        <div class="merge-line-v"></div>
+      </div>
+      <div class="merge-line-h" style="width:80px;"></div>
+    </div>
+
+    <!-- P1 Section -->
+    <div class="node node-section delay-16">P1（Stretch）· B6 SSE 并发断流 · 1-2d</div>
+    <div class="connector delay-16"><div class="connector-line"></div></div>
+
+    <!-- P1 decision -->
+    <div class="node node-decision delay-16">时间充裕？</div>
+    <div class="connector delay-16" style="position:relative;">
+      <div style="position:absolute; left:-120px; top:0;">
+        <span class="branch-label branch-yes">YES</span>
+      </div>
+      <div style="position:absolute; right:-120px; top:0;">
+        <span class="branch-label branch-no">NO</span>
+      </div>
+    </div>
+
+    <div class="branch-row">
+      <div class="branch-col">
+        <div class="node node-action delay-16" style="width:260px;">
+          Locust 并发排查 + SSE 流控修复<br>
+          <span style="font-size:12px;color:var(--muted);">anyio task group / httpx stream / Redis Pub/Sub 背压</span>
+        </div>
+      </div>
+      <div class="branch-col">
+        <div class="node node-p1 delay-16" style="width:260px;">
+          写入 follow-up.md<br>
+          <span style="font-size:12px;">诚实告知"并发场景 SSE 有更深问题"</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Merge -->
+    <div class="merge-row delay-16">
+      <div class="merge-line-h" style="width:80px;"></div>
+      <div style="display:flex;flex-direction:column;align-items:center;">
+        <div class="merge-line-v"></div>
+      </div>
+      <div class="merge-line-h" style="width:80px;"></div>
+    </div>
+
+    <!-- END -->
+    <div class="connector delay-16"><div class="connector-line"></div></div>
+    <div class="node node-start delay-16" style="background:linear-gradient(135deg,#10b981,#059669);">
+      输出 final-report-v2.md：有区分度的量化对比 + 完整的测量→修复→验证故事
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

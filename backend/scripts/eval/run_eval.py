@@ -20,7 +20,7 @@ import httpx
 from scripts.eval.sse_client import ask_question
 
 
-BASE_URL = os.environ.get("EVAL_BASE_URL", "http://localhost:8000")
+BASE_URL = os.environ.get("EVAL_BASE_URL", "http://localhost:8080")
 TOKEN = os.environ.get("EVAL_TOKEN")  # 必填，从已登录的浏览器 localStorage 复制
 
 
@@ -122,11 +122,18 @@ async def main():
     outcomes = Counter(r["result"]["outcome"] for r in results)
 
     def pct(values, p):
+        """线性插值分位数，避免 int 截断导致的系统性偏差。"""
         if not values:
             return None
         values = sorted(values)
-        k = int(len(values) * p)
-        return values[min(k, len(values) - 1)]
+        n = len(values)
+        idx = p * (n - 1)
+        lo = int(idx)
+        hi = min(lo + 1, n - 1)
+        if lo == hi:
+            return values[lo]
+        frac = idx - lo
+        return round(values[lo] + frac * (values[hi] - values[lo]), 1)
 
     report_lines = [
         f"# 评估报告 — {args.label}",

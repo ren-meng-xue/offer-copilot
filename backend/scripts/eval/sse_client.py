@@ -41,6 +41,8 @@ async def ask_question(
             buffer = ""
             async for chunk in resp.aiter_text():
                 buffer += chunk
+                # 标准化换行符，兼容 \r\n\r\n 作为 SSE 事件分隔符
+                buffer = buffer.replace("\r\n", "\n")
                 while "\n\n" in buffer:
                     block, buffer = buffer.split("\n\n", 1)
                     # 查找 data: 开头的行

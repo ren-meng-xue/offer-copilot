@@ -25,10 +25,10 @@ class Settings(BaseSettings):
 
     # Web 服务运行配置。
     APP_HOST: str = "0.0.0.0"
-    APP_PORT: int = 8000
+    APP_PORT: int = 8080
     BACKEND_CORS_ORIGINS: str = (
-        "http://localhost:3000,"
-        "http://127.0.0.1:3000,"
+        "http://localhost:3005,"
+        "http://127.0.0.1:3005,"
         "https://offer-copilot-frontend.vercel.app,"
         "https://offer-copilot-git-main-ren-meng-xues-projects.vercel.app,"
         "https://offer-copilot.vercel.app"
@@ -37,14 +37,14 @@ class Settings(BaseSettings):
 
     # 基础设施配置，后续 auth、数据库和任务系统都会依赖这些变量。
     DATABASE_URL: str = (
-        "postgresql+asyncpg://postgres:postgres@localhost:5433/offercopilot"
+        "postgresql+asyncpg://postgres:postgres@localhost:5439/offercopilot"
     )
     ALEMBIC_DATABASE_URL: Optional[str] = None
 
     # Redis 基础配置
     REDIS_URL: Optional[str] = None
     REDIS_HOST: str = "localhost"
-    REDIS_PORT: int = 6379
+    REDIS_PORT: int = 6389
     REDIS_DB: int = 0
     REDIS_PASSWORD: str | None = None
 
@@ -56,7 +56,7 @@ class Settings(BaseSettings):
     # 密码重置链接有效期，单位分钟。
     PASSWORD_RESET_TOKEN_EXPIRE_MINUTES: int = 30
     # 发邮件时拼接的前端重置密码页面地址。
-    PASSWORD_RESET_URL_BASE: str = "http://localhost:3000/auth/reset-password"
+    PASSWORD_RESET_URL_BASE: str = "http://localhost:3005/auth/reset-password"
     # SMTP 邮件配置。默认值按 QQ 邮箱本地联调场景给出。
     SMTP_HOST: str = "smtp.qq.com"
     SMTP_PORT: int = 465
@@ -84,6 +84,7 @@ class Settings(BaseSettings):
     OPENAI_BASE_URL: str | None = None
     COHERE_API_KEY: str | None = None
     COHERE_BASE_URL: str | None = None
+    COHERE_TIMEOUT: float = 3.0  # Cohere Rerank API 超时时间（秒）
     AMAP_API_KEY: str | None = None  # 高德开放平台 Web 服务 Key
     RAG_VECTOR_TOP_K: int = 20
     RAG_FTS_TOP_K: int = 20
@@ -127,6 +128,13 @@ class Settings(BaseSettings):
     @classmethod
     def normalize_database_url(cls, value: str) -> str:
         return cls._normalize_postgres_url(str(value), "postgresql+asyncpg")
+
+    @field_validator("ALEMBIC_DATABASE_URL", mode="before")
+    @classmethod
+    def normalize_alembic_database_url(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        return cls._normalize_postgres_url(str(value), "postgresql+psycopg2")
 
     @field_validator("SENTRY_TRACES_SAMPLE_RATE")
     @classmethod

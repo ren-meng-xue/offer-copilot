@@ -3,7 +3,7 @@
 启动：
   cd backend
   uv run locust -f scripts/load_test/locustfile.py \
-    --host=http://localhost:8000 \
+    --host=http://localhost:8080 \
     --headless -u 50 -r 5 -t 5m \
     --html ../docs/specs/2026-05-27-measurement-and-fix/screenshots/baseline/locust-50.html
 

@@ -7,7 +7,7 @@ scrape_configs:
     metrics_path: '/metrics'
     static_configs:
       # host.docker.internal 让容器能访问本机 host 上的 backend
-      - targets: ['host.docker.internal:8000']
+      - targets: ['host.docker.internal:8080']
         labels:
           service: 'offer-copilot-backend'
 
@@ -17,3 +17,10 @@ scrape_configs:
       - targets: ['host.docker.internal:9646']
         labels:
           service: 'locust'
+
+  - job_name: 'celery'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['host.docker.internal:8001']
+        labels:
+          service: 'offer-copilot-celery'

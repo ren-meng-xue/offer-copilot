@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>可观测性数据流 — Observability Enhancement</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --border: #334155;
+    --text: #f1f5f9;
+    --muted: #94a3b8;
+    --action: #3b82f6;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --decision: #8b5cf6;
+    --start: #06b6d4;
+    --new: #ec4899;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', system-ui, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    min-height: 100vh;
+  }
+  h1 {
+    font-size: 20px;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+  .subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 40px;
+  }
+  .legend {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 32px;
+    font-size: 12px;
+    color: var(--muted);
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+  }
+  .legend-dot.existing { background: var(--action); }
+  .legend-dot.new { background: var(--new); }
+  .legend-dot.storage { background: var(--decision); }
+  .legend-dot.viz { background: var(--success); }
+  .legend-dot.endpoint { background: var(--start); }
+
+  svg {
+    max-width: 900px;
+    width: 100%;
+  }
+
+  /* Node animations */
+  .node {
+    animation: fadeInUp 0.4s ease both;
+  }
+  .edge {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    animation: drawLine 1.2s ease forwards;
+  }
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes drawLine {
+    to { stroke-dashoffset: 0; }
+  }
+
+  /* Stagger delays */
+  .d0 { animation-delay: 0.00s; }
+  .d1 { animation-delay: 0.08s; }
+  .d2 { animation-delay: 0.16s; }
+  .d3 { animation-delay: 0.24s; }
+  .d4 { animation-delay: 0.32s; }
+  .d5 { animation-delay: 0.40s; }
+  .d6 { animation-delay: 0.48s; }
+  .d7 { animation-delay: 0.56s; }
+  .d8 { animation-delay: 0.64s; }
+  .d9 { animation-delay: 0.72s; }
+  .d10 { animation-delay: 0.80s; }
+  .d11 { animation-delay: 0.88s; }
+  .d12 { animation-delay: 0.96s; }
+
+  g:hover rect.action,
+  g:hover rect.new,
+  g:hover rect.storage,
+  g:hover rect.viz,
+  g:hover rect.endpoint,
+  g:hover rect.decision,
+  g:hover rect.danger,
+  g:hover rect.start-node {
+    filter: drop-shadow(0 0 8px rgba(255,255,255,0.15));
+  }
+</style>
+</head>
+<body>
+
+<h1>可观测性增强 — 数据流图</h1>
+<p class="subtitle">虚线边框 = 本次新增 | 实线边框 = 已有</p>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot existing"></div>已有指标埋点</div>
+  <div class="legend-item"><div class="legend-dot new"></div>本次新增埋点 (P0-1 / P0-2)</div>
+  <div class="legend-item"><div class="legend-dot endpoint"></div>采集端点</div>
+  <div class="legend-item"><div class="legend-dot storage"></div>存储</div>
+  <div class="legend-item"><div class="legend-dot viz"></div>可视化</div>
+</div>
+
+<svg viewBox="0 0 880 1000" xmlns="http://www.w3.org/2000/svg">
+
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+    </marker>
+    <marker id="arrow-new" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#ec4899"/>
+    </marker>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="50%" stop-color="#1a1f3a"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="880" height="1000" fill="url(#bgGrad)" rx="16"/>
+
+  <!-- ==================== 行 1：代码埋点层 ==================== -->
+
+  <!-- 已有：HTTP middleware -->
+  <g class="node d0">
+    <rect x="80" y="40" width="160" height="44" rx="10" fill="var(--action)" opacity="0.9" class="action"/>
+    <text x="160" y="67" text-anchor="middle" fill="#fff" font-size="12" font-weight="600">HTTP Middleware</text>
+  </g>
+
+  <!-- 已有：RAG telemetry -->
+  <g class="node d1">
+    <rect x="280" y="40" width="160" height="44" rx="10" fill="var(--action)" opacity="0.9" class="action"/>
+    <text x="360" y="67" text-anchor="middle" fill="#fff" font-size="12" font-weight="600">RAG Telemetry</text>
+  </g>
+
+  <!-- 已有：Cache lookup -->
+  <g class="node d2">
+    <rect x="480" y="40" width="160" height="44" rx="10" fill="var(--action)" opacity="0.9" class="action"/>
+    <text x="560" y="67" text-anchor="middle" fill="#fff" font-size="12" font-weight="600">Cache Lookup</text>
+  </g>
+
+  <!-- 新增：Celery signals -->
+  <g class="node d3">
+    <rect x="100" y="120" width="160" height="44" rx="10" fill="none" stroke="var(--new)" stroke-width="2" stroke-dasharray="6,3" class="new"/>
+    <text x="180" y="147" text-anchor="middle" fill="var(--new)" font-size="12" font-weight="600">Celery Signals</text>
+  </g>
+
+  <!-- 新增：Embedding service -->
+  <g class="node d4">
+    <rect x="340" y="120" width="160" height="44" rx="10" fill="none" stroke="var(--new)" stroke-width="2" stroke-dasharray="6,3" class="new"/>
+    <text x="420" y="147" text-anchor="middle" fill="var(--new)" font-size="12" font-weight="600">Embedding Service</text>
+  </g>
+
+  <!-- ==================== 标签 ==================== -->
+
+  <text x="440" y="30" text-anchor="middle" fill="var(--muted)" font-size="10">已有</text>
+  <text x="440" y="110" text-anchor="middle" fill="var(--muted)" font-size="10">新增 P0-1 / P0-2</text>
+
+  <!-- ==================== 行 2：Prometheus 指标 ==================== -->
+
+  <!-- 已有指标组 -->
+  <g class="node d5">
+    <rect x="80" y="220" width="600" height="52" rx="12" fill="var(--surface)" stroke="var(--border)" stroke-width="1"/>
+    <text x="380" y="240" text-anchor="middle" fill="#93c5fd" font-size="11" font-weight="600">已有 15 个指标</text>
+    <text x="380" y="258" text-anchor="middle" fill="var(--muted)" font-size="10">http_requests_total · http_request_duration_seconds · http_requests_in_progress</text>
+    <text x="380" y="270" text-anchor="middle" fill="var(--muted)" font-size="10">rag_stage_duration_seconds · rag_ttft_seconds · rag_outcome_total · cache_lookup_total …</text>
+  </g>
+
+  <!-- 新增指标组 -->
+  <g class="node d6">
+    <rect x="280" y="310" width="400" height="52" rx="12" fill="none" stroke="var(--new)" stroke-width="2" stroke-dasharray="6,3"/>
+    <text x="480" y="330" text-anchor="middle" fill="var(--new)" font-size="11" font-weight="600">新增 5 个指标</text>
+    <text x="480" y="348" text-anchor="middle" fill="var(--muted)" font-size="10">celery_task_duration_seconds · celery_task_total · celery_queue_length · celery_active_tasks · embedding_duration_seconds</text>
+  </g>
+
+  <!-- ==================== 箭头：埋点 → 指标 ==================== -->
+
+  <!-- HTTP → 已有指标 -->
+  <path d="M 160 84 L 160 220" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)" class="edge d0"/>
+  <!-- RAG → 已有指标 -->
+  <path d="M 360 84 L 360 220" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)" class="edge d1"/>
+  <!-- Cache → 已有指标 -->
+  <path d="M 560 84 L 560 220" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)" class="edge d2"/>
+
+  <!-- Celery → 新增指标 -->
+  <path d="M 180 164 L 180 220 Q 180 265 280 265 L 280 310" stroke="#ec4899" stroke-width="1.5" marker-end="url(#arrow-new)" stroke-dasharray="6,3" class="edge d3"/>
+  <!-- Embedding → 新增指标 -->
+  <path d="M 420 164 L 420 310" stroke="#ec4899" stroke-width="1.5" marker-end="url(#arrow-new)" stroke-dasharray="6,3" class="edge d4"/>
+
+  <!-- ==================== 行 3：/metrics 端点 ==================== -->
+
+  <g class="node d7">
+    <polygon points="380,400 480,400 500,430 480,460 380,460 360,430" fill="var(--start)" opacity="0.9"/>
+    <text x="430" y="435" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">/metrics</text>
+  </g>
+
+  <path d="M 380 272 L 380 290 Q 380 345 430 345 L 430 400" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)" class="edge d5"/>
+  <path d="M 480 362 L 480 380 L 430 380 L 430 400" stroke="#ec4899" stroke-width="1.5" marker-end="url(#arrow-new)" stroke-dasharray="6,3" class="edge d6"/>
+
+  <!-- ==================== 行 4：Prometheus 存储 ==================== -->
+
+  <g class="node d8">
+    <rect x="280" y="510" width="300" height="48" rx="12" fill="var(--decision)" opacity="0.85"/>
+    <text x="430" y="532" text-anchor="middle" fill="#fff" font-size="13" font-weight="600">Prometheus :9090</text>
+    <text x="430" y="548" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="10">每 15s scrape · 保留 7 天</text>
+  </g>
+
+  <path d="M 430 460 L 430 510" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)" class="edge d8"/>
+
+  <!-- ==================== 行 5：Grafana 可视化 ==================== -->
+
+  <g class="node d9">
+    <rect x="60" y="610" width="200" height="44" rx="10" fill="var(--success)" opacity="0.9" class="viz"/>
+    <text x="160" y="637" text-anchor="middle" fill="#fff" font-size="12" font-weight="600">HTTP &amp; SLI</text>
+  </g>
+
+  <g class="node d10">
+    <rect x="280" y="610" width="200" height="44" rx="10" fill="var(--success)" opacity="0.9" class="viz"/>
+    <text x="380" y="637" text-anchor="middle" fill="#fff" font-size="12" font-weight="600">Cache 命中率</text>
+  </g>
+
+  <g class="node d11">
+    <rect x="500" y="610" width="200" height="44" rx="10" fill="var(--success)" opacity="0.9" class="viz"/>
+    <text x="600" y="637" text-anchor="middle" fill="#fff" font-size="12" font-weight="600">RAG 链路</text>
+  </g>
+
+  <!-- 新增 Dashboard -->
+  <g class="node d12">
+    <rect x="280" y="690" width="200" height="44" rx="10" fill="none" stroke="var(--new)" stroke-width="2" stroke-dasharray="6,3" class="viz"/>
+    <text x="380" y="717" text-anchor="middle" fill="var(--new)" font-size="12" font-weight="600">Celery</text>
+  </g>
+
+  <!-- 箭头 Prometheus → Grafana -->
+  <path d="M 280 534 Q 160 570 160 610" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)" class="edge d9"/>
+  <path d="M 380 558 L 380 610" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)" class="edge d10"/>
+  <path d="M 500 534 L 500 570 Q 560 590 600 610" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)" class="edge d11"/>
+  <path d="M 380 558 L 380 690" stroke="#ec4899" stroke-width="1.5" marker-end="url(#arrow-new)" stroke-dasharray="6,3" class="edge d12"/>
+
+  <!-- ==================== RAG Dashboard 细化标注 ==================== -->
+
+  <g class="node">
+    <rect x="640" y="590" width="200" height="64" rx="10" fill="var(--surface)" stroke="var(--border)" stroke-width="1"/>
+    <text x="740" y="612" text-anchor="middle" fill="var(--warning)" font-size="11" font-weight="600">RAG Panel 细化</text>
+    <text x="740" y="630" text-anchor="middle" fill="var(--muted)" font-size="10">5 stage 独立 · error_code 分布</text>
+    <text x="740" y="646" text-anchor="middle" fill="var(--muted)" font-size="10">P50/P99 · retrieval hit rate</text>
+  </g>
+
+  <path d="M 700 610 L 640 610" stroke="var(--warning)" stroke-width="1" marker-end="url(#arrow)"/>
+
+  <!-- ==================== Grafana 大框 ==================== -->
+  <rect x="40" y="590" width="680" height="168" rx="14" fill="none" stroke="var(--surface)" stroke-width="1.5"/>
+  <text x="390" y="582" text-anchor="middle" fill="var(--muted)" font-size="10">Grafana :3001 · admin/admin</text>
+
+  <!-- ==================== 底部说明 ==================== -->
+
+  <text x="440" y="820" text-anchor="middle" fill="var(--muted)" font-size="10">Prometheus pull 模式 · backend /metrics 端点暴露所有指标 · provisioning 自动加载 Dashboard JSON</text>
+
+  <!-- ==================== 右侧：评估验证 ==================== -->
+  <g class="node">
+    <rect x="640" y="690" width="200" height="44" rx="10" fill="var(--surface)" stroke="var(--border)" stroke-width="1"/>
+    <text x="740" y="717" text-anchor="middle" fill="var(--start)" font-size="12" font-weight="600">run_eval.py 验证</text>
+  </g>
+  <path d="M 640 712 L 480 712" stroke="var(--start)" stroke-width="1" stroke-dasharray="4,4"/>
+
+</svg>
+
+</body>
+</html>

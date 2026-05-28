@@ -17,7 +17,7 @@ if [ $# -lt 1 ]; then
 fi
 
 export EVAL_TOKEN="$1"
-export EVAL_BASE_URL="${EVAL_BASE_URL:-http://localhost:8000}"
+export EVAL_BASE_URL="${EVAL_BASE_URL:-http://localhost:8080}"
 
 # 检查后端是否可达
 echo ">>> 检查后端连接..."

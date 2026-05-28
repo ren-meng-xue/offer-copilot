@@ -61,3 +61,12 @@ def _on_task_postrun(sender=None, state=None, runtime=None, **_kwargs):
     CELERY_TASK_TOTAL.labels(
         task_name=task_name, status="success" if state == "SUCCESS" else "failure"
     ).inc()
+
+
+@signals.worker_process_init.connect
+def _on_worker_process_init(*_args, **_kwargs):
+    from prometheus_client import start_http_server
+    try:
+        start_http_server(8001)
+    except Exception:
+        pass

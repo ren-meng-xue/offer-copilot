@@ -37,7 +37,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "Prometheus" },
-          "expr": "sum(rate(cache_lookup_total{layer=\"l1\",result=\"hit\"}[5m])) / sum(rate(cache_lookup_total{layer=\"l1\"}[5m]))",
+          "expr": "sum(cache_lookup_total{layer=\"l1\",result=\"hit\"}) / sum(cache_lookup_total{layer=\"l1\"}) or vector(0)",
           "refId": "A"
         }
       ],
@@ -74,7 +74,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "Prometheus" },
-          "expr": "sum(rate(cache_lookup_total{layer=\"l2\",result=\"hit\"}[5m])) / sum(rate(cache_lookup_total{layer=\"l2\"}[5m]))",
+          "expr": "sum(cache_lookup_total{layer=\"l2\",result=\"hit\"}) / sum(cache_lookup_total{layer=\"l2\"}) or vector(0)",
           "refId": "A"
         }
       ],
@@ -97,13 +97,13 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "Prometheus" },
-          "expr": "sum(rate(cache_lookup_total{layer=\"l1\",result=\"hit\"}[5m])) / sum(rate(cache_lookup_total{layer=\"l1\"}[5m]))",
+          "expr": "sum(cache_lookup_total{layer=\"l1\",result=\"hit\"}) / sum(cache_lookup_total{layer=\"l1\"}) or vector(0)",
           "legendFormat": "L1 Hit Rate",
           "refId": "A"
         },
         {
           "datasource": { "type": "prometheus", "uid": "Prometheus" },
-          "expr": "sum(rate(cache_lookup_total{layer=\"l2\",result=\"hit\"}[5m])) / sum(rate(cache_lookup_total{layer=\"l2\"}[5m]))",
+          "expr": "sum(cache_lookup_total{layer=\"l2\",result=\"hit\"}) / sum(cache_lookup_total{layer=\"l2\"}) or vector(0)",
           "legendFormat": "L2 Hit Rate",
           "refId": "B"
         }
