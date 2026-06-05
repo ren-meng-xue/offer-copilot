@@ -41,6 +41,9 @@ class Settings(BaseSettings):
         "postgresql+asyncpg://postgres:postgres@localhost:5439/offercopilot"
     )
     ALEMBIC_DATABASE_URL: Optional[str] = None
+    # 原始 DATABASE_URL 含 sslmode=require 时由 model_validator 置为 True，
+    # session.py 据此在 connect_args 里注入 ssl=True。
+    DATABASE_USE_SSL: bool = False
 
     # Redis 基础配置
     REDIS_URL: Optional[str] = None
@@ -125,10 +128,10 @@ class Settings(BaseSettings):
         return value
 
     @staticmethod
-    def _fix_asyncpg_ssl_params(url: str) -> str:
-        """asyncpg 不支持 libpq 风格的 sslmode/channel_binding 参数。
-        将 sslmode=require/verify-ca/verify-full 转换为 ssl=true，
-        并移除 channel_binding（asyncpg 不认识该参数）。
+    def _strip_asyncpg_incompatible_params(url: str) -> tuple[str, bool]:
+        """移除 asyncpg 不支持的 libpq 风格参数（sslmode、channel_binding），
+        返回清理后的 URL 和是否需要 SSL 的布尔标志。
+        由调用方通过 connect_args={"ssl": True} 传给引擎，避免字符串类型歧义。
         """
         parsed = urlparse(url)
         params = parse_qs(parsed.query, keep_blank_values=True)
@@ -136,19 +139,17 @@ class Settings(BaseSettings):
         ssl_modes = {"require", "verify-ca", "verify-full"}
         sslmode_values = params.pop("sslmode", [])
         params.pop("channel_binding", None)
-
-        if any(v in ssl_modes for v in sslmode_values):
-            params["ssl"] = ["true"]
+        need_ssl = any(v in ssl_modes for v in sslmode_values)
 
         new_query = urlencode({k: v[0] for k, v in params.items()})
-        return urlunparse(parsed._replace(query=new_query))
+        return urlunparse(parsed._replace(query=new_query)), need_ssl
 
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
     def normalize_database_url(cls, value: str) -> str:
         url = cls._normalize_postgres_url(str(value), "postgresql+asyncpg")
         if "+asyncpg" in url:
-            url = cls._fix_asyncpg_ssl_params(url)
+            url, _ = cls._strip_asyncpg_incompatible_params(url)
         return url
 
     @field_validator("ALEMBIC_DATABASE_URL", mode="before")
@@ -174,6 +175,11 @@ class Settings(BaseSettings):
             self.ALEMBIC_DATABASE_URL = self._normalize_postgres_url(
                 self.DATABASE_URL, "postgresql+psycopg2"
             )
+
+        # 2. 生产环境默认开启 DB SSL（Neon/云托管 PG 均要求）；
+        #    也可通过 DATABASE_USE_SSL=true 环境变量显式覆盖。
+        if not self.DATABASE_USE_SSL and self.APP_ENV == "production":
+            self.DATABASE_USE_SSL = True
 
         # 自动处理 Redis 相关的 fallback
         if self.REDIS_URL:
