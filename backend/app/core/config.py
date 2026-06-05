@@ -188,10 +188,10 @@ class Settings(BaseSettings):
         else:
             if not self.CELERY_BROKER_URL:
                 self.CELERY_BROKER_URL = (
-                    f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/1"
+                    f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/0"
                 )
                 if self.REDIS_PASSWORD:
-                    self.CELERY_BROKER_URL = f"redis://:{self.REDIS_PASSWORD}@{self.REDIS_HOST}:{self.REDIS_PORT}/1"
+                    self.CELERY_BROKER_URL = f"redis://:{self.REDIS_PASSWORD}@{self.REDIS_HOST}:{self.REDIS_PORT}/0"
 
         return self
 
