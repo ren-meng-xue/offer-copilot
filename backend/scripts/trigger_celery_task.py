@@ -1,10 +1,15 @@
 import asyncio
+import os
+
 import httpx
 
 BASE_URL = "http://localhost:8080/api/v1"
-TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiZXhwIjoxNzgwMDQyMTUwfQ.MRKvfnsuZ16MGd3D9A_klHYNK8-BrQMm9232l-ZokfU"
+TOKEN = os.environ.get("DEV_RAG_TOKEN")
 
 async def trigger_celery():
+    if not TOKEN:
+        raise RuntimeError("请先设置 DEV_RAG_TOKEN，再运行该脚本。")
+
     print("🚀 正在通过 API 请求发送新建知识库动作以激活 Celery 异步任务...")
     
     headers = {

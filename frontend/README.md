@@ -39,7 +39,13 @@ refresh cookie 在 `SameSite=Lax` 下也能正常工作。
 ```bash
 NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000/api/v1
 BACKEND_PROXY_TARGET=http://127.0.0.1:8000
+NEXT_PUBLIC_DEFAULT_LOGIN_EMAIL=<development login email>
+NEXT_PUBLIC_DEFAULT_LOGIN_PASSWORD=<development login password>
 ```
+
+生产环境如果需要登录页默认填充账号，需要在部署平台配置对应的
+`NEXT_PUBLIC_DEFAULT_LOGIN_EMAIL` 和 `NEXT_PUBLIC_DEFAULT_LOGIN_PASSWORD`。
+这些值会进入浏览器 bundle，只适合临时演示或内部环境使用。
 
 当前登录链路里：
 

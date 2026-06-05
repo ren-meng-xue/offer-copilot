@@ -1,7 +1,7 @@
 [project]
 name = "offercopilot-api"
 version = "0.1.0"
-description = "OfferPilot API is an AI job-search copilot backend built with FastAPI, Celery, Redis, and PostgreSQL, focused on JD analysis, resume scoring, resume optimization, and interview preparation."
+description = "DevDoc RAG API is a developer-documentation RAG backend built with FastAPI, Celery, Redis, PostgreSQL, pgvector, hybrid retrieval, rerank, and citation guard."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

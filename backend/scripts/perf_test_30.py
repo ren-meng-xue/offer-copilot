@@ -1,9 +1,10 @@
 import asyncio
+import os
 import time
-import httpx
-import sys
 
-TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiZXhwIjoxNzgwMDQ1MjA2fQ.BkdTX95apaDvLwVeIpEo299tJ8Dabi3dJem1xcrolEg"
+import httpx
+
+TOKEN = os.environ.get("DEV_RAG_TOKEN")
 BASE_URL = "http://127.0.0.1:8080"
 KB_ID = 4  # 使用 FastAPI 中文教程知识库
 
@@ -49,6 +50,9 @@ async def run_single_request(client, conv_id, idx):
     }
 
 async def main():
+    if not TOKEN:
+        raise RuntimeError("请先设置 DEV_RAG_TOKEN，再运行该脚本。")
+
     print("🚀 正在初始化压测会话...")
     headers = {"Authorization": f"Bearer {TOKEN}"}
     
