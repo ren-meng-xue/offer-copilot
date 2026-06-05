@@ -22,7 +22,7 @@ const inputClass =
   "h-12 w-full rounded-xl border border-slate-200 bg-white pl-10 text-sm text-slate-900 shadow-sm outline-none placeholder:text-slate-400 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-[#212121] dark:text-[#ececec] dark:placeholder:text-[#8e8ea0] dark:focus:border-slate-600 dark:focus:ring-slate-600/10";
 
 const productionLoginCredentials = {
-  email: "admin@qq.com",
+  email: "admin@admin.com",
   password: "admin123",
 };
 
