@@ -65,6 +65,11 @@ def _on_task_postrun(sender=None, state=None, runtime=None, **_kwargs):
 
 @signals.worker_process_init.connect
 def _on_worker_process_init(*_args, **_kwargs):
+    # 在生产环境（如 Render）中，开启额外的端口（8001）会导致端口探测冲突（502 错误）。
+    # 因此仅在非生产环境或显式开启时启动。
+    if settings.APP_ENV == "production":
+        return
+
     from prometheus_client import start_http_server
     try:
         start_http_server(8001)
