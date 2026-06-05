@@ -81,8 +81,9 @@ app = FastAPI(
     debug=settings.DEBUG,
 )
 
-if settings.PROMETHEUS_ENABLED:
+if settings.PROMETHEUS_ENABLED and settings.APP_ENV != "production":
     # 挂载 Prometheus ASGI 子应用，避免后续 HTTP 指标中间件统计 /metrics 自身。
+    # 在生产环境（Render）中禁用独立子应用挂载，避免端口探测冲突。
     metrics_app = make_asgi_app()
     app.router.routes.append(Mount(settings.METRICS_PATH, app=metrics_app))
 
