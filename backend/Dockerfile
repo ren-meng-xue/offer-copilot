@@ -15,6 +15,8 @@ RUN uv sync --frozen --no-dev --project /app/backend
 
 COPY . /app/backend
 
+RUN chmod +x /app/backend/start-combined.sh
+
 EXPOSE 8080
 
-CMD ["uv", "run", "--project", "/app/backend", "uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["sh", "/app/backend/start-combined.sh"]

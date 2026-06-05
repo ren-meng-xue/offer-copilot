@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: offer-copilot-api
+    env: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    region: oregon
+    healthCheckPath: /health
+    envVars:
+      # 敏感凭据 — 部署时在 Render 控制台手动填写
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: FIRECRAWL_API_KEY
+        sync: false
+      - key: COHERE_API_KEY
+        sync: false
+      - key: SMTP_USERNAME
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      # 自动生成
+      - key: SECRET_KEY
+        generateValue: true
+      # 非敏感配置
+      - key: APP_ENV
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: BACKEND_CORS_ORIGINS
+        value: "https://offer-copilots.vercel.app,https://offer-copilot-git-main-ren-meng-xues-projects.vercel.app"
+      - key: BACKEND_CORS_ORIGIN_REGEX
+        value: "https://offer-copilot.*\\.vercel\\.app"
+      - key: REFRESH_TOKEN_COOKIE_SECURE
+        value: "true"
+      - key: PASSWORD_RESET_URL_BASE
+        value: "https://offer-copilots.vercel.app/auth/reset-password"
