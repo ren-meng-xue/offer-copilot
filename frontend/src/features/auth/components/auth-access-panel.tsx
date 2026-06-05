@@ -21,10 +21,20 @@ type AuthAccessPanelProps = {
 const inputClass =
   "h-12 w-full rounded-xl border border-slate-200 bg-white pl-10 text-sm text-slate-900 shadow-sm outline-none placeholder:text-slate-400 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-[#212121] dark:text-[#ececec] dark:placeholder:text-[#8e8ea0] dark:focus:border-slate-600 dark:focus:ring-slate-600/10";
 
-const defaultLoginCredentials = {
-  email: process.env.NEXT_PUBLIC_DEFAULT_LOGIN_EMAIL ?? "",
-  password: process.env.NEXT_PUBLIC_DEFAULT_LOGIN_PASSWORD ?? "",
+const productionLoginCredentials = {
+  email: "admin@qq.com",
+  password: "admin123",
 };
+
+const developmentLoginCredentials = {
+  email: "917596600@qq.com",
+  password: "qq1.2.3",
+};
+
+const defaultLoginCredentials =
+  process.env.NODE_ENV === "production"
+    ? productionLoginCredentials
+    : developmentLoginCredentials;
 
 export function AuthAccessPanel({
   initialMode = "login",
