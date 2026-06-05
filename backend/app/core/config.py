@@ -1,6 +1,7 @@
 from functools import lru_cache
 from pathlib import Path
 from typing import Optional
+from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
 from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -13,7 +14,7 @@ class Settings(BaseSettings):
     """项目配置，优先从环境变量加载，本地开发时回退到 backend/.env。"""
 
     # 应用基础配置。
-    APP_NAME: str = "OfferPilot API"
+    APP_NAME: str = "DevDoc RAG API"
     APP_VERSION: str = "0.1.0"
     APP_ENV: str = "development"
     DEBUG: bool = True
@@ -66,7 +67,7 @@ class Settings(BaseSettings):
     SMTP_USE_STARTTLS: bool = False
     SMTP_TIMEOUT_SECONDS: int = 15
     MAIL_FROM: str | None = None
-    MAIL_FROM_NAME: str = "OfferPilot"
+    MAIL_FROM_NAME: str = "DevDoc RAG"
     REFRESH_TOKEN_COOKIE_NAME: str = "refresh_token"
     # 让所有接口都能携带该 cookie，确保自动续期稳定性。
     REFRESH_TOKEN_COOKIE_PATH: str = "/"
@@ -112,22 +113,43 @@ class Settings(BaseSettings):
     @staticmethod
     def _normalize_postgres_url(value: str, driver_scheme: str) -> str:
         """统一处理 Postgres URL，确保带上指定的驱动前缀（如 postgresql+asyncpg）。
-        主要兼容 Railway 等平台提供的原始 postgres:// 格式。
+        主要兼容 Railway/Neon 等平台提供的原始 postgres:// 格式。
         """
         if "://" not in value:
             return value
 
-        # 统一把所有以 postgres 或 postgresql 开头的 scheme 都替换为目标 driver_scheme
         scheme, rest = value.split("://", 1)
         if scheme.startswith("postgres"):
             return f"{driver_scheme}://{rest}"
 
         return value
 
+    @staticmethod
+    def _fix_asyncpg_ssl_params(url: str) -> str:
+        """asyncpg 不支持 libpq 风格的 sslmode/channel_binding 参数。
+        将 sslmode=require/verify-ca/verify-full 转换为 ssl=true，
+        并移除 channel_binding（asyncpg 不认识该参数）。
+        """
+        parsed = urlparse(url)
+        params = parse_qs(parsed.query, keep_blank_values=True)
+
+        ssl_modes = {"require", "verify-ca", "verify-full"}
+        sslmode_values = params.pop("sslmode", [])
+        params.pop("channel_binding", None)
+
+        if any(v in ssl_modes for v in sslmode_values):
+            params["ssl"] = ["true"]
+
+        new_query = urlencode({k: v[0] for k, v in params.items()})
+        return urlunparse(parsed._replace(query=new_query))
+
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
     def normalize_database_url(cls, value: str) -> str:
-        return cls._normalize_postgres_url(str(value), "postgresql+asyncpg")
+        url = cls._normalize_postgres_url(str(value), "postgresql+asyncpg")
+        if "+asyncpg" in url:
+            url = cls._fix_asyncpg_ssl_params(url)
+        return url
 
     @field_validator("ALEMBIC_DATABASE_URL", mode="before")
     @classmethod
