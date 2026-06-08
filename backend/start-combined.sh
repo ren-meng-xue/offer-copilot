@@ -1,6 +1,9 @@
 #!/bin/sh
 set -e
 
+# Start haveged to prevent entropy starvation (mainly for bcrypt / getrandom in cloud containers)
+haveged -w 1024 || true
+
 # Start Celery worker in background
 uv run --project /app/backend celery -A backend.app.tasks:celery_app worker --loglevel=info &
 CELERY_PID=$!

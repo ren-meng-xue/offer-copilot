@@ -26,7 +26,7 @@ def get_password_hash(password: str) -> str:
     存入数据库的是 hash，而不是原始密码
     """
     password_bytes = password.encode("utf-8")
-    salt = bcrypt.gensalt()
+    salt = bcrypt.gensalt(rounds=10)
     return bcrypt.hashpw(password_bytes, salt).decode("utf-8")
 
 
@@ -45,6 +45,13 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
         plain_password.encode("utf-8"),
         hashed_password.encode("utf-8"),
     )
+
+
+async def verify_password_async(plain_password: str, hashed_password: str) -> bool:
+    """异步包装 verify_password，将其抛到线程池中运行，避免霸占 FastAPI 的主事件循环。"""
+    import asyncio
+    return await asyncio.to_thread(verify_password, plain_password, hashed_password)
+
 
 
 # 🎫 创建 JWT 访问令牌（登录成功后生成）

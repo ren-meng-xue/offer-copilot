@@ -34,7 +34,7 @@ from backend.app.core.exceptions import (
 
 from backend.app.core.security import (
     get_password_hash,
-    verify_password,
+    verify_password_async,
     create_access_token,
     hash_token,
     create_refresh_token,
@@ -83,7 +83,7 @@ async def login_user(
     if not user:
         raise UnauthorizedException(msg="用户不存在")
 
-    if not verify_password(payload.password, user.password_hash):
+    if not await verify_password_async(payload.password, user.password_hash):
         raise UnauthorizedException(msg="密码错误")
 
     if user.status != UserStatus.ACTIVE:
